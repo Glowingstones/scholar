@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>科研成果管理系统 (完整同步版)</title>
+    <title>科研成果管理系统</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -32,7 +32,7 @@
             --radius: 12px;
             --radius-sm: 8px;
             
-            /* 将原来的 GitHub 色系改为 OneDrive 风格 */
+            /* OneDrive / Local Backup Colors */
             --onedrive-color: #0078D4;
             --onedrive-light: #E5F3FF;
         }
@@ -120,9 +120,8 @@
             font-size: 0.85rem; color: var(--success); margin-bottom: 12px;
             display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
         }
-        .storage-status.active { color: var(--onedrive-color); font-weight: 600; }
         .storage-status.warning { color: var(--warning); }
-        .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: inline-block; }
+        .storage-status .sync-info { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; }
 
         .data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .data-btn {
@@ -133,8 +132,19 @@
         }
         .data-btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent); }
         
-        .data-btn.onedrive { border-color: var(--onedrive-color); color: var(--onedrive-color); font-weight: 600; }
+        /* OneDrive Style Buttons */
+        .data-btn.onedrive { border-color: var(--onedrive-color); color: var(--onedrive-color); }
         .data-btn.onedrive:hover { background: var(--onedrive-light); }
+        
+        .btn-onedrive { background: var(--onedrive-color); color: white; }
+        .btn-onedrive:hover { background: #005a9e; }
+
+        .backup-section { 
+            background: var(--onedrive-light); border: 1px solid var(--onedrive-color); 
+            border-radius: var(--radius); padding: 16px; margin-bottom: 20px; 
+        }
+        .backup-section h4 { color: var(--onedrive-color); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .backup-info { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
 
         /* Dropdown Menu */
         .dropdown-menu {
@@ -212,7 +222,14 @@
         .stat-info p { font-size: 0.75rem; color: var(--text-secondary); }
 
         /* List Layout */
-        #listViewContainer { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        #listViewContainer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
         .filter-container { margin-bottom: 12px; flex-shrink: 0; }
         .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
         .filter-chip {
@@ -232,13 +249,18 @@
             background: var(--bg-card); 
             border: 1px solid var(--border); 
             border-radius: var(--radius); 
-            display: flex; flex-direction: column; flex: 1; 
-            overflow: hidden; min-height: 0;
+            display: flex;
+            flex-direction: column;
+            flex: 1; 
+            overflow: hidden;
+            min-height: 0;
         }
         .results-header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-secondary); 
-            flex-wrap: wrap; gap: 10px; flex-shrink: 0;
+            padding: 12px 16px; 
+            border-bottom: 1px solid var(--border); background: var(--bg-secondary); 
+            flex-wrap: wrap; gap: 10px; 
+            flex-shrink: 0;
         }
         .results-count { color: var(--text-secondary); font-size: 0.85rem; }
         .batch-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -246,42 +268,45 @@
         .select-all-wrapper:hover { background: var(--bg-hover); }
         .select-all-wrapper input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
         
-        .results-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .results-list { 
+            flex: 1; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
         
         .result-item { 
-            display: flex; align-items: center; padding: 12px 16px;
+            display: flex; align-items: center; 
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-light); 
-            cursor: pointer; transition: background 0.2s; gap: 12px; min-height: 72px;
+            cursor: pointer; transition: background 0.2s; gap: 12px;
+            min-height: 72px;
         }
         .result-item:hover { background: var(--bg-hover); }
         .result-item:last-child { border-bottom: none; }
         .result-item:active { background: var(--accent-light); }
         .result-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
         .result-type { 
-            width: 40px; height: 40px; border-radius: var(--radius-sm); 
+            width: 40px; height: 40px;
+            border-radius: var(--radius-sm); 
             display: flex; align-items: center; justify-content: center; 
             font-size: 1.2rem; flex-shrink: 0; 
         }
+        
         .type-paper { background: #dbeafe; } .type-patent { background: #fef3c7; }
         .type-project { background: #d1fae5; } .type-award { background: #fce7f3; }
         .type-book { background: #e0e7ff; } .type-member { background: #f3e8ff; }
         
         .result-content { flex: 1; min-width: 0; overflow: hidden; }
         .result-title { 
-            font-weight: 600; color: var(--text-primary); font-size: 0.95rem; 
-            margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            font-weight: 600; color: var(--text-primary); 
+            font-size: 0.95rem; 
+            margin-bottom: 4px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
         }
         .result-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); }
         .result-meta span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+        .result-meta .has-pdf { color: var(--accent); font-weight: 500; }
         
-        .pdf-badge {
-            display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
-            background: var(--accent-light); color: var(--accent);
-            border-radius: 12px; font-size: 0.75rem; font-weight: 600;
-            cursor: pointer; transition: background 0.2s;
-        }
-        .pdf-badge:hover { background: var(--accent); color: white; }
-
         .result-actions { display: flex; gap: 6px; flex-shrink: 0; }
         .action-btn { 
             width: 36px; height: 36px; border: none; background: var(--bg-hover); 
@@ -290,6 +315,8 @@
         }
         .action-btn:hover { background: var(--accent-light); color: var(--accent); }
         .action-btn.delete:hover { background: var(--danger-light); color: var(--danger); }
+        .action-btn.view:hover { background: var(--success-light); color: var(--success); }
+        .action-btn.download:hover { background: var(--onedrive-light); color: var(--onedrive-color); }
 
         .empty-state { padding: 60px 20px; text-align: center; color: var(--text-secondary); }
         .empty-state h3 { font-size: 1.25rem; margin-bottom: 8px; color: var(--text-primary); }
@@ -336,20 +363,29 @@
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
             outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); 
         }
+        .form-group textarea { min-height: 100px; resize: vertical; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        
+        .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .form-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+
         .file-upload { border: 2px dashed var(--border); border-radius: var(--radius); padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; }
         .file-upload:hover { border-color: var(--accent); background: var(--accent-light); }
         .file-upload input { display: none; }
         .file-upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
-        .file-upload.has-file { border-color: var(--success); background: var(--success-light); }
-        .file-upload-actions { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .file-upload-text { color: var(--text-secondary); font-size: 0.9rem; }
+        .file-upload.has-file { display: none; }
+        .file-info { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--accent-light); border-radius: var(--radius-sm); border: 1px solid var(--accent); }
+        .file-info-name { display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 500; }
+        .file-remove { width: 32px; height: 32px; border: none; background: var(--danger-light); color: var(--danger); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        .excel-preview { max-height: 200px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+        .excel-preview { max-height: 200px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); -webkit-overflow-scrolling: touch; }
         .excel-preview table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .excel-preview th, .excel-preview td { padding: 10px 12px; border: 1px solid var(--border); text-align: left; white-space: nowrap; }
         .excel-preview th { background: var(--bg-secondary); font-weight: 600; position: sticky; top: 0; }
-        
+        .mapping-row { display: grid; grid-template-columns: 140px 1fr; gap: 12px; align-items: center; margin-bottom: 12px; }
+        .mapping-row label { font-weight: 500; color: var(--text-secondary); font-size: 0.9rem; }
+        .mapping-row select { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); font-size: 16px; }
+
         /* Toast */
         .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
         .toast { 
@@ -360,23 +396,108 @@
         .toast.show { transform: translateY(0); }
         .toast.success { background: var(--success-light); border-color: var(--success); color: var(--success); }
         .toast.error { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
+        .toast.warning { background: var(--warning-light); border-color: var(--warning); color: var(--warning); }
 
-        /* Mobile Menu */
-        .mobile-menu-btn { display: none; position: fixed; top: 12px; left: 12px; z-index: 101; width: 48px; height: 48px; border: none; background: var(--bg-card); border-radius: var(--radius-sm); box-shadow: var(--shadow); font-size: 1.4rem; cursor: pointer; align-items: center; justify-content: center; }
-        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+        .duplicate-warning { background: var(--warning-light); border: 1px solid var(--warning); border-radius: var(--radius-sm); padding: 16px; margin-top: 16px; }
+        .duplicate-warning h4 { color: var(--warning); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .duplicate-list { max-height: 150px; overflow-y: auto; font-size: 0.85rem; color: var(--text-secondary); }
+        .duplicate-list li { padding: 4px 0; border-bottom: 1px solid var(--warning); }
+        .duplicate-list li:last-child { border-bottom: none; }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 101;
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            font-size: 1.4rem;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Sidebar Overlay for Mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
         .sidebar-overlay.active { display: block; }
 
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Confirm Dialog */
+        .confirm-dialog {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            max-width: 360px;
+            width: 90%;
+            text-align: center;
+        }
+        .confirm-dialog p { margin-bottom: 20px; font-size: 1.05rem; }
+        .confirm-dialog .btn-group { display: flex; gap: 12px; justify-content: center; }
+
+        /* Responsive Design */
         @media (min-width: 769px) {
             .modal-overlay { align-items: center; padding: 20px; }
             .modal { border-radius: var(--radius); max-height: 85vh; }
         }
+
         @media (max-width: 768px) {
             .mobile-menu-btn { display: flex; }
-            .sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); width: 85%; max-width: 320px; }
+            .sidebar { 
+                position: fixed; 
+                left: 0; top: 0; bottom: 0;
+                transform: translateX(-100%); 
+                width: 85%;
+                max-width: 320px;
+            }
             .sidebar.open { transform: translateX(0); }
             .main-content { padding: 70px 12px 12px; }
+            .page-title { font-size: 1.25rem; }
+            .header { flex-direction: column; align-items: stretch; }
+            .header-actions { width: 100%; justify-content: stretch; }
+            .search-box { max-width: none; min-width: 0; }
+            .btn { padding: 10px 16px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .form-row { grid-template-columns: 1fr; }
+            .stat-card { padding: 12px; }
+            .stat-info h3 { font-size: 1.1rem; }
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .mapping-row { grid-template-columns: 1fr; gap: 8px; }
+            .result-actions { opacity: 1; }
+            .result-item { padding: 12px; }
+            .results-header { padding: 10px 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .stat-card { padding: 10px 8px; flex-direction: column; gap: 6px; text-align: center; }
+            .stat-icon { width: 32px; height: 32px; font-size: 1rem; }
+            .stat-info h3 { font-size: 1rem; }
+            .stat-info p { font-size: 0.7rem; }
+            .filter-chip { padding: 5px 10px; font-size: 0.8rem; }
+            .result-meta { font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -391,46 +512,68 @@
                 <div class="logo-icon">🔬</div>
                 <div>
                     <div>科研成果管理</div>
-                    <div style="font-size:0.7rem;color:var(--text-muted);font-weight:400;">支持自动文件同步</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);font-weight:400;">本地自动保存 | 云端备份</div>
                 </div>
             </div>
         </div>
 
         <nav class="nav-menu">
             <div class="nav-section">成果管理</div>
-            <div class="nav-item active" data-view="all" onclick="setView('all')">📋 <span>全部成果</span><span class="badge" id="totalCount">0</span></div>
-            <div class="nav-item" data-view="paper" onclick="setView('paper')">📄 <span>学术论文</span><span class="badge" id="paperCount">0</span></div>
-            <div class="nav-item" data-view="patent" onclick="setView('patent')">💡 <span>发明专利</span><span class="badge" id="patentCount">0</span></div>
-            <div class="nav-item" data-view="project" onclick="setView('project')">📊 <span>科研项目</span><span class="badge" id="projectCount">0</span></div>
-            <div class="nav-item" data-view="award" onclick="setView('award')">🏆 <span>获奖情况</span><span class="badge" id="awardCount">0</span></div>
-            <div class="nav-item" data-view="book" onclick="setView('book')">📚 <span>专著出版</span><span class="badge" id="bookCount">0</span></div>
+            <div class="nav-item active" data-view="all" onclick="setView('all')">
+                📋 <span>全部成果</span>
+                <span class="badge" id="totalCount">0</span>
+            </div>
+            <div class="nav-item" data-view="paper" onclick="setView('paper')">
+                📄 <span>学术论文</span>
+                <span class="badge" id="paperCount">0</span>
+            </div>
+            <div class="nav-item" data-view="patent" onclick="setView('patent')">
+                💡 <span>发明专利</span>
+                <span class="badge" id="patentCount">0</span>
+            </div>
+            <div class="nav-item" data-view="project" onclick="setView('project')">
+                📊 <span>科研项目</span>
+                <span class="badge" id="projectCount">0</span>
+            </div>
+            <div class="nav-item" data-view="award" onclick="setView('award')">
+                🏆 <span>获奖情况</span>
+                <span class="badge" id="awardCount">0</span>
+            </div>
+            <div class="nav-item" data-view="book" onclick="setView('book')">
+                📚 <span>专著出版</span>
+                <span class="badge" id="bookCount">0</span>
+            </div>
             <div class="nav-section">团队管理</div>
-            <div class="nav-item" data-view="member" onclick="setView('member')">👥 <span>成员信息</span><span class="badge" id="memberCount">0</span></div>
+            <div class="nav-item" data-view="member" onclick="setView('member')">
+                👥 <span>成员信息</span>
+                <span class="badge" id="memberCount">0</span>
+            </div>
         </nav>
 
         <div class="sidebar-footer">
             <div class="storage-status" id="storageStatus">
-                <span class="sync-dot"></span> <span id="syncText">本地存储模式</span>
+                ✓ 数据已本地保存
             </div>
             <div class="data-actions">
-                <button class="data-btn" onclick="toggleMenu('exportMenu')">📤 备份</button>
-                <button class="data-btn" onclick="toggleMenu('importMenu')">📥 恢复</button>
-                <button class="data-btn onedrive" onclick="connectLocalFile()" style="grid-column: span 2;">
-                    🔄 关联文件 (自动同步)
+                <button class="data-btn" onclick="toggleMenu('exportMenu')">📤 导出</button>
+                <button class="data-btn" onclick="toggleMenu('importMenu')">📥 导入</button>
+                <button class="data-btn onedrive" onclick="openBackupModal()" style="grid-column: span 2;">
+                    ☁️ 备份到 OneDrive
                 </button>
             </div>
             
             <div id="exportMenu" class="dropdown-menu">
                 <div class="menu-item" onclick="exportToExcelFile()">📊 导出 Excel</div>
                 <div class="menu-item" onclick="exportToWordFile()">📝 导出 Word</div>
-                <div class="menu-item" onclick="performBackup()">📦 导出备份 (.json)</div>
+                <div class="menu-item" onclick="exportData()">📦 导出纯 JSON</div>
             </div>
 
             <div id="importMenu" class="dropdown-menu">
                 <div class="menu-item" onclick="openExcelImport()">📊 导入 Excel</div>
-                <div class="menu-item" onclick="triggerImport()">📂 恢复备份 (.json)</div>
+                <div class="menu-item" onclick="triggerImport()">📂 恢复 JSON</div>
             </div>
-            <input type="file" id="importInput" class="hidden" accept=".json" onchange="performRestore(event)">
+
+            <input type="file" id="importInput" class="hidden" accept=".json" onchange="importData(event)">
         </div>
     </aside>
 
@@ -441,19 +584,45 @@
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="🔍 搜索..." oninput="handleSearch()">
                 </div>
-                <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">➕ 添加</button>
+                <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">➕ <span id="addBtnText">添加</span></button>
             </div>
         </div>
 
         <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon papers">📄</div>
+                <div class="stat-info"><h3 id="statPaper">0</h3><p>论文</p></div>
             </div>
+            <div class="stat-card">
+                <div class="stat-icon patents">💡</div>
+                <div class="stat-info"><h3 id="statPatent">0</h3><p>专利</p></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon projects">📊</div>
+                <div class="stat-info"><h3 id="statProject">0</h3><p>项目</p></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon awards">🏆</div>
+                <div class="stat-info"><h3 id="statAward">0</h3><p>获奖</p></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon books">📚</div>
+                <div class="stat-info"><h3 id="statBook">0</h3><p>著作</p></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon members">👥</div>
+                <div class="stat-info"><h3 id="statMember">0</h3><p>成员</p></div>
+            </div>
+        </div>
 
         <div id="listViewContainer">
             <div class="filter-container">
                 <div class="filter-bar" id="filterBar">
                     <div class="filter-chip active" data-year="all" onclick="setYearFilter('all')">全部年份</div>
                 </div>
-                <div class="keyword-bar" id="keywordBar" style="display:none;"></div>
+                <div class="keyword-bar" id="keywordBar" style="display:none;">
+                    <span style="font-size:0.8rem;color:var(--text-muted);margin-right:5px;">🏷️ 热门标签:</span>
+                </div>
             </div>
 
             <div class="results-container" id="resultsContainer">
@@ -467,9 +636,9 @@
                             🗑 删除 (<span id="selectedCount">0</span>)
                         </button>
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                         <span class="results-count" id="resultsCount">共 0 条</span>
-                        <select id="sortSelect" onchange="handleSort()" style="padding:10px 12px;border-radius:8px;border:2px solid var(--border);">
+                        <select id="sortSelect" onchange="handleSort()" style="padding:10px 12px;border-radius:8px;border:2px solid var(--border);background:var(--bg-card);color:var(--text-primary);font-weight:500;font-size:16px;">
                             <option value="date-desc">最新优先</option>
                             <option value="date-asc">最早优先</option>
                             <option value="title-asc">标题排序</option>
@@ -495,6 +664,7 @@
                     <div class="form-group">
                         <label>成果类型 *</label>
                         <select id="type" required onchange="toggleFormFields()">
+                            <option value="">请选择</option>
                             <option value="paper">学术论文</option>
                             <option value="patent">发明专利</option>
                             <option value="project">科研项目</option>
@@ -507,60 +677,141 @@
                         <input type="date" id="date">
                     </div>
                 </div>
-                
                 <div id="generalFields">
-                    <div class="form-group"><label>标题 *</label><input type="text" id="title" required></div>
-                    <div class="form-group"><label>作者/成员</label><input type="text" id="authors" placeholder="多个逗号分隔"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>来源/期刊</label><input type="text" id="source"></div>
-                        <div class="form-group"><label>级别</label><input type="text" id="level"></div>
+                    <div class="form-group" id="titleGroup">
+                        <label>标题 *</label>
+                        <input type="text" id="title" placeholder="请输入成果标题">
                     </div>
-                    <div class="form-group"><label>关键词</label><input type="text" id="keywords"></div>
+                    <div class="form-group" id="authorsGroup">
+                        <label>作者/成员</label>
+                        <input type="text" id="authors" placeholder="多个作者用逗号分隔">
+                    </div>
+                    <div class="form-row" id="sourceGroup">
+                        <div class="form-group">
+                            <label>来源/期刊</label>
+                            <input type="text" id="source" placeholder="如 Nature">
+                        </div>
+                        <div class="form-group">
+                            <label>级别</label>
+                            <input type="text" id="level" placeholder="如 SCI一区">
+                        </div>
+                    </div>
+                    <div class="form-group" id="keywordsGroup">
+                        <label>关键词</label>
+                        <input type="text" id="keywords" placeholder="多个关键词用逗号分隔">
+                    </div>
                 </div>
-
                 <div id="patentFields" class="hidden">
-                    <div class="form-group"><label>专利名称 *</label><input type="text" id="patentName"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>专利类型</label><select id="patentType"><option value="发明专利">发明专利</option><option value="实用新型">实用新型</option></select></div>
-                        <div class="form-group"><label>状态</label><select id="patentStatus"><option value="申请中">申请中</option><option value="已授权">已授权</option></select></div>
+                    <div class="form-group">
+                        <label>专利名称 *</label>
+                        <input type="text" id="patentName" placeholder="请输入专利名称">
                     </div>
-                    <div class="form-group"><label>发明人</label><input type="text" id="inventors"></div>
                     <div class="form-row">
-                        <div class="form-group"><label>申请日</label><input type="date" id="applicationDate"></div>
-                        <div class="form-group"><label>专利号</label><input type="text" id="patentNumber"></div>
+                        <div class="form-group">
+                            <label>专利类型 *</label>
+                            <select id="patentType">
+                                <option value="">请选择</option>
+                                <option value="发明专利">发明专利</option>
+                                <option value="实用新型">实用新型</option>
+                                <option value="外观设计">外观设计</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>专利状态</label>
+                            <select id="patentStatus">
+                                <option value="">请选择</option>
+                                <option value="申请中">申请中</option>
+                                <option value="已受理">已受理</option>
+                                <option value="实审中">实审中</option>
+                                <option value="已授权">已授权</option>
+                                <option value="已驳回">已驳回</option>
+                                <option value="已失效">已失效</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>发明人</label>
+                            <input type="text" id="inventors" placeholder="多个发明人用逗号分隔">
+                        </div>
+                        <div class="form-group">
+                            <label>专利权人</label>
+                            <input type="text" id="patentOwner" placeholder="专利权人">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>专利申请日</label>
+                            <input type="date" id="applicationDate">
+                        </div>
+                        <div class="form-group">
+                            <label>受理/授权时间</label>
+                            <input type="date" id="grantDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>专利号</label>
+                        <input type="text" id="patentNumber" placeholder="如 CN202310001234.5">
                     </div>
                 </div>
-
                 <div id="projectFields" class="hidden">
-                    <div class="form-group"><label>项目名称 *</label><input type="text" id="projectName"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>级别</label><input type="text" id="projectLevel"></div>
-                        <div class="form-group"><label>编号</label><input type="text" id="projectNumber"></div>
+                    <div class="form-group">
+                        <label>项目名称 *</label>
+                        <input type="text" id="projectName" placeholder="请输入项目名称">
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>开始时间</label><input type="date" id="projectStartDate"></div>
-                        <div class="form-group"><label>结束时间</label><input type="date" id="projectEndDate"></div>
+                        <div class="form-group">
+                            <label>项目级别</label>
+                            <select id="projectLevel">
+                                <option value="">请选择</option>
+                                <option value="国家级">国家级</option>
+                                <option value="省部级">省部级</option>
+                                <option value="厅局级">厅局级</option>
+                                <option value="校级">校级</option>
+                                <option value="横向项目">横向项目</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>项目编号</label>
+                            <input type="text" id="projectNumber" placeholder="项目编号">
+                        </div>
                     </div>
-                    <div class="form-group"><label>所属单位</label><input type="text" id="projectOrg"></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>开始时间</label>
+                            <input type="date" id="projectStartDate">
+                        </div>
+                        <div class="form-group">
+                            <label>结束时间</label>
+                            <input type="date" id="projectEndDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>项目所属单位</label>
+                        <input type="text" id="projectOrg" placeholder="项目所属单位">
+                    </div>
                 </div>
-
                 <div class="form-group">
-                    <label>📎 PDF 附件 (支持存储、预览、下载)</label>
-                    <div class="file-upload" id="fileUploadZone" onclick="document.getElementById('pdfInput').click()">
-                        <input type="file" id="pdfInput" accept="application/pdf" onchange="handleFileSelect(event)">
+                    <label>📎 PDF 附件</label>
+                    <div class="file-upload" id="fileUpload" onclick="document.getElementById('pdfInput').click()">
+                        <input type="file" id="pdfInput" accept=".pdf" onchange="handleFileSelect(event)">
                         <div class="file-upload-icon">📄</div>
-                        <div class="file-upload-text" id="fileUploadText">点击上传 PDF</div>
+                        <div class="file-upload-text">点击上传 PDF 文件</div>
                     </div>
-                    <div id="fileActions" class="file-upload-actions hidden">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="previewCurrentFile()">👁️ 预览</button>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeFile()">🗑 删除</button>
+                    <div class="file-info hidden" id="fileInfo">
+                        <span class="file-info-name">
+                            <span>📄</span>
+                            <span id="fileName"></span>
+                        </span>
+                        <button type="button" class="file-remove" onclick="removeFile()">✕</button>
                     </div>
                 </div>
             </form>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
-            <button type="submit" form="researchForm" class="btn btn-primary">保存</button>
+            <button type="submit" form="researchForm" class="btn btn-primary" id="submitBtn">保存</button>
         </div>
     </div>
 </div>
@@ -575,15 +826,93 @@
             <form id="memberForm" onsubmit="handleMemberSubmit(event)">
                 <input type="hidden" id="memberEditId">
                 <div class="form-row">
-                    <div class="form-group"><label>学号/工号 *</label><input type="text" id="memberNo" required></div>
-                    <div class="form-group"><label>姓名 *</label><input type="text" id="memberName" required></div>
+                    <div class="form-group">
+                        <label>学号/工号 *</label>
+                        <input type="text" id="memberNo" required placeholder="学号或工号">
+                    </div>
+                    <div class="form-group">
+                        <label>姓名 *</label>
+                        <input type="text" id="memberName" required placeholder="姓名">
+                    </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>性别</label><select id="memberGender"><option value="男">男</option><option value="女">女</option></select></div>
-                    <div class="form-group"><label>职称</label><input type="text" id="memberTitle"></div>
+                    <div class="form-group">
+                        <label>性别</label>
+                        <select id="memberGender">
+                            <option value="">请选择</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>出生年月</label>
+                        <input type="month" id="memberBirth">
+                    </div>
                 </div>
-                <div class="form-group"><label>单位</label><input type="text" id="memberOrg"></div>
-                <div class="form-group"><label>邮箱</label><input type="email" id="memberEmail"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>证件类型</label>
+                        <select id="memberIdType">
+                            <option value="身份证">身份证</option>
+                            <option value="护照">护照</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>证件号码</label>
+                        <input type="text" id="memberIdNo" placeholder="证件号码">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>民族</label>
+                        <input type="text" id="memberNation" placeholder="如：汉族">
+                    </div>
+                    <div class="form-group">
+                        <label>国别或地区</label>
+                        <input type="text" id="memberCountry" placeholder="如：中国" value="中国">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>工作单位</label>
+                        <input type="text" id="memberOrg" placeholder="所属单位">
+                    </div>
+                    <div class="form-group">
+                        <label>职称</label>
+                        <input type="text" id="memberTitle" placeholder="如：副教授">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>是否在读研究生</label>
+                        <select id="memberIsStudent">
+                            <option value="">请选择</option>
+                            <option value="是">是</option>
+                            <option value="否">否</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>最高学位</label>
+                        <select id="memberDegree">
+                            <option value="">请选择</option>
+                            <option value="学士">学士</option>
+                            <option value="硕士">硕士</option>
+                            <option value="博士">博士</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>电子邮箱</label>
+                        <input type="email" id="memberEmail" placeholder="email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>手机</label>
+                        <input type="tel" id="memberPhone" placeholder="手机号码">
+                    </div>
+                </div>
             </form>
         </div>
         <div class="modal-footer">
@@ -595,23 +924,103 @@
 
 <div class="modal-overlay" id="excelModal">
     <div class="modal wide">
-        <div class="modal-header"><h2>导入 Excel</h2><button class="modal-close" onclick="closeExcelModal()">✕</button></div>
+        <div class="modal-header">
+            <h2>导入 Excel 数据</h2>
+            <button class="modal-close" onclick="closeExcelModal()">✕</button>
+        </div>
         <div class="modal-body">
             <div class="form-group">
-                <label>导入类型</label>
-                <select id="excelImportType"><option value="paper">学术论文</option><option value="patent">发明专利</option><option value="member">成员</option></select>
+                <label>选择要导入的数据类型</label>
+                <select id="excelImportType" onchange="updateMappingFields()">
+                    <option value="paper">学术论文</option>
+                    <option value="patent">发明专利</option>
+                    <option value="project">科研项目</option>
+                    <option value="award">获奖情况</option>
+                    <option value="book">专著出版</option>
+                    <option value="member">成员</option>
+                </select>
             </div>
-            <div class="file-upload" onclick="document.getElementById('excelInput').click()">
-                <input type="file" id="excelInput" accept=".xlsx,.xls" onchange="handleExcelSelect(event)">
-                <div class="file-upload-text">点击选择 Excel 文件</div>
+            <div class="form-group">
+                <label>选择 Excel 文件</label>
+                <div class="file-upload" onclick="document.getElementById('excelInput').click()">
+                    <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" onchange="handleExcelSelect(event)">
+                    <div class="file-upload-icon">📊</div>
+                    <div class="file-upload-text">点击选择 Excel 文件</div>
+                </div>
             </div>
-            <div id="excelPreviewContainer" class="hidden" style="margin-top:10px;">
+            <div id="excelPreviewContainer" class="hidden">
+                <label style="font-weight:600;margin-bottom:10px;display:block;">数据预览（前5行）</label>
                 <div class="excel-preview" id="excelPreview"></div>
+            </div>
+            <div id="mappingContainer" class="hidden" style="margin-top:20px;">
+                <label style="font-weight:600;margin-bottom:10px;display:block;">字段映射</label>
+                <div id="mappingFields"></div>
+            </div>
+            <div id="duplicateWarning" class="duplicate-warning hidden">
+                <h4>⚠️ 发现重复项</h4>
+                <p style="margin-bottom:8px;font-size:0.9rem;">以下数据可能与已有记录重复：</p>
+                <ul class="duplicate-list" id="duplicateList"></ul>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeExcelModal()">取消</button>
-            <button class="btn btn-primary" id="importExcelBtn" onclick="confirmExcelImport()" disabled>确认导入</button>
+            <button type="button" class="btn btn-secondary" onclick="closeExcelModal()">取消</button>
+            <button type="button" class="btn btn-primary" id="importExcelBtn" onclick="confirmExcelImport()" disabled>确认导入</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="backupModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>☁️ 数据备份与恢复</h2>
+            <button class="modal-close" onclick="closeBackupModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="backup-section">
+                <h4>📥 备份到 OneDrive / 本地</h4>
+                <div class="backup-info">
+                    由于数据量较大（含PDF附件），建议使用此方式。
+                    <br>
+                    <strong>操作指南：</strong>点击下方按钮，将生成的 <code style="background:rgba(0,0,0,0.1);padding:2px 4px;border-radius:4px;">.json</code> 备份文件直接保存到您的 <strong>OneDrive 同步文件夹</strong>中，即可实现云端备份。
+                </div>
+                
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="includePdfInBackup" checked style="width:18px;height:18px;">
+                        包含 PDF 附件文件
+                    </label>
+                    <div class="form-hint">如果不勾选，仅备份文字信息，文件体积会非常小。</div>
+                </div>
+
+                <div class="form-group" style="margin-top:10px;">
+                    <button class="btn btn-onedrive" onclick="performBackup()" style="width:100%;justify-content:center;">
+                        ☁️ 导出备份文件 (保存到 OneDrive)
+                    </button>
+                </div>
+            </div>
+
+            <div style="border-top:1px solid var(--border); padding-top:20px; margin-top:20px;">
+                <h4 style="margin-bottom:12px;font-size:1rem;">📤 从备份恢复</h4>
+                <div class="backup-info">
+                    从您的 OneDrive 文件夹或本地磁盘选择之前的备份文件进行恢复。
+                </div>
+                
+                <div class="file-upload" onclick="document.getElementById('restoreInput').click()" style="padding:20px;">
+                    <input type="file" id="restoreInput" accept=".json" onchange="performRestore(event)">
+                    <div class="file-upload-icon" style="font-size:2rem;margin-bottom:8px;">📂</div>
+                    <div class="file-upload-text">点击选择备份文件 (.json)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+    <div class="confirm-dialog">
+        <p id="confirmMessage">确定要删除这条记录吗？</p>
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="closeConfirmModal()">取消</button>
+            <button class="btn btn-danger" onclick="confirmDelete()">删除</button>
         </div>
     </div>
 </div>
@@ -619,27 +1028,31 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-    // --- Global State ---
-    let achievements = [];
-    let members = [];
-    let currentView = 'all';
-    let currentYearFilter = 'all';
-    let currentKeywordFilter = null;
-    let searchQuery = '';
-    let sortOrder = 'date-desc';
-    let selectedItems = new Set();
-    
-    // File Sync State
-    let fileHandle = null;
-    
-    // Temp PDF State
-    let currentPdfData = null;
-    let currentPdfName = null;
-    
-    // Excel State
-    let excelData = null;
+    // Dark mode detection
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(event) {
+        event.matches ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
+    });
 
-    const typeConfig = {
+    // Global State
+    var achievements = [];
+    var members = [];
+    var currentView = 'all';
+    var currentYearFilter = 'all';
+    var currentKeywordFilter = null;
+    var searchQuery = '';
+    var sortOrder = 'date-desc';
+    var deleteTargetIds = [];
+    var deleteTargetType = 'achievement';
+    var currentPdfData = null;
+    var currentPdfName = null;
+    var excelData = null;
+    var excelHeaders = [];
+    var selectedItems = new Set();
+
+    var typeConfig = {
         paper: { icon: '📄', label: '学术论文', class: 'type-paper' },
         patent: { icon: '💡', label: '发明专利', class: 'type-patent' },
         project: { icon: '📊', label: '科研项目', class: 'type-project' },
@@ -648,587 +1061,1261 @@
         member: { icon: '👤', label: '成员', class: 'type-member' }
     };
 
-    // --- Initialization ---
-    window.onload = async function() {
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        await loadFromIndexedDB();
-        updateUI();
+    var fieldMappings = {
+        paper: [
+            { key: 'title', label: '标题', required: true },
+            { key: 'authors', label: '作者' },
+            { key: 'date', label: '发表日期' },
+            { key: 'source', label: '期刊/来源' },
+            { key: 'level', label: '级别' },
+            { key: 'keywords', label: '关键词' }
+        ],
+        patent: [
+            { key: 'patentName', label: '专利名称', required: true },
+            { key: 'patentType', label: '专利类型' },
+            { key: 'inventors', label: '发明人' },
+            { key: 'patentOwner', label: '专利权人' },
+            { key: 'applicationDate', label: '申请日' },
+            { key: 'grantDate', label: '授权时间' },
+            { key: 'patentNumber', label: '专利号' },
+            { key: 'patentStatus', label: '专利状态' }
+        ],
+        project: [
+            { key: 'projectName', label: '项目名称', required: true },
+            { key: 'projectLevel', label: '项目级别' },
+            { key: 'projectNumber', label: '项目编号' },
+            { key: 'projectStartDate', label: '开始时间' },
+            { key: 'projectEndDate', label: '结束时间' },
+            { key: 'projectOrg', label: '所属单位' }
+        ],
+        award: [
+            { key: 'title', label: '奖项名称', required: true },
+            { key: 'authors', label: '获奖人' },
+            { key: 'date', label: '获奖日期' },
+            { key: 'level', label: '级别' }
+        ],
+        book: [
+            { key: 'title', label: '著作名称', required: true },
+            { key: 'authors', label: '作者' },
+            { key: 'date', label: '出版日期' },
+            { key: 'source', label: '出版社' }
+        ],
+        member: [
+            { key: 'memberNo', label: '学号/工号', required: true },
+            { key: 'memberName', label: '姓名', required: true },
+            { key: 'memberGender', label: '性别' },
+            { key: 'memberBirth', label: '出生年月' },
+            { key: 'memberIdType', label: '证件类型' },
+            { key: 'memberIdNo', label: '证件号码' },
+            { key: 'memberNation', label: '民族' },
+            { key: 'memberCountry', label: '国别' },
+            { key: 'memberOrg', label: '工作单位' },
+            { key: 'memberTitle', label: '职称' },
+            { key: 'memberIsStudent', label: '是否在读' },
+            { key: 'memberDegree', label: '最高学位' },
+            { key: 'memberEmail', label: '邮箱' },
+            { key: 'memberPhone', label: '手机' }
+        ]
     };
 
-    function updateUI() {
-        updateStats();
-        renderResults();
-        updateNavBadges();
-    }
+    // IndexedDB Storage
+    const DB_NAME = 'ResearchDB_V4';
+    const DB_VERSION = 1;
+    let db;
 
-    // --- IndexedDB ---
-    const DB_NAME = 'ResearchDB_V5';
-    function getDB() {
-        return new Promise((resolve, reject) => {
-            const req = indexedDB.open(DB_NAME, 1);
-            req.onupgradeneeded = e => {
-                const db = e.target.result;
-                if(!db.objectStoreNames.contains('store')) db.createObjectStore('store');
+    function initDB() {
+        return new Promise(function(resolve, reject) {
+            var request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onerror = function(event) {
+                console.error("Database error");
+                reject(event.target.errorCode);
             };
-            req.onsuccess = e => resolve(e.target.result);
-            req.onerror = e => reject(e);
+            request.onupgradeneeded = function(event) {
+                var database = event.target.result;
+                if (!database.objectStoreNames.contains('appState')) {
+                    database.createObjectStore('appState', { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                resolve(db);
+            };
         });
     }
 
     async function saveToLocal() {
-        const db = await getDB();
-        const tx = db.transaction('store', 'readwrite');
-        const store = tx.objectStore('store');
-        store.put({ achievements, members, updatedAt: new Date().toISOString() }, 'mainData');
-        
-        // Auto Sync Trigger
-        if (fileHandle) {
-            await autoSaveToFile();
-        } else {
-            updateStorageStatus(false);
-        }
-    }
-
-    async function loadFromIndexedDB() {
-        const db = await getDB();
-        return new Promise(resolve => {
-            const tx = db.transaction('store', 'readonly');
-            const req = tx.objectStore('store').get('mainData');
-            req.onsuccess = e => {
-                const res = e.target.result;
-                if (res) {
-                    achievements = res.achievements || [];
-                    members = res.members || [];
-                }
-                resolve(true);
-            };
-        });
-    }
-
-    // --- File System Access API (Auto Sync) ---
-    async function connectLocalFile() {
-        if (!window.showOpenFilePicker) {
-            alert("您的浏览器不支持此功能，建议使用 Chrome/Edge 桌面版。");
-            return;
-        }
-        try {
-            // Pick file
-            [fileHandle] = await window.showOpenFilePicker({
-                types: [{ description: 'JSON Database', accept: { 'application/json': ['.json'] } }],
-                multiple: false
-            });
-            
-            // Read
-            const file = await fileHandle.getFile();
-            const text = await file.text();
-            if (text) {
-                const json = JSON.parse(text);
-                // Merge logic: prefer file data if connected
-                if (confirm("是否加载该文件的数据覆盖当前页面数据？")) {
-                    achievements = json.achievements || [];
-                    members = json.members || [];
-                    await saveToLocal(); // This will trigger autoSave back to file effectively syncing
-                    updateUI();
-                }
-            }
-            updateStorageStatus(true, file.name);
-            showToast("✅ 已开启自动同步", "success");
-        } catch (err) {
-            console.error(err);
-            if (err.name !== 'AbortError') showToast("关联失败: " + err.message, "error");
-        }
-    }
-
-    async function autoSaveToFile() {
-        if (!fileHandle) return;
-        try {
-            const writable = await fileHandle.createWritable();
-            const data = {
-                version: '5.0',
-                updatedAt: new Date().toISOString(),
-                achievements,
-                members
-            };
-            await writable.write(JSON.stringify(data, null, 2));
-            await writable.close();
-            updateStorageStatus(true, fileHandle.name);
-        } catch (err) {
-            console.error("Auto save failed", err);
-            updateStorageStatus(false);
-            fileHandle = null; // Reset on permission loss
-            showToast("⚠️ 自动同步中断，请重新关联", "warning");
-        }
-    }
-
-    function updateStorageStatus(connected, filename) {
-        const el = document.getElementById('storageStatus');
-        if (connected) {
-            el.className = 'storage-status active';
-            el.innerHTML = `<span class="sync-dot" style="color:var(--success)"></span> 🟢 自动同步: ${filename}`;
-        } else {
-            el.className = 'storage-status';
-            el.innerHTML = `<span class="sync-dot" style="color:var(--text-muted)"></span> 本地存储模式`;
-        }
-    }
-
-    // --- Core Logic ---
-    function setView(view) {
-        currentView = view;
-        selectedItems.clear();
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === view));
-        document.getElementById('pageTitle').textContent = view === 'all' ? '全部成果' : typeConfig[view].label;
-        closeSidebar();
-        renderResults();
-    }
-
-    function updateStats() {
-        const counts = { paper:0, patent:0, project:0, award:0, book:0 };
-        achievements.forEach(a => { if(counts[a.type] !== undefined) counts[a.type]++; });
-        
-        document.getElementById('totalCount').textContent = achievements.length;
-        document.getElementById('memberCount').textContent = members.length;
-        
-        Object.keys(counts).forEach(k => {
-            const el = document.getElementById(k+'Count');
-            if(el) el.textContent = counts[k];
-        });
-
-        const grid = document.getElementById('statsGrid');
-        grid.innerHTML = Object.entries(typeConfig).map(([k, cfg]) => {
-            const count = k === 'member' ? members.length : counts[k];
-            return `<div class="stat-card" onclick="setView('${k}')" style="cursor:pointer">
-                <div class="stat-icon ${cfg.class}">${cfg.icon}</div>
-                <div class="stat-info"><h3>${count}</h3><p>${cfg.label}</p></div>
-            </div>`;
-        }).join('');
-    }
-
-    function updateNavBadges() {
-        // Already updated in updateStats logic sharing IDs
-    }
-
-    function renderResults() {
-        const list = document.getElementById('resultsList');
-        let items = currentView === 'member' ? members : achievements;
-        
-        if (currentView !== 'all' && currentView !== 'member') {
-            items = items.filter(i => i.type === currentView);
-        }
-
-        if (currentYearFilter !== 'all') {
-            items = items.filter(i => {
-                const d = i.date || i.applicationDate || i.projectStartDate || '';
-                return d.startsWith(currentYearFilter);
-            });
-        }
-
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            items = items.filter(i => {
-                const txt = [i.title, i.memberName, i.authors, i.keywords].join(' ').toLowerCase();
-                return txt.includes(q);
-            });
-        }
-
-        items.sort((a,b) => {
-            const da = a.date || a.createdAt || '0';
-            const db = b.date || b.createdAt || '0';
-            return sortOrder === 'date-desc' ? db.localeCompare(da) : da.localeCompare(db);
-        });
-
-        document.getElementById('resultsCount').textContent = `共 ${items.length} 条`;
-
-        if (items.length === 0) {
-            list.innerHTML = `<div class="empty-state"><h3>暂无数据</h3><p>点击上方“添加”按钮开始</p></div>`;
-            return;
-        }
-
-        // Generate Year Filter
-        const years = [...new Set(achievements.map(a => (a.date||'').substring(0,4)).filter(y=>y))].sort().reverse();
-        const filterBar = document.getElementById('filterBar');
-        filterBar.innerHTML = `<div class="filter-chip ${currentYearFilter==='all'?'active':''}" onclick="setYearFilter('all')">全部</div>` + 
-            years.map(y => `<div class="filter-chip ${currentYearFilter===y?'active':''}" onclick="setYearFilter('${y}')">${y}</div>`).join('');
-
-        // Render List
-        list.innerHTML = items.map(item => {
-            const cfg = typeConfig[item.type] || typeConfig.paper;
-            const title = item.type === 'member' ? `${item.memberName} (${item.memberNo})` : (item.title || item.patentName || item.projectName);
-            const sub = item.type === 'member' ? (item.memberOrg||'') : (item.authors || item.inventors || item.date);
-            const hasPdf = item.pdfData ? `<span class="pdf-badge" onclick="event.stopPropagation(); previewPdf('${item.id}', '${item.type}')">📎 预览PDF</span>` : '';
-            
-            return `<div class="result-item" onclick="editItem('${item.id}', '${item.type}')">
-                <input type="checkbox" class="result-checkbox" data-id="${item.id}" onclick="event.stopPropagation(); toggleSelect('${item.id}')">
-                <div class="result-type ${cfg.class}">${cfg.icon}</div>
-                <div class="result-content">
-                    <div class="result-title">${escapeHtml(title)}</div>
-                    <div class="result-meta"><span>${escapeHtml(sub)}</span> ${hasPdf}</div>
-                </div>
-                <div class="result-actions">
-                    ${item.pdfData ? `<button class="action-btn" title="下载" onclick="event.stopPropagation(); downloadPdf('${item.id}', '${item.type}')">⬇️</button>` : ''}
-                    <button class="action-btn delete" onclick="event.stopPropagation(); deleteItem('${item.id}', '${item.type}')">🗑</button>
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    // --- CRUD ---
-    function openAddModal() {
-        if (currentView === 'member') { openMemberModal(); return; }
-        document.getElementById('researchForm').reset();
-        document.getElementById('editId').value = '';
-        document.getElementById('type').value = currentView === 'all' ? 'paper' : currentView;
-        toggleFormFields();
-        clearFile();
-        document.getElementById('modalTitle').textContent = '添加成果';
-        document.getElementById('formModal').classList.add('active');
-    }
-
-    function editItem(id, type) {
-        if (type === 'member') { editMember(id); return; }
-        const item = achievements.find(i => i.id === id);
-        if (!item) return;
-
-        document.getElementById('modalTitle').textContent = '编辑成果';
-        document.getElementById('editId').value = id;
-        document.getElementById('type').value = item.type;
-        toggleFormFields();
-
-        // Populate fields
-        if (item.type === 'patent') {
-            ['patentName', 'patentType', 'patentStatus', 'inventors', 'applicationDate', 'patentNumber'].forEach(k => {
-                const el = document.getElementById(k); if(el) el.value = item[k] || '';
-            });
-        } else if (item.type === 'project') {
-            ['projectName', 'projectLevel', 'projectNumber', 'projectStartDate', 'projectEndDate', 'projectOrg'].forEach(k => {
-                const el = document.getElementById(k); if(el) el.value = item[k] || '';
-            });
-        } else {
-            ['title', 'authors', 'date', 'source', 'level', 'keywords'].forEach(k => {
-                const el = document.getElementById(k); if(el) el.value = item[k] || '';
-            });
-        }
-
-        // Populate PDF
-        if (item.pdfData) {
-            currentPdfData = item.pdfData;
-            currentPdfName = item.pdfName;
-            updateFileUI();
-        } else {
-            clearFile();
-        }
-        
-        document.getElementById('formModal').classList.add('active');
-    }
-
-    function handleSubmit(e) {
-        e.preventDefault();
-        const id = document.getElementById('editId').value;
-        const type = document.getElementById('type').value;
-        let data = {
-            id: id || Date.now().toString(),
-            type,
-            updatedAt: new Date().toISOString(),
-            pdfData: currentPdfData,
-            pdfName: currentPdfName
+        if (!db) await initDB();
+        var transaction = db.transaction(['appState'], 'readwrite');
+        var store = transaction.objectStore('appState');
+        var dataToSave = {
+            id: 'main_data',
+            achievements: achievements,
+            members: members,
+            updatedAt: new Date().toISOString()
         };
-
-        if (type === 'patent') {
-            ['patentName', 'patentType', 'patentStatus', 'inventors', 'applicationDate', 'patentNumber'].forEach(k => data[k] = document.getElementById(k).value);
-            data.title = data.patentName; data.date = data.applicationDate;
-        } else if (type === 'project') {
-            ['projectName', 'projectLevel', 'projectNumber', 'projectStartDate', 'projectEndDate', 'projectOrg'].forEach(k => data[k] = document.getElementById(k).value);
-            data.title = data.projectName; data.date = data.projectStartDate;
-        } else {
-            ['title', 'authors', 'date', 'source', 'level', 'keywords'].forEach(k => data[k] = document.getElementById(k).value);
-        }
-
-        if (id) {
-            const idx = achievements.findIndex(a => a.id === id);
-            if(idx > -1) achievements[idx] = { ...achievements[idx], ...data };
-        } else {
-            data.createdAt = new Date().toISOString();
-            achievements.push(data);
-        }
-
-        saveToLocal();
-        closeModal();
-        updateUI();
-        showToast('保存成功', 'success');
+        var request = store.put(dataToSave);
+        request.onsuccess = function() { updateStorageStatus(true); };
+        request.onerror = function() { updateStorageStatus(false); showToast("保存失败", "error"); };
     }
 
-    function deleteItem(id, type) {
-        if (!confirm('确定删除吗？')) return;
-        if (type === 'member') members = members.filter(m => m.id !== id);
-        else achievements = achievements.filter(a => a.id !== id);
-        saveToLocal();
-        updateUI();
-        showToast('已删除', 'success');
-    }
-
-    // --- Member Logic ---
-    function openMemberModal() {
-        document.getElementById('memberForm').reset();
-        document.getElementById('memberEditId').value = '';
-        document.getElementById('memberModalTitle').textContent = '添加成员';
-        document.getElementById('memberModal').classList.add('active');
-    }
-    function editMember(id) {
-        const m = members.find(i => i.id === id);
-        if(!m) return;
-        document.getElementById('memberEditId').value = id;
-        document.getElementById('memberModalTitle').textContent = '编辑成员';
-        ['memberNo','memberName','memberGender','memberTitle','memberOrg','memberEmail'].forEach(k => {
-            document.getElementById(k).value = m[k] || '';
+    async function loadFromLocal() {
+        if (!db) await initDB();
+        return new Promise(function(resolve) {
+            var transaction = db.transaction(['appState'], 'readonly');
+            var store = transaction.objectStore('appState');
+            var request = store.get('main_data');
+            request.onsuccess = function(event) {
+                var result = event.target.result;
+                if (result) {
+                    achievements = result.achievements || [];
+                    members = result.members || [];
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            };
+            request.onerror = function() { resolve(false); };
         });
-        document.getElementById('memberModal').classList.add('active');
     }
-    function handleMemberSubmit(e) {
-        e.preventDefault();
-        const id = document.getElementById('memberEditId').value;
-        let data = { id: id || Date.now().toString(), updatedAt: new Date().toISOString() };
-        ['memberNo','memberName','memberGender','memberTitle','memberOrg','memberEmail'].forEach(k => {
-            data[k] = document.getElementById(k).value;
-        });
-        
-        if(id) {
-            const idx = members.findIndex(m => m.id === id);
-            if(idx > -1) members[idx] = { ...members[idx], ...data };
+
+    function updateStorageStatus(ok) {
+        var status = document.getElementById('storageStatus');
+        if (ok) {
+            status.className = 'storage-status';
+            status.innerHTML = '✓ 数据已本地保存';
         } else {
-            data.createdAt = new Date().toISOString();
-            members.push(data);
-        }
-        saveToLocal();
-        closeMemberModal();
-        updateUI();
-        showToast('保存成功', 'success');
-    }
-
-    // --- PDF Handling (Fixed) ---
-    function handleFileSelect(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 20 * 1024 * 1024) { alert("文件过大(>20MB)"); return; }
-        
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            currentPdfData = evt.target.result;
-            currentPdfName = file.name;
-            updateFileUI();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function updateFileUI() {
-        const zone = document.getElementById('fileUploadZone');
-        const text = document.getElementById('fileUploadText');
-        const actions = document.getElementById('fileActions');
-        
-        if (currentPdfData) {
-            zone.classList.add('has-file');
-            text.textContent = `✅ 已就绪: ${currentPdfName}`;
-            actions.classList.remove('hidden');
-        } else {
-            zone.classList.remove('has-file');
-            text.textContent = '点击上传 PDF';
-            actions.classList.add('hidden');
+            status.className = 'storage-status warning';
+            status.textContent = '⚠ 保存失败';
         }
     }
 
-    function clearFile() {
-        currentPdfData = null;
-        currentPdfName = null;
-        document.getElementById('pdfInput').value = '';
-        updateFileUI();
-    }
-
-    function previewCurrentFile() {
-        if (currentPdfData) openPdf(currentPdfData);
-    }
-
-    function previewPdf(id, type) {
-        const item = achievements.find(a => a.id === id);
-        if (item && item.pdfData) openPdf(item.pdfData);
-    }
-
-    function downloadPdf(id, type) {
-        const item = achievements.find(a => a.id === id);
-        if (item && item.pdfData) {
-            const a = document.createElement('a');
-            a.href = item.pdfData;
-            a.download = item.pdfName || 'download.pdf';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-    }
-
-    function openPdf(base64) {
-        const win = window.open();
-        win.document.write(`<iframe src="${base64}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-    }
-
-    // --- Helper Functions ---
-    function toggleFormFields() {
-        const type = document.getElementById('type').value;
-        document.getElementById('generalFields').classList.toggle('hidden', type === 'patent' || type === 'project');
-        document.getElementById('patentFields').classList.toggle('hidden', type !== 'patent');
-        document.getElementById('projectFields').classList.toggle('hidden', type !== 'project');
-        document.getElementById('dateGroup').classList.toggle('hidden', type === 'patent' || type === 'project');
-    }
-
-    function closeModal() { document.getElementById('formModal').classList.remove('active'); }
-    function closeMemberModal() { document.getElementById('memberModal').classList.remove('active'); }
-    function closeExcelModal() { document.getElementById('excelModal').classList.remove('active'); }
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
-    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
-    function toggleMenu(id) { 
-        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
-        document.getElementById(id).classList.add('show'); 
-    }
-    document.addEventListener('click', e => {
-        if(!e.target.closest('.data-btn') && !e.target.closest('.dropdown-menu')) document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
-    });
-
-    function setYearFilter(y) { currentYearFilter = y; renderResults(); updateFilterUI(); }
-    function handleSearch() { searchQuery = document.getElementById('searchInput').value; renderResults(); }
-    function handleSort() { sortOrder = document.getElementById('sortSelect').value; renderResults(); }
+    // --- Backup & Restore Functions ---
     
-    function toggleSelect(id) {
-        if(selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id);
-        updateBatchUI();
-    }
-    function toggleSelectAll() {
-        const all = document.getElementById('selectAll').checked;
-        const list = currentView === 'member' ? members : achievements;
-        selectedItems.clear();
-        if(all) list.forEach(i => selectedItems.add(i.id));
-        document.querySelectorAll('.result-checkbox').forEach(c => c.checked = all);
-        updateBatchUI();
-    }
-    function updateBatchUI() {
-        const btn = document.getElementById('batchDeleteBtn');
-        const count = selectedItems.size;
-        document.getElementById('selectedCount').textContent = count;
-        btn.style.display = count > 0 ? 'inline-flex' : 'none';
-    }
-    function batchDelete() {
-        if(!confirm(`确定删除选中的 ${selectedItems.size} 项?`)) return;
-        if(currentView === 'member') members = members.filter(m => !selectedItems.has(m.id));
-        else achievements = achievements.filter(a => !selectedItems.has(a.id));
-        selectedItems.clear();
-        saveToLocal();
-        updateUI();
+    function openBackupModal() {
+        document.getElementById('backupModal').classList.add('active');
+        closeAllMenus();
     }
 
-    // --- Export/Import ---
+    function closeBackupModal() {
+        document.getElementById('backupModal').classList.remove('active');
+    }
+
     function performBackup() {
-        const blob = new Blob([JSON.stringify({achievements, members}, null, 2)], {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `backup_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-        showToast("备份下载成功", "success");
+        var includePdf = document.getElementById('includePdfInBackup').checked;
+        
+        var btn = document.querySelector('.btn-onedrive');
+        var originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span>正在打包...';
+
+        setTimeout(function() {
+            try {
+                var dataToBackup = {
+                    version: '4.1', 
+                    backupDate: new Date().toISOString(),
+                    system: 'ResearchManager',
+                    achievements: [],
+                    members: members
+                };
+
+                if (includePdf) {
+                    dataToBackup.achievements = achievements;
+                } else {
+                    dataToBackup.achievements = achievements.map(function(item) {
+                        var copy = Object.assign({}, item);
+                        if (copy.pdfData) {
+                            copy.pdfData = null;
+                            copy.pdfName = (item.pdfName || 'Unknown') + " (附件未备份)";
+                        }
+                        return copy;
+                    });
+                }
+
+                var jsonStr = JSON.stringify(dataToBackup, null, 2);
+                var blob = new Blob([jsonStr], { type: 'application/json' });
+                
+                var sizeInMB = (blob.size / (1024 * 1024)).toFixed(2);
+                if (sizeInMB > 100) {
+                    if (!confirm('备份文件较大 (' + sizeInMB + ' MB)，下载可能需要一点时间。是否继续？')) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
+                    }
+                }
+
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                var timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                a.download = 'Research_Backup_' + timestamp + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast('✓ 备份已生成，请保存到 OneDrive', 'success');
+                closeBackupModal();
+
+            } catch (err) {
+                console.error(err);
+                showToast('❌ 备份失败: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }, 100);
     }
 
-    function performRestore(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = async function(evt) {
+    function performRestore(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
             try {
-                const json = JSON.parse(evt.target.result);
-                if(confirm("确定覆盖当前数据?")) {
-                    achievements = json.achievements || [];
-                    members = json.members || [];
-                    await saveToLocal();
-                    updateUI();
-                    showToast("恢复成功", "success");
+                var data = JSON.parse(e.target.result);
+                
+                if (!data.achievements && !data.members) {
+                    throw new Error('文件格式不正确，未找到数据');
                 }
-            } catch(err) { showToast("文件格式错误", "error"); }
+
+                var newAchievements = data.achievements || [];
+                var newMembers = data.members || [];
+                var msg = '解析成功！\n';
+                msg += '包含成果: ' + newAchievements.length + ' 条\n';
+                msg += '包含成员: ' + newMembers.length + ' 人\n\n';
+                msg += '点击“确定”将合并当前数据(相同ID覆盖)，点击“取消”终止。';
+
+                if (confirm(msg)) {
+                    newMembers.forEach(function(nm) {
+                        var idx = members.findIndex(function(m){ return m.id === nm.id; });
+                        if (idx !== -1) members[idx] = nm;
+                        else members.push(nm);
+                    });
+
+                    newAchievements.forEach(function(na) {
+                        var idx = achievements.findIndex(function(a){ return a.id === na.id; });
+                        if (idx !== -1) achievements[idx] = na;
+                        else achievements.push(na);
+                    });
+
+                    saveToLocal();
+                    updateStats();
+                    renderResults();
+                    closeBackupModal();
+                    showToast('✓ 成功恢复数据', 'success');
+                }
+            } catch (err) {
+                alert('恢复失败：文件可能已损坏或格式错误。\n' + err.message);
+            }
+            document.getElementById('restoreInput').value = '';
         };
         reader.readAsText(file);
     }
 
-    function exportToExcelFile() {
-        if(!achievements.length && !members.length) { showToast("无数据可导出", "warning"); return; }
-        const wb = XLSX.utils.book_new();
-        if(achievements.length) {
-            const data = achievements.map(a => ({
-                类型: typeConfig[a.type].label,
-                标题: a.title || a.patentName || a.projectName,
-                日期: a.date || a.applicationDate || a.projectStartDate,
-                人员: a.authors || a.inventors
-            }));
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "成果");
-        }
-        if(members.length) {
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(members), "成员");
-        }
-        XLSX.writeFile(wb, `export_${new Date().toISOString().slice(0,10)}.xlsx`);
-    }
-
-    function exportToWordFile() {
-        let content = `<h1>科研成果报表</h1>`;
-        achievements.forEach((a, i) => {
-            content += `<p><b>${i+1}. ${a.title||a.patentName}</b><br>类型: ${typeConfig[a.type].label}<br>日期: ${a.date||'--'}</p><hr>`;
-        });
-        const blob = new Blob(['\ufeff', `<html><body>${content}</body></html>`], {type:'application/msword'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'report.doc';
-        a.click();
-    }
-
-    // --- Excel Import Logic ---
-    function openExcelImport() { document.getElementById('excelModal').classList.add('active'); }
-    function handleExcelSelect(e) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            const wb = XLSX.read(evt.target.result, {type:'binary'});
-            excelData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-            document.getElementById('excelPreview').innerHTML = `<pre>${JSON.stringify(excelData.slice(0,3), null, 2)}</pre>`;
-            document.getElementById('importExcelBtn').disabled = false;
-        };
-        reader.readAsBinaryString(file);
-    }
-    function confirmExcelImport() {
-        if(!excelData) return;
-        const type = document.getElementById('excelImportType').value;
-        const count = excelData.length;
-        // Simple mapping assumption: Map first few columns
-        excelData.forEach(row => {
-            const item = { id: Date.now()+Math.random(), type, createdAt: new Date().toISOString() };
-            if(type === 'member') {
-                item.memberName = Object.values(row)[0]; // Assume 1st col is name
-                members.push(item);
-            } else {
-                item.title = Object.values(row)[0];
-                achievements.push(item);
-            }
-        });
-        saveToLocal();
-        closeExcelModal();
-        updateUI();
-        showToast(`成功导入 ${count} 条`, "success");
+    // Utility Functions
+    function base64ToBlob(base64Data) {
+        var arr = base64Data.split(',');
+        var mime = arr[0].match(/:(.*?);/)[1];
+        var bstr = atob(arr[1]);
+        var n = bstr.length;
+        var u8arr = new Uint8Array(n);
+        while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+        return new Blob([u8arr], { type: mime });
     }
 
     function escapeHtml(text) {
         if (!text) return '';
-        return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
-    function showToast(msg, type) {
-        const el = document.createElement('div');
-        el.className = `toast ${type}`;
-        el.textContent = msg;
-        document.getElementById('toastContainer').appendChild(el);
-        requestAnimationFrame(() => el.classList.add('show'));
-        setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
+    function handleFileSelect(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        if (file.size > 20 * 1024 * 1024) {
+            showToast('文件过大 (>20MB)', 'error');
+            return;
+        }
+        if (file.type !== 'application/pdf') {
+            showToast('请选择 PDF 文件', 'error');
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            currentPdfData = e.target.result;
+            currentPdfName = file.name;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileInfo').classList.remove('hidden');
+            document.getElementById('fileUpload').classList.add('has-file');
+        };
+        reader.readAsDataURL(file);
     }
+
+    function removeFile() {
+        currentPdfData = null;
+        currentPdfName = null;
+        document.getElementById('pdfInput').value = '';
+        document.getElementById('fileInfo').classList.add('hidden');
+        document.getElementById('fileUpload').classList.remove('hidden');
+        document.getElementById('fileUpload').classList.remove('has-file');
+    }
+
+    // PDF Functions
+    function viewPdf(id) {
+        var item = achievements.find(function(a) { return String(a.id) === String(id); });
+        if (item && item.pdfData) {
+            try {
+                var blob = base64ToBlob(item.pdfData);
+                var url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+            } catch (e) {
+                showToast("打开失败", "error");
+            }
+        } else {
+            showToast("未找到附件", "warning");
+        }
+    }
+
+    function downloadPdf(id) {
+        var item = achievements.find(function(a) { return String(a.id) === String(id); });
+        if (item && item.pdfData) {
+            var blob = base64ToBlob(item.pdfData);
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = item.pdfName || 'document.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } else {
+            showToast("未找到附件", "warning");
+        }
+    }
+
+    // Sidebar Functions
+    function toggleSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+    }
+
+    function setView(view) {
+        currentView = view;
+        selectedItems.clear();
+        updateBatchDeleteBtn();
+        document.querySelectorAll('.nav-item').forEach(function(item) {
+            item.classList.toggle('active', item.dataset.view === view);
+        });
+
+        var titles = { all: '全部成果', paper: '学术论文', patent: '发明专利', project: '科研项目', award: '获奖情况', book: '专著出版', member: '成员信息' };
+        document.getElementById('pageTitle').textContent = titles[view];
+        document.getElementById('addBtnText').textContent = view === 'member' ? '添加' : '添加';
+
+        closeSidebar();
+        renderResults();
+    }
+
+    function setYearFilter(year) {
+        currentYearFilter = year;
+        document.querySelectorAll('.filter-chip').forEach(function(chip) {
+            chip.classList.toggle('active', chip.dataset.year === year);
+        });
+        renderResults();
+    }
+
+    function setKeywordFilter(keyword) {
+        if(currentKeywordFilter === keyword) currentKeywordFilter = null; 
+        else currentKeywordFilter = keyword;
+        document.querySelectorAll('.keyword-chip').forEach(function(chip) {
+            chip.classList.toggle('active', chip.textContent.includes(keyword) && currentKeywordFilter !== null);
+        });
+        renderResults();
+    }
+
+    function handleSearch() {
+        searchQuery = document.getElementById('searchInput').value.toLowerCase();
+        renderResults();
+    }
+
+    function handleSort() {
+        sortOrder = document.getElementById('sortSelect').value;
+        renderResults();
+    }
+
+    function updateStats() {
+        var counts = { paper: 0, patent: 0, project: 0, award: 0, book: 0 };
+        var allKeywords = {};
+
+        achievements.forEach(function(item) { 
+            if (counts[item.type] !== undefined) counts[item.type]++; 
+            if(item.keywords) {
+                var kws = item.keywords.split(/[,，;；]/);
+                kws.forEach(function(k) {
+                    k = k.trim();
+                    if(k) allKeywords[k] = (allKeywords[k] || 0) + 1;
+                });
+            }
+        });
+
+        document.getElementById('totalCount').textContent = achievements.length;
+        document.getElementById('memberCount').textContent = members.length;
+        document.getElementById('statMember').textContent = members.length;
+
+        ['paper', 'patent', 'project', 'award', 'book'].forEach(function(t) {
+            document.getElementById(t + 'Count').textContent = counts[t];
+            document.getElementById('stat' + t.charAt(0).toUpperCase() + t.slice(1)).textContent = counts[t];
+        });
+
+        var years = [];
+        achievements.forEach(function(a) {
+            var dateStr = a.date || a.applicationDate || a.projectStartDate;
+            if (dateStr) {
+                var y = dateStr.substring(0, 4);
+                if (years.indexOf(y) === -1) years.push(y);
+            }
+        });
+        years.sort().reverse();
+
+        var filterBar = document.getElementById('filterBar');
+        var yearHtml = '<div class="filter-chip active" data-year="all" onclick="setYearFilter(\'all\')">全部</div>';
+        years.forEach(function(year) {
+            yearHtml += '<div class="filter-chip" data-year="' + year + '" onclick="setYearFilter(\'' + year + '\')">' + year + '</div>';
+        });
+        filterBar.innerHTML = yearHtml;
+
+        var keywordBar = document.getElementById('keywordBar');
+        if(Object.keys(allKeywords).length > 0) {
+            keywordBar.style.display = 'flex';
+            var sortedKeys = Object.keys(allKeywords).sort(function(a,b){return allKeywords[b]-allKeywords[a]}).slice(0, 8);
+            var kwHtml = '<span style="font-size:0.75rem;color:var(--text-muted);">🏷️</span>';
+            sortedKeys.forEach(function(k) {
+                kwHtml += '<div class="keyword-chip" onclick="setKeywordFilter(\''+k+'\')">' + k + '</div>';
+            });
+            keywordBar.innerHTML = kwHtml;
+        } else {
+            keywordBar.style.display = 'none';
+        }
+    }
+
+    function toggleSelectAll() {
+        var checked = document.getElementById('selectAll').checked;
+        var checkboxes = document.querySelectorAll('.result-checkbox');
+        checkboxes.forEach(function(cb) {
+            cb.checked = checked;
+            var id = cb.dataset.id;
+            if (checked) selectedItems.add(id); else selectedItems.delete(id);
+        });
+        updateBatchDeleteBtn();
+    }
+
+    function toggleItemSelect(id, event) {
+        event.stopPropagation();
+        if (selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id);
+        updateBatchDeleteBtn();
+        updateSelectAllState();
+    }
+
+    function updateSelectAllState() {
+        var checkboxes = document.querySelectorAll('.result-checkbox');
+        var allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(function(cb) { return cb.checked; });
+        document.getElementById('selectAll').checked = allChecked;
+    }
+
+    function updateBatchDeleteBtn() {
+        var btn = document.getElementById('batchDeleteBtn');
+        var count = selectedItems.size;
+        document.getElementById('selectedCount').textContent = count;
+        btn.style.display = count > 0 ? 'inline-flex' : 'none';
+    }
+
+    function batchDelete() {
+        if (selectedItems.size === 0) return;
+        deleteTargetIds = Array.from(selectedItems);
+        deleteTargetType = currentView === 'member' ? 'member' : 'achievement';
+        document.getElementById('confirmMessage').textContent = '确定删除选中的 ' + selectedItems.size + ' 条记录吗？';
+        document.getElementById('confirmModal').classList.add('active');
+    }
+
+    function promptDelete(id, type) {
+        deleteTargetIds = [id];
+        deleteTargetType = type;
+        document.getElementById('confirmMessage').textContent = '确定要删除这条记录吗？';
+        document.getElementById('confirmModal').classList.add('active');
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').classList.remove('active');
+    }
+
+    function confirmDelete() {
+        if (deleteTargetType === 'member') {
+            members = members.filter(function(m) { return deleteTargetIds.indexOf(m.id) === -1; });
+        } else {
+            achievements = achievements.filter(function(a) { return deleteTargetIds.indexOf(a.id) === -1; });
+        }
+        deleteTargetIds.forEach(function(id) { selectedItems.delete(id); });
+        saveToLocal();
+        updateStats();
+        renderResults();
+        updateBatchDeleteBtn();
+        closeConfirmModal();
+        showToast('✓ 已删除', 'success');
+    }
+
+    function renderResults() {
+        var container = document.getElementById('resultsList');
+        if (currentView === 'member') { renderMembers(container); return; }
+
+        var filtered = achievements.slice();
+        if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; });
+        if (currentYearFilter !== 'all') {
+            filtered = filtered.filter(function(a) {
+                var d = a.date || a.applicationDate || a.projectStartDate || '';
+                return d.indexOf(currentYearFilter) === 0;
+            });
+        }
+        if (currentKeywordFilter) {
+            filtered = filtered.filter(function(a) { return a.keywords && a.keywords.indexOf(currentKeywordFilter) !== -1; });
+        }
+        if (searchQuery) {
+            filtered = filtered.filter(function(a) {
+                var searchFields = [a.title, a.authors, a.keywords, a.patentName, a.inventors, a.patentNumber, a.projectName, a.projectNumber].join(' ').toLowerCase();
+                return searchFields.indexOf(searchQuery) !== -1;
+            });
+        }
+
+        filtered.sort(function(a, b) {
+            var dateA = a.date || a.applicationDate || a.projectStartDate || '0';
+            var dateB = b.date || b.applicationDate || b.projectStartDate || '0';
+            if (sortOrder === 'date-desc') return dateB.localeCompare(dateA);
+            if (sortOrder === 'date-asc') return dateA.localeCompare(dateB);
+            if (sortOrder === 'title-asc') return (a.title || a.patentName || a.projectName || '').localeCompare(b.title || b.patentName || b.projectName || '', 'zh-CN');
+            return 0;
+        });
+
+        document.getElementById('resultsCount').textContent = '共 ' + filtered.length + ' 条';
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="empty-state"><h3>暂无记录</h3><p>' + (searchQuery ? '没有找到匹配的结果' : '点击添加按钮开始录入') + '</p></div>';
+            return;
+        }
+
+        container.innerHTML = filtered.map(function(item) {
+            var config = typeConfig[item.type] || typeConfig.paper;
+            var displayTitle = item.type === 'patent' ? (item.patentName || item.title) : (item.type === 'project' ? (item.projectName || item.title) : item.title);
+            var displayDate = item.type === 'patent' ? (item.applicationDate || item.date) : (item.type === 'project' ? item.projectStartDate : item.date);
+            var displayAuthors = item.type === 'patent' ? item.inventors : item.authors;
+            var isChecked = selectedItems.has(item.id) ? 'checked' : '';
+            var metaHtml = '<span>📅 ' + (displayDate || '-') + '</span>';
+            if (displayAuthors) metaHtml += '<span>👤 ' + escapeHtml(displayAuthors.substring(0, 20)) + (displayAuthors.length > 20 ? '...' : '') + '</span>';
+
+            if (item.type === 'patent' && item.patentStatus) {
+                metaHtml += '<span>⚡ ' + escapeHtml(item.patentStatus) + '</span>';
+            } else if (item.type === 'project' && item.projectLevel) {
+                metaHtml += '<span>⭐ ' + escapeHtml(item.projectLevel) + '</span>';
+            } else if (item.level) {
+                metaHtml += '<span>⭐ ' + escapeHtml(item.level) + '</span>';
+            }
+            
+            // Add PDF Icon to Meta if exists
+            var hasPdfIcon = item.pdfData ? '<span class="has-pdf">📎</span>' : '';
+            if (hasPdfIcon) metaHtml += hasPdfIcon;
+
+            // NEW: PDF Buttons Logic
+            var pdfActions = '';
+            if (item.pdfData) {
+                pdfActions = `
+                    <button class="action-btn view" onclick="event.stopPropagation(); viewPdf('${item.id}')" title="预览 PDF">👁️</button>
+                    <button class="action-btn download" onclick="event.stopPropagation(); downloadPdf('${item.id}')" title="下载 PDF">⬇️</button>
+                `;
+            }
+
+            return '<div class="result-item" onclick="editAchievement(\'' + item.id + '\')">' +
+                '<input type="checkbox" class="result-checkbox" data-id="' + item.id + '" ' + isChecked + ' onclick="toggleItemSelect(\'' + item.id + '\', event)">' +
+                '<div class="result-type ' + config.class + '">' + config.icon + '</div>' +
+                '<div class="result-content">' +
+                '<div class="result-title">' + escapeHtml(displayTitle) + '</div>' +
+                '<div class="result-meta">' + metaHtml + '</div></div>' +
+                '<div class="result-actions">' +
+                pdfActions + // Insert PDF buttons here
+                '<button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + item.id + '\', \'achievement\')" title="删除">🗑</button>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    function renderMembers(container) {
+        var filtered = members.slice();
+        if (searchQuery) {
+            filtered = filtered.filter(function(m) {
+                var searchFields = [m.memberNo, m.memberName, m.memberOrg, m.memberEmail, m.memberTitle].join(' ').toLowerCase();
+                return searchFields.indexOf(searchQuery) !== -1;
+            });
+        }
+        document.getElementById('resultsCount').textContent = '共 ' + filtered.length + ' 条';
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="empty-state"><h3>暂无成员</h3><p>' + (searchQuery ? '没有找到匹配的结果' : '点击添加按钮开始录入') + '</p></div>';
+            return;
+        }
+        container.innerHTML = filtered.map(function(m) {
+            var isChecked = selectedItems.has(m.id) ? 'checked' : '';
+            var metaHtml = '';
+            if (m.memberNo) metaHtml += '<span>🔢 ' + escapeHtml(m.memberNo) + '</span>';
+            if (m.memberOrg) metaHtml += '<span>🏢 ' + escapeHtml(m.memberOrg.substring(0, 15)) + '</span>';
+            if (m.memberTitle) metaHtml += '<span>👔 ' + escapeHtml(m.memberTitle) + '</span>';
+
+            return '<div class="result-item" onclick="editMember(\'' + m.id + '\')">' +
+                '<input type="checkbox" class="result-checkbox" data-id="' + m.id + '" ' + isChecked + ' onclick="toggleItemSelect(\'' + m.id + '\', event)">' +
+                '<div class="result-type type-member">👤</div>' +
+                '<div class="result-content">' +
+                '<div class="result-title">' + escapeHtml(m.memberName) + (m.memberGender ? ' (' + m.memberGender + ')' : '') + '</div>' +
+                '<div class="result-meta">' + metaHtml + '</div></div>' +
+                '<div class="result-actions">' +
+                '<button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + m.id + '\', \'member\')" title="删除">🗑</button>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    function toggleFormFields() {
+        var type = document.getElementById('type').value;
+        var isPatent = type === 'patent';
+        var isProject = type === 'project';
+        document.getElementById('patentFields').classList.toggle('hidden', !isPatent);
+        document.getElementById('projectFields').classList.toggle('hidden', !isProject);
+        document.getElementById('generalFields').classList.toggle('hidden', isPatent || isProject);
+        document.getElementById('dateGroup').classList.toggle('hidden', isPatent || isProject);
+    }
+
+    // Modal Functions
+    function openAddModal() {
+        if (currentView === 'member') { openMemberModal(); return; }
+        document.getElementById('modalTitle').textContent = '添加科研成果';
+        document.getElementById('submitBtn').textContent = '保存';
+        document.getElementById('researchForm').reset();
+        document.getElementById('editId').value = '';
+        document.getElementById('date').valueAsDate = new Date();
+        if (currentView !== 'all' && currentView !== 'member') { document.getElementById('type').value = currentView; } 
+        else { document.getElementById('type').value = ''; }
+        toggleFormFields();
+        removeFile();
+        document.getElementById('formModal').classList.add('active');
+    }
+
+    function editAchievement(id) {
+        var item = achievements.find(function(a) { return String(a.id) === String(id); });
+        if (!item) return;
+        document.getElementById('modalTitle').textContent = '编辑科研成果';
+        document.getElementById('submitBtn').textContent = '更新';
+        document.getElementById('editId').value = id;
+        document.getElementById('type').value = item.type || '';
+        toggleFormFields();
+
+        if (item.type === 'patent') {
+            document.getElementById('patentName').value = item.patentName || '';
+            document.getElementById('patentType').value = item.patentType || '';
+            document.getElementById('inventors').value = item.inventors || '';
+            document.getElementById('patentOwner').value = item.patentOwner || '';
+            document.getElementById('applicationDate').value = item.applicationDate || '';
+            document.getElementById('grantDate').value = item.grantDate || '';
+            document.getElementById('patentNumber').value = item.patentNumber || '';
+            document.getElementById('patentStatus').value = item.patentStatus || '';
+        } else if (item.type === 'project') {
+            document.getElementById('projectName').value = item.projectName || item.title || '';
+            document.getElementById('projectLevel').value = item.projectLevel || item.level || '';
+            document.getElementById('projectNumber').value = item.projectNumber || '';
+            document.getElementById('projectStartDate').value = item.projectStartDate || item.date || '';
+            document.getElementById('projectEndDate').value = item.projectEndDate || '';
+            document.getElementById('projectOrg').value = item.projectOrg || '';
+        } else {
+            document.getElementById('date').value = item.date || '';
+            document.getElementById('title').value = item.title || '';
+            document.getElementById('authors').value = item.authors || '';
+            document.getElementById('source').value = item.source || '';
+            document.getElementById('level').value = item.level || '';
+            document.getElementById('keywords').value = item.keywords || '';
+        }
+        removeFile();
+        if (item.pdfData) {
+            currentPdfData = item.pdfData;
+            currentPdfName = item.pdfName;
+            document.getElementById('fileName').textContent = item.pdfName || 'document.pdf';
+            document.getElementById('fileInfo').classList.remove('hidden');
+            document.getElementById('fileUpload').classList.add('has-file');
+        }
+        document.getElementById('formModal').classList.add('active');
+    }
+
+    function closeModal() { document.getElementById('formModal').classList.remove('active'); }
+
+    function handleSubmit(event) {
+        event.preventDefault();
+        var editId = document.getElementById('editId').value;
+        var type = document.getElementById('type').value;
+        var data = {
+            id: editId || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            type: type,
+            pdfData: currentPdfData,
+            pdfName: currentPdfName,
+            updatedAt: new Date().toISOString()
+        };
+
+        if (type === 'patent') {
+            data.patentName = document.getElementById('patentName').value;
+            data.patentType = document.getElementById('patentType').value;
+            data.inventors = document.getElementById('inventors').value;
+            data.patentOwner = document.getElementById('patentOwner').value;
+            data.applicationDate = document.getElementById('applicationDate').value;
+            data.grantDate = document.getElementById('grantDate').value;
+            data.patentNumber = document.getElementById('patentNumber').value;
+            data.patentStatus = document.getElementById('patentStatus').value;
+            data.title = data.patentName;
+            data.date = data.applicationDate;
+        } else if (type === 'project') {
+            data.projectName = document.getElementById('projectName').value;
+            data.projectLevel = document.getElementById('projectLevel').value;
+            data.projectNumber = document.getElementById('projectNumber').value;
+            data.projectStartDate = document.getElementById('projectStartDate').value;
+            data.projectEndDate = document.getElementById('projectEndDate').value;
+            data.projectOrg = document.getElementById('projectOrg').value;
+            data.title = data.projectName;
+            data.date = data.projectStartDate;
+        } else {
+            data.date = document.getElementById('date').value;
+            data.title = document.getElementById('title').value;
+            data.authors = document.getElementById('authors').value;
+            data.source = document.getElementById('source').value;
+            data.level = document.getElementById('level').value;
+            data.keywords = document.getElementById('keywords').value;
+        }
+
+        if (editId) {
+            var index = achievements.findIndex(function(a) { return String(a.id) === String(editId); });
+            if (index !== -1) {
+                achievements[index] = Object.assign(achievements[index], data);
+                showToast('✓ 已更新', 'success');
+            }
+        } else {
+            data.createdAt = new Date().toISOString();
+            achievements.push(data);
+            showToast('✓ 已添加', 'success');
+        }
+        saveToLocal();
+        closeModal();
+        updateStats();
+        renderResults();
+    }
+
+    function openMemberModal() {
+        document.getElementById('memberModalTitle').textContent = '添加成员';
+        document.getElementById('memberForm').reset();
+        document.getElementById('memberEditId').value = '';
+        document.getElementById('memberModal').classList.add('active');
+    }
+
+    function editMember(id) {
+        var m = members.find(function(item) { return String(item.id) === String(id); });
+        if (!m) return;
+        document.getElementById('memberModalTitle').textContent = '编辑成员';
+        document.getElementById('memberEditId').value = id;
+        
+        var fields = ['memberNo', 'memberName', 'memberGender', 'memberBirth', 'memberIdType', 'memberIdNo', 
+            'memberNation', 'memberCountry', 'memberOrg', 'memberTitle', 'memberIsStudent', 'memberDegree', 
+            'memberEmail', 'memberPhone'];
+        fields.forEach(function(f) {
+            var el = document.getElementById(f);
+            if (el) el.value = m[f] || '';
+        });
+        document.getElementById('memberModal').classList.add('active');
+    }
+
+    function closeMemberModal() { document.getElementById('memberModal').classList.remove('active'); }
+
+    function handleMemberSubmit(event) {
+        event.preventDefault();
+        var editId = document.getElementById('memberEditId').value;
+        var fields = ['memberNo', 'memberName', 'memberGender', 'memberBirth', 'memberIdType', 'memberIdNo', 
+            'memberNation', 'memberCountry', 'memberOrg', 'memberTitle', 'memberIsStudent', 'memberDegree', 
+            'memberEmail', 'memberPhone'];
+        var data = {
+            id: editId || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            updatedAt: new Date().toISOString()
+        };
+        fields.forEach(function(f) {
+            var el = document.getElementById(f);
+            if (el) data[f] = el.value;
+        });
+
+        if (editId) {
+            var index = members.findIndex(function(m) { return String(m.id) === String(editId); });
+            if (index !== -1) {
+                members[index] = Object.assign(members[index], data);
+                showToast('✓ 已更新', 'success');
+            }
+        } else {
+            data.createdAt = new Date().toISOString();
+            members.push(data);
+            showToast('✓ 已添加', 'success');
+        }
+        saveToLocal();
+        closeMemberModal();
+        updateStats();
+        renderResults();
+    }
+
+    function exportData() {
+        var data = {
+            version: '4.0',
+            exportDate: new Date().toISOString(),
+            achievements: achievements,
+            members: members
+        };
+        var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'research_data_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('✓ 备份文件已下载', 'success');
+        closeAllMenus();
+    }
+
+    function exportToWordFile() {
+        var content = '';
+        var title = '';
+        
+        if (currentView === 'member') {
+            title = '团队成员名单';
+            content += '<h1>' + title + '</h1><table border="1" style="border-collapse:collapse;width:100%">';
+            content += '<tr><th>学号/工号</th><th>姓名</th><th>性别</th><th>职称</th><th>单位</th><th>邮箱</th></tr>';
+            members.forEach(function(m) {
+                content += '<tr><td>' + (m.memberNo || '') + '</td><td>' + (m.memberName || '') + '</td><td>' + (m.memberGender || '') + '</td><td>' + (m.memberTitle || '') + '</td><td>' + (m.memberOrg || '') + '</td><td>' + (m.memberEmail || '') + '</td></tr>';
+            });
+            content += '</table>';
+        } else {
+            var typeName = { all: '全部成果', paper: '学术论文', patent: '发明专利', project: '科研项目', award: '获奖情况', book: '专著出版' };
+            title = typeName[currentView] || '科研成果列表';
+            
+            var filtered = achievements;
+            if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; });
+            
+            content += '<h1>' + title + '</h1>';
+            filtered.forEach(function(item, index) {
+                var itemTitle = item.title || item.patentName || item.projectName;
+                var itemDate = item.date || item.applicationDate || item.projectStartDate;
+                var itemAuth = item.authors || item.inventors || item.projectOrg;
+                
+                content += '<p><strong>' + (index + 1) + '. ' + escapeHtml(itemTitle) + '</strong><br>';
+                content += '日期: ' + (itemDate || '-') + ' | 人员: ' + (itemAuth || '-') + '<br>';
+                if (item.source) content += '来源: ' + escapeHtml(item.source) + '<br>';
+                if (item.level) content += '级别: ' + escapeHtml(item.level) + '<br>';
+                if (item.patentNumber) content += '专利号: ' + escapeHtml(item.patentNumber) + '<br>';
+                content += '</p><hr>';
+            });
+        }
+
+        var header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + title + "</title></head><body>";
+        var footer = "</body></html>";
+        var sourceHTML = header + content + footer;
+
+        var blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = title + '_' + new Date().toISOString().slice(0, 10) + '.doc';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('✓ Word 导出成功', 'success');
+        closeAllMenus();
+    }
+
+    function exportToExcelFile() {
+        if (!typeof XLSX) { showToast('Excel 组件未加载', 'error'); return; }
+        
+        var dataToExport = [];
+        var sheetName = '';
+
+        if (currentView === 'member') {
+            sheetName = '团队成员';
+            dataToExport = members.map(function(m) {
+                return {
+                    '学号/工号': m.memberNo,
+                    '姓名': m.memberName,
+                    '性别': m.memberGender,
+                    '出生年月': m.memberBirth,
+                    '证件类型': m.memberIdType,
+                    '证件号码': m.memberIdNo,
+                    '民族': m.memberNation,
+                    '国别': m.memberCountry,
+                    '单位': m.memberOrg,
+                    '职称': m.memberTitle,
+                    '是否在读': m.memberIsStudent,
+                    '最高学位': m.memberDegree,
+                    '邮箱': m.memberEmail,
+                    '手机': m.memberPhone
+                };
+            });
+        } else {
+            var filtered = achievements;
+            if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; });
+            sheetName = '科研成果';
+            
+            dataToExport = filtered.map(function(a) {
+                var base = { '类型': typeConfig[a.type]?.label || a.type };
+                if (a.type === 'patent') {
+                    Object.assign(base, {
+                        '专利名称': a.patentName, '专利类型': a.patentType, '发明人': a.inventors,
+                        '专利权人': a.patentOwner, '申请日': a.applicationDate, '授权日': a.grantDate,
+                        '专利号': a.patentNumber, '状态': a.patentStatus
+                    });
+                } else if (a.type === 'project') {
+                    Object.assign(base, {
+                        '项目名称': a.projectName, '级别': a.projectLevel, '编号': a.projectNumber,
+                        '开始时间': a.projectStartDate, '结束时间': a.projectEndDate, '所属单位': a.projectOrg
+                    });
+                } else {
+                    Object.assign(base, {
+                        '标题': a.title, '作者': a.authors, '日期': a.date,
+                        '来源': a.source, '级别': a.level, '关键词': a.keywords
+                    });
+                }
+                return base;
+            });
+        }
+
+        if (dataToExport.length === 0) { showToast('没有数据可导出', 'warning'); return; }
+
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.json_to_sheet(dataToExport);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        XLSX.writeFile(wb, (sheetName) + '_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+        
+        showToast('✓ Excel 导出成功', 'success');
+        closeAllMenus();
+    }
+
+    // Import Functions
+    function triggerImport() {
+        document.getElementById('importInput').click();
+        closeAllMenus();
+    }
+
+    function importData(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var data = JSON.parse(e.target.result);
+                if (data.achievements || data.members) {
+                    if (confirm('导入将合并现有数据，是否继续？')) {
+                        // Merge logic: Add if ID doesn't exist
+                        var newAchievements = data.achievements || [];
+                        var newMembers = data.members || [];
+                        
+                        var addedCount = 0;
+                        newAchievements.forEach(function(item) {
+                            if (!achievements.some(function(exist) { return exist.id === item.id; })) {
+                                achievements.push(item);
+                                addedCount++;
+                            }
+                        });
+                        
+                        newMembers.forEach(function(item) {
+                            if (!members.some(function(exist) { return exist.id === item.id; })) {
+                                members.push(item);
+                                addedCount++;
+                            }
+                        });
+
+                        saveToLocal();
+                        updateStats();
+                        renderResults();
+                        showToast('✓ 成功导入 ' + addedCount + ' 条新数据', 'success');
+                    }
+                } else {
+                    showToast('数据格式错误', 'error');
+                }
+            } catch (err) {
+                showToast('文件解析失败', 'error');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Reset input
+    }
+
+    // Excel Import Logic
+    function openExcelImport() {
+        document.getElementById('excelModal').classList.add('active');
+        document.getElementById('excelInput').value = '';
+        document.getElementById('excelPreviewContainer').classList.add('hidden');
+        document.getElementById('mappingContainer').classList.add('hidden');
+        document.getElementById('importExcelBtn').disabled = true;
+        document.getElementById('duplicateWarning').classList.add('hidden');
+        excelData = null;
+        closeAllMenus();
+    }
+
+    function closeExcelModal() {
+        document.getElementById('excelModal').classList.remove('active');
+    }
+
+    function handleExcelSelect(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var data = new Uint8Array(e.target.result);
+            var workbook = XLSX.read(data, { type: 'array' });
+            var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            excelData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            
+            if (excelData.length > 0) {
+                excelHeaders = excelData[0];
+                renderExcelPreview();
+                updateMappingFields();
+                document.getElementById('excelPreviewContainer').classList.remove('hidden');
+                document.getElementById('mappingContainer').classList.remove('hidden');
+                document.getElementById('importExcelBtn').disabled = false;
+            } else {
+                showToast('Excel 文件为空', 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function renderExcelPreview() {
+        var html = '<table><thead><tr>';
+        excelHeaders.forEach(function(h) { html += '<th>' + escapeHtml(h) + '</th>'; });
+        html += '</tr></thead><tbody>';
+        
+        // Show first 5 rows
+        for (var i = 1; i < Math.min(excelData.length, 6); i++) {
+            html += '<tr>';
+            var row = excelData[i];
+            excelHeaders.forEach(function(_, idx) {
+                html += '<td>' + escapeHtml(row[idx] || '') + '</td>';
+            });
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+        document.getElementById('excelPreview').innerHTML = html;
+    }
+
+    function updateMappingFields() {
+        var type = document.getElementById('excelImportType').value;
+        var fields = fieldMappings[type] || [];
+        var container = document.getElementById('mappingFields');
+        var html = '';
+
+        fields.forEach(function(field) {
+            html += '<div class="mapping-row">';
+            html += '<label>' + field.label + (field.required ? ' *' : '') + '</label>';
+            html += '<select class="field-map-select" data-key="' + field.key + '" data-required="' + field.required + '">';
+            html += '<option value="">(不导入)</option>';
+            
+            // Auto match logic
+            excelHeaders.forEach(function(header, idx) {
+                var selected = '';
+                // Simple fuzzy match
+                if (header.indexOf(field.label) !== -1 || field.label.indexOf(header) !== -1) {
+                    selected = 'selected';
+                }
+                html += '<option value="' + idx + '" ' + selected + '>' + escapeHtml(header) + '</option>';
+            });
+            
+            html += '</select></div>';
+        });
+        container.innerHTML = html;
+    }
+
+    function confirmExcelImport() {
+        var type = document.getElementById('excelImportType').value;
+        var selects = document.querySelectorAll('.field-map-select');
+        var mapConfig = {};
+        var hasError = false;
+
+        selects.forEach(function(sel) {
+            var key = sel.dataset.key;
+            var idx = sel.value;
+            if (sel.dataset.required === 'true' && idx === '') {
+                showToast('请映射必填字段', 'error');
+                sel.style.borderColor = 'var(--danger)';
+                hasError = true;
+            } else {
+                sel.style.borderColor = 'var(--border)';
+                if (idx !== '') mapConfig[key] = parseInt(idx);
+            }
+        });
+
+        if (hasError) return;
+
+        var importCount = 0;
+        var duplicateCount = 0;
+        var duplicates = [];
+
+        // Process data (skip header row 0)
+        for (var i = 1; i < excelData.length; i++) {
+            var row = excelData[i];
+            if (!row || row.length === 0) continue;
+
+            var item = {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                createdAt: new Date().toISOString()
+            };
+
+            if (type !== 'member') {
+                item.type = type;
+            }
+
+            // Map fields
+            for (var key in mapConfig) {
+                var colIdx = mapConfig[key];
+                var val = row[colIdx];
+                
+                // Handle dates if Excel parsed them as numbers (basic approximation)
+                if (typeof val === 'number' && key.toLowerCase().includes('date') && val > 20000) {
+                    var dateObj = new Date((val - (25567 + 2)) * 86400 * 1000);
+                    val = dateObj.toISOString().slice(0, 10);
+                }
+                
+                item[key] = val !== undefined ? String(val).trim() : '';
+            }
+
+            // Check uniqueness (simple check based on title/name/number)
+            var isDuplicate = false;
+            if (type === 'member') {
+                isDuplicate = members.some(function(m) { return m.memberNo === item.memberNo; });
+                if (!isDuplicate) {
+                    members.push(item);
+                    importCount++;
+                } else {
+                    duplicates.push(item.memberName + ' (' + item.memberNo + ')');
+                    duplicateCount++;
+                }
+            } else {
+                var uniqueKey = type === 'patent' ? 'patentName' : (type === 'project' ? 'projectName' : 'title');
+                isDuplicate = achievements.some(function(a) { 
+                    return a[uniqueKey] === item[uniqueKey] && a.type === type; 
+                });
+                
+                if (!isDuplicate) {
+                    achievements.push(item);
+                    importCount++;
+                } else {
+                    duplicates.push(item[uniqueKey]);
+                    duplicateCount++;
+                }
+            }
+        }
+
+        saveToLocal();
+        updateStats();
+        renderResults();
+
+        if (duplicateCount > 0) {
+            var warnList = document.getElementById('duplicateList');
+            warnList.innerHTML = duplicates.map(function(d) { return '<li>' + escapeHtml(d) + '</li>'; }).join('');
+            document.getElementById('duplicateWarning').classList.remove('hidden');
+            showToast('导入成功 ' + importCount + ' 条，跳过 ' + duplicateCount + ' 条重复', 'warning');
+        } else {
+            closeExcelModal();
+            showToast('✓ 成功导入 ' + importCount + ' 条数据', 'success');
+        }
+    }
+
+    // Toast Notification
+    function showToast(message, type) {
+        var container = document.getElementById('toastContainer');
+        var toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+        toast.textContent = message;
+        
+        container.appendChild(toast);
+        
+        // Trigger animation
+        requestAnimationFrame(function() {
+            toast.classList.add('show');
+        });
+
+        setTimeout(function() {
+            toast.classList.remove('show');
+            setTimeout(function() {
+                container.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+
+    // Menu Functions
+    function toggleMenu(id) {
+        var menu = document.getElementById(id);
+        var isVisible = menu.classList.contains('show');
+        closeAllMenus();
+        if (!isVisible) menu.classList.add('show');
+    }
+
+    function closeAllMenus() {
+        document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.classList.remove('show'); });
+    }
+
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.data-actions') && !event.target.closest('.dropdown-menu')) {
+            closeAllMenus();
+        }
+    });
+
+    // Initialize
+    window.onload = function() {
+        // Try load from IndexedDB
+        loadFromLocal().then(function(loaded) {
+            if (!loaded) {
+                // If DB empty/error, initialize empty
+                console.log("Initialize empty DB");
+            }
+            updateStats();
+            renderResults();
+            document.getElementById('loadingSpinner')?.remove();
+        });
+
+        // Initialize file drag and drop for upload
+        var dropZone = document.getElementById('fileUpload');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZone.style.borderColor = 'var(--accent)';
+                dropZone.style.background = 'var(--accent-light)';
+            });
+            
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                dropZone.style.borderColor = 'var(--border)';
+                dropZone.style.background = 'transparent';
+            });
+            
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.style.borderColor = 'var(--border)';
+                dropZone.style.background = 'transparent';
+                
+                if (e.dataTransfer.files.length) {
+                    document.getElementById('pdfInput').files = e.dataTransfer.files;
+                    handleFileSelect({ target: { files: e.dataTransfer.files } });
+                }
+            });
+        }
+    };
 </script>
 </body>
 </html>
