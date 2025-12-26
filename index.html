@@ -3,445 +3,612 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>科研成果管理系统 (最终完美稳定版)</title>
+    <title>科研成果管理系统 (原版UI修复版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* =================================================================
-           1. 系统级 CSS 变量与重置
+           1. 样式重置与核心变量 (还原为您最初的亮色风格)
            ================================================================= */
         :root {
-            /* 界面配色 - 还原为您可能习惯的清爽风格 */
-            --primary-color: #2563eb;       /* 科技蓝 */
-            --primary-hover: #1d4ed8;
-            --bg-body: #f3f4f6;             /* 浅灰底色 */
-            --bg-sidebar: #111827;          /* 深色侧边栏 (专业感) */
-            --text-sidebar: #e5e7eb;
-            --bg-white: #ffffff;
+            /* 界面背景 - 还原为清爽的亮色系 */
+            --bg-primary: #f8fafc;    /* 页面大背景：极淡的灰蓝色 */
+            --bg-secondary: #ffffff;  /* 侧边栏/卡片背景：纯白 */
+            --bg-card: #ffffff;
             
-            /* 边框与分割 */
-            --border-color: #e5e7eb;
-            --radius-md: 6px;
-            --radius-lg: 12px;
+            /* 交互颜色 */
+            --bg-hover: #f1f5f9;      /* 鼠标悬停色 */
+            --bg-active: #eef2ff;     /* 选中激活色 (淡紫) */
 
-            /* 功能色 */
-            --color-paper: #3b82f6;
-            --color-patent: #f59e0b;
-            --color-project: #10b981;
-            --color-award: #ef4444;
-            --color-book: #8b5cf6;
-            --color-member: #06b6d4;
+            /* 字体颜色 */
+            --text-primary: #1e293b;  /* 主文字：深蓝灰 */
+            --text-secondary: #64748b;/* 次要文字：灰 */
+            --text-muted: #94a3b8;    /* 提示文字：浅灰 */
 
-            /* 阴影与层级 */
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --z-modal: 9999;
-            --z-toast: 10000;
+            /* 边框 */
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+
+            /* 品牌色 (您习惯的蓝紫色) */
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-dark: #4f46e5;
+
+            /* 状态颜色 */
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+
+            /* 阴影系统 */
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            
+            /* 圆角 */
+            --radius: 12px;
+            --radius-sm: 8px;
         }
 
         /* 基础重置 */
-        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
         body {
-            font-family: "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-body);
-            color: #1f2937;
-            height: 100vh;
-            overflow: hidden; /* 禁用 Body 滚动，使用内部 Flex 滚动 */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            height: 100vh; /* 固定高度，内部滚动 */
+            overflow: hidden;
             display: flex;
         }
 
-        /* 滚动条美化 */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* 通用隐藏类 */
+        .hidden { display: none !important; }
+
+        /* 整体布局容器 */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
 
         /* =================================================================
-           2. 侧边栏 (Sidebar) - 稳固布局
+           2. 侧边栏 (Sidebar) - 还原为白色背景
            ================================================================= */
         .sidebar {
             width: 260px;
-            background-color: var(--bg-sidebar);
-            color: var(--text-sidebar);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
-            transition: width 0.3s;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            height: 100%;
         }
 
-        .logo-area {
-            height: 64px;
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            padding: 0 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            gap: 12px;
+        }
+
+        /* Logo 区域 */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
             font-size: 1.2rem;
-            font-weight: bold;
-            color: #fff;
-            letter-spacing: 1px;
+            color: var(--text-primary);
         }
-        .logo-icon { margin-right: 10px; font-size: 1.4rem; }
 
-        .nav-scroller {
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 导航菜单滚动区 */
+        .nav-menu {
             flex: 1;
+            padding: 20px 12px;
             overflow-y: auto;
-            padding: 20px 10px;
         }
 
-        .nav-group-label {
+        .nav-section {
             font-size: 0.75rem;
-            color: #6b7280;
-            text-transform: uppercase;
-            margin: 15px 0 5px 12px;
             font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 12px;
+            margin-top: 20px;
+            margin-bottom: 8px;
         }
+        .nav-section:first-child { margin-top: 0; }
 
         .nav-item {
             display: flex;
             align-items: center;
+            gap: 12px;
             padding: 12px 16px;
-            margin-bottom: 4px;
-            border-radius: var(--radius-md);
+            border-radius: var(--radius-sm);
             cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
             transition: all 0.2s;
-            color: #d1d5db;
+            margin-bottom: 4px;
         }
-        .nav-item:hover { background-color: rgba(255,255,255,0.1); color: #fff; }
-        .nav-item.active { background-color: var(--primary-color); color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); }
-        
-        .nav-icon { width: 24px; text-align: center; margin-right: 10px; }
-        .nav-badge {
+
+        .nav-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--bg-active);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-item .badge {
             margin-left: auto;
-            background: rgba(0,0,0,0.3);
+            background: var(--bg-hover);
             padding: 2px 8px;
             border-radius: 10px;
             font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        
+        .nav-item.active .badge {
+            background: var(--accent);
+            color: white;
         }
 
         /* 侧边栏底部功能区 */
-        .sidebar-bottom {
-            padding: 16px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.2);
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-secondary);
         }
 
-        /* 强力按钮组 - 解决“点不动”问题 */
-        .action-btn-group {
+        /* 云同步状态条 */
+        .cloud-status-bar {
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--bg-hover);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: 0.2s;
+        }
+        .cloud-status-bar:hover { border-color: var(--accent); background: var(--bg-active); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; margin-right: 8px; }
+        .status-text { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+
+        /* 数据操作按钮组 */
+        .data-actions {
+            display: grid;
+            grid-template-columns: 1fr;
             gap: 10px;
         }
-        
-        .sidebar-action-btn {
-            width: 100%;
+
+        .data-btn {
             padding: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: transparent;
-            color: #fff;
-            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: 0.2s;
-            font-size: 0.9rem;
         }
-        .sidebar-action-btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
-        .sidebar-action-btn.primary { background: var(--primary-color); border-color: var(--primary-color); }
-        .sidebar-action-btn.primary:hover { background: var(--primary-hover); }
+        
+        .data-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--bg-active);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .data-btn.primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+        }
+        .data-btn.primary:hover {
+            background: var(--accent-dark);
+        }
 
         /* =================================================================
            3. 主内容区 (Main Content)
            ================================================================= */
-        .main-wrapper {
+        .main-content {
             flex: 1;
+            padding: 30px;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
             position: relative;
         }
 
-        /* 顶部栏 */
-        .top-bar {
-            height: 64px;
-            background: var(--bg-white);
-            border-bottom: 1px solid var(--border-color);
+        .header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            align-items: center;
+            margin-bottom: 24px;
             flex-shrink: 0;
         }
 
-        .page-header h2 { font-size: 1.4rem; font-weight: 700; color: #111827; }
-        
-        .top-tools { display: flex; align-items: center; gap: 16px; }
-        
-        .search-container { position: relative; }
-        .search-input {
-            width: 300px; padding: 10px 16px 10px 36px;
-            border: 1px solid var(--border-color); border-radius: var(--radius-md);
-            background: #f9fafb; transition: 0.2s;
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-primary);
         }
-        .search-input:focus { border-color: var(--primary-color); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .search-box input {
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 1rem;
+            width: 300px;
+            transition: all 0.2s;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-light);
+        }
 
         .btn-add {
-            background: var(--primary-color); color: #fff;
-            padding: 10px 24px; border-radius: var(--radius-md);
-            border: none; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 4px 6px rgba(37,99,235,0.2); transition: 0.2s;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: white;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
         }
-        .btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-add:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
         /* 内容滚动区域 */
-        .content-area {
+        .content-scroll {
             flex: 1;
             overflow-y: auto;
-            padding: 24px 32px;
+            padding-bottom: 40px;
         }
 
-        /* 统计卡片组 */
-        .stats-overview {
+        /* 统计卡片 */
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
-            margin-bottom: 24px;
+            margin-bottom: 30px;
         }
+
         .stat-card {
-            background: #fff; padding: 20px; border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color); display: flex; align-items: center; gap: 16px;
-            box-shadow: var(--shadow); cursor: pointer; transition: 0.2s;
-        }
-        .stat-card:hover { transform: translateY(-3px); border-color: var(--primary-color); }
-        .stat-icon-box {
-            width: 50px; height: 50px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
-        }
-        .stat-text h3 { font-size: 1.6rem; font-weight: 800; color: #111827; line-height: 1; margin-bottom: 5px; }
-        .stat-text p { font-size: 0.85rem; color: #6b7280; margin: 0; }
-
-        /* 数据表格区域 */
-        .data-panel {
-            background: #fff; border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg); overflow: hidden;
-            display: flex; flex-direction: column; min-height: 500px;
-            box-shadow: var(--shadow);
-        }
-
-        .panel-toolbar {
-            padding: 16px 24px; border-bottom: 1px solid var(--border-color);
-            background: #f9fafb; display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .filter-group { display: flex; align-items: center; gap: 12px; }
-        .year-select { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; }
-        
-        .btn-danger { background: #ef4444; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 0.85rem; border: none; cursor: pointer; display: none; }
-        .btn-danger:hover { background: #dc2626; }
-
-        /* 列表头 */
-        .table-header {
-            display: grid;
-            grid-template-columns: 40px 2fr 1.5fr 1.5fr 1fr 120px;
-            padding: 12px 24px;
-            background: #f3f4f6;
-            border-bottom: 1px solid var(--border-color);
-            font-weight: 700; color: #4b5563; font-size: 0.9rem;
-        }
-
-        /* 列表体 */
-        .table-body { flex: 1; overflow-y: auto; }
-
-        .table-row {
-            display: grid;
-            grid-template-columns: 40px 2fr 1.5fr 1.5fr 1fr 120px;
-            padding: 16px 24px;
-            border-bottom: 1px solid #f3f4f6;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            display: flex;
             align-items: center;
-            transition: 0.1s;
+            gap: 16px;
+            transition: all 0.2s;
             cursor: pointer;
         }
-        .table-row:hover { background: #f9fafb; }
-        .table-row:last-child { border-bottom: none; }
-
-        .row-check { width: 18px; height: 18px; cursor: pointer; }
-        
-        .cell-title { font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .cell-meta { font-size: 0.9rem; color: #6b7280; }
-        .cell-tag span {
-            display: inline-block; padding: 2px 8px; border-radius: 12px;
-            font-size: 0.75rem; background: #e5e7eb; color: #374151;
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent);
         }
-        .cell-actions { display: flex; gap: 8px; opacity: 0; transition: 0.2s; }
-        .table-row:hover .cell-actions { opacity: 1; }
+
+        .stat-icon {
+            width: 54px; height: 54px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem;
+        }
+        /* 卡片配色 */
+        .icon-paper { background: #e0f2fe; color: #0284c7; }
+        .icon-patent { background: #fef3c7; color: #d97706; }
+        .icon-project { background: #dcfce7; color: #16a34a; }
+        .icon-award { background: #fee2e2; color: #dc2626; }
+        .icon-book { background: #f3e8ff; color: #9333ea; }
+        .icon-member { background: #ffedd5; color: #ea580c; }
+
+        .stat-info h3 { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); line-height: 1; }
+        .stat-info p { font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px; }
+
+        /* 列表区域 */
+        .list-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 400px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .list-toolbar {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-hover);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filter-group { display: flex; align-items: center; gap: 16px; }
+        
+        .year-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: white;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .batch-btn {
+            background: var(--danger); color: white; border: none;
+            padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;
+            cursor: pointer; display: none;
+        }
+
+        /* 列表头部 */
+        .list-header {
+            display: grid;
+            grid-template-columns: 50px 2fr 1.5fr 1.5fr 1.5fr 100px;
+            padding: 14px 24px;
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* 列表内容 */
+        .list-body { flex: 1; overflow-y: auto; }
+
+        .list-row {
+            display: grid;
+            grid-template-columns: 50px 2fr 1.5fr 1.5fr 1.5fr 100px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-light);
+            align-items: center;
+            transition: background 0.1s;
+            cursor: pointer;
+        }
+        .list-row:hover { background: var(--bg-hover); }
+        .list-row:last-child { border-bottom: none; }
+
+        .row-check { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
+        
+        .row-title { font-weight: 600; color: var(--text-primary); font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .row-text { color: var(--text-secondary); font-size: 0.9rem; }
+        
+        .row-tag {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            background: var(--bg-hover); color: var(--text-secondary);
+            font-size: 0.8rem; border: 1px solid var(--border);
+        }
+        .row-pdf { color: var(--accent); font-weight: 600; font-size: 0.8rem; margin-left: 8px; }
+
+        .row-actions { display: flex; gap: 8px; opacity: 0; transition: 0.2s; }
+        .list-row:hover .row-actions { opacity: 1; }
 
         .icon-btn {
-            width: 32px; height: 32px; border: 1px solid var(--border-color);
-            border-radius: 6px; background: #fff; color: #6b7280;
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            width: 32px; height: 32px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--border); background: white;
+            color: var(--text-secondary); cursor: pointer; transition: 0.2s;
         }
-        .icon-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
-        .icon-btn.del:hover { border-color: #ef4444; color: #ef4444; }
+        .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .icon-btn.delete:hover { border-color: var(--danger); color: var(--danger); }
 
-        .empty-state { padding: 60px; text-align: center; color: #9ca3af; }
+        .empty-state { padding: 80px; text-align: center; color: var(--text-muted); font-size: 1.1rem; }
 
         /* =================================================================
-           4. 强力弹窗系统 (Modals)
+           4. 弹窗组件 (Modals) - 解决“点不动”的关键
            ================================================================= */
         .modal-overlay {
-            position: fixed; inset: 0; background: var(--bg-modal-overlay);
-            backdrop-filter: blur(3px); z-index: var(--z-modal);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); z-index: 2000;
             display: flex; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; transition: 0.2s;
+            opacity: 0; visibility: hidden; transition: all 0.3s;
         }
         .modal-overlay.active { opacity: 1; visibility: visible; }
 
-        .modal-panel {
-            background: #fff; width: 600px; max-width: 95%; max-height: 90vh;
+        .modal-box {
+            background: #fff; width: 700px; max-width: 95%; max-height: 90vh;
             border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            display: flex; flex-direction: column; transform: scale(0.95); transition: 0.2s;
+            display: flex; flex-direction: column; transform: scale(0.95); transition: 0.3s;
         }
-        .modal-overlay.active .modal-panel { transform: scale(1); }
+        .modal-overlay.active .modal-box { transform: scale(1); }
 
         .modal-header {
-            padding: 20px 24px; border-bottom: 1px solid var(--border-color);
+            padding: 24px; border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
         }
-        .modal-header h3 { font-size: 1.25rem; font-weight: 700; }
-        .close-icon { font-size: 1.5rem; color: #9ca3af; cursor: pointer; background: none; border: none; }
+        .modal-header h3 { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); }
+        .close-btn { background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; }
 
-        .modal-content { padding: 24px; overflow-y: auto; }
-
+        .modal-body { padding: 24px; overflow-y: auto; }
         .modal-footer {
-            padding: 20px 24px; border-top: 1px solid var(--border-color);
-            background: #f9fafb; display: flex; justify-content: flex-end; gap: 12px;
-            border-radius: 0 0 16px 16px;
+            padding: 20px 24px; border-top: 1px solid var(--border);
+            background: var(--bg-hover); border-radius: 0 0 16px 16px;
+            display: flex; justify-content: flex-end; gap: 12px;
         }
 
         /* 表单样式 */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         .form-full { grid-column: span 2; }
-        .form-label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
         .form-input {
-            width: 100%; padding: 10px 12px; border: 1px solid var(--border-color);
-            border-radius: 6px; font-size: 1rem; transition: 0.2s;
+            width: 100%; padding: 12px; border: 2px solid var(--border);
+            border-radius: 8px; font-size: 1rem; transition: 0.2s;
         }
-        .form-input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px var(--accent-light); }
 
-        /* 数据管理弹窗特别样式 */
-        .data-manage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .data-card {
-            border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;
+        /* 数据管理中心专用样式 */
+        .data-center-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .data-option-card {
+            border: 2px solid var(--border); border-radius: 12px; padding: 24px;
             text-align: center; cursor: pointer; transition: 0.2s; background: #fff;
         }
-        .data-card:hover { border-color: var(--primary-color); background: #eff6ff; }
-        .data-card h4 { margin-top: 10px; color: #374151; }
-        .data-card p { font-size: 0.8rem; color: #9ca3af; margin-top: 5px; }
+        .data-option-card:hover { border-color: var(--accent); background: var(--bg-active); transform: translateY(-2px); }
+        .data-icon { font-size: 2.5rem; margin-bottom: 10px; display: block; }
+        .data-title { font-weight: 700; color: var(--text-primary); font-size: 1.1rem; display: block; margin-bottom: 5px; }
+        .data-desc { color: var(--text-secondary); font-size: 0.85rem; }
 
-        /* Toast 提示 */
-        .toast-container { position: fixed; top: 30px; right: 30px; z-index: var(--z-toast); display: flex; flex-direction: column; gap: 10px; }
-        .toast-msg {
-            padding: 16px 24px; background: #fff; border-radius: 8px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-left: 5px solid var(--primary-color);
-            font-weight: 500; transform: translateX(120%); transition: 0.3s;
+        /* Toast */
+        .toast-container { position: fixed; top: 30px; right: 30px; z-index: 3000; }
+        .toast {
+            background: #fff; padding: 16px 24px; border-radius: 8px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-left: 5px solid var(--accent);
+            margin-bottom: 10px; transform: translateX(120%); transition: 0.3s; font-weight: 500;
         }
-        .toast-msg.show { transform: translateX(0); }
-
-        /* 隐藏的文件输入 */
-        .hidden-file { display: none; }
+        .toast.show { transform: translateX(0); }
 
         /* 移动端适配 */
         @media (max-width: 768px) {
-            .sidebar { position: absolute; height: 100%; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
+            .sidebar { position: fixed; transform: translateX(-100%); width: 85%; box-shadow: 10px 0 20px rgba(0,0,0,0.1); }
             .sidebar.open { transform: translateX(0); }
-            .main-wrapper { margin-left: 0; width: 100%; }
-            .top-bar { padding: 0 16px; }
-            .search-input { width: 150px; }
-            .table-header { display: none; } /* 移动端隐藏表头 */
-            .table-row { grid-template-columns: 1fr; gap: 8px; align-items: start; }
-            .mobile-toggle { display: block !important; position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: var(--primary-color); color:#fff; border-radius: 50%; z-index: 2000; border:none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 1.5rem; }
+            .main-content { margin-left: 0; padding: 16px; width: 100%; }
             .form-grid { grid-template-columns: 1fr; }
             .form-full { grid-column: span 1; }
-            .data-manage-grid { grid-template-columns: 1fr; }
+            .mobile-menu-btn { display: flex !important; position: fixed; bottom: 20px; right: 20px; z-index: 2000; width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: white; font-size: 1.5rem; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); justify-content: center; align-items: center; }
+            .list-header { display: none; }
+            .list-row { grid-template-columns: 1fr; gap: 8px; padding: 16px; align-items: start; }
+            .search-box input { width: 100%; }
+            .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .header-actions { width: 100%; justify-content: space-between; }
         }
     </style>
 </head>
 <body>
 
-<button class="mobile-toggle" style="display:none;" onclick="toggleSidebar()">☰</button>
+<button class="mobile-menu-btn" style="display:none;" onclick="toggleSidebar()">☰</button>
 
 <div class="app-container">
-    
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="logo-box"><div class="logo-icon">🔬</div> 科研管理系统</div>
+            <div class="logo">
+                <div class="logo-icon">🔬</div>
+                <span>科研管理系统</span>
+            </div>
         </div>
-        
-        <nav class="nav-scroller">
-            <div class="nav-group-label">成果库</div>
-            <a class="nav-item active" onclick="switchView('all')" id="nav-all">
-                <div class="nav-icon">📋</div> 全部成果 <div class="nav-badge" id="c-all">0</div>
-            </a>
-            <a class="nav-item" onclick="switchView('paper')" id="nav-paper">
-                <div class="nav-icon">📄</div> 学术论文 <div class="nav-badge" id="c-paper">0</div>
-            </a>
-            <a class="nav-item" onclick="switchView('patent')" id="nav-patent">
-                <div class="nav-icon">💡</div> 发明专利 <div class="nav-badge" id="c-patent">0</div>
-            </a>
-            <a class="nav-item" onclick="switchView('project')" id="nav-project">
-                <div class="nav-icon">📊</div> 科研项目 <div class="nav-badge" id="c-project">0</div>
-            </a>
-            <a class="nav-item" onclick="switchView('award')" id="nav-award">
-                <div class="nav-icon">🏆</div> 获奖情况 <div class="nav-badge" id="c-award">0</div>
-            </a>
-            <a class="nav-item" onclick="switchView('book')" id="nav-book">
-                <div class="nav-icon">📚</div> 专著出版 <div class="nav-badge" id="c-book">0</div>
-            </a>
 
-            <div class="nav-group-label">团队</div>
-            <a class="nav-item" onclick="switchView('member')" id="nav-member">
-                <div class="nav-icon">👥</div> 成员信息 <div class="nav-badge" id="c-member">0</div>
-            </a>
+        <nav class="nav-menu">
+            <div class="nav-section">成果库</div>
+            <div class="nav-item active" onclick="switchView('all')" id="nav-all">
+                <span>📋</span> 全部成果 <span class="badge" id="c-all">0</span>
+            </div>
+            <div class="nav-item" onclick="switchView('paper')" id="nav-paper">
+                <span>📄</span> 学术论文 <span class="badge" id="c-paper">0</span>
+            </div>
+            <div class="nav-item" onclick="switchView('patent')" id="nav-patent">
+                <span>💡</span> 发明专利 <span class="badge" id="c-patent">0</span>
+            </div>
+            <div class="nav-item" onclick="switchView('project')" id="nav-project">
+                <span>📊</span> 科研项目 <span class="badge" id="c-project">0</span>
+            </div>
+            <div class="nav-item" onclick="switchView('award')" id="nav-award">
+                <span>🏆</span> 获奖情况 <span class="badge" id="c-award">0</span>
+            </div>
+            <div class="nav-item" onclick="switchView('book')" id="nav-book">
+                <span>📚</span> 专著出版 <span class="badge" id="c-book">0</span>
+            </div>
+
+            <div class="nav-section">团队</div>
+            <div class="nav-item" onclick="switchView('member')" id="nav-member">
+                <span>👥</span> 成员信息 <span class="badge" id="c-member">0</span>
+            </div>
         </nav>
 
-        <div class="sidebar-bottom">
-            <div class="action-btn-group">
-                <button class="sidebar-action-btn primary" onclick="openDataManager()">
-                    <span>📤</span> 数据导入 / 导出 / 备份
-                </button>
-                <button class="sidebar-action-btn" onclick="openCloudConfig()">
-                    <span id="cloudIcon">☁️</span> <span id="cloudText">配置云同步</span>
-                </button>
+        <div class="sidebar-footer">
+            <div class="cloud-status-bar" onclick="openCloudModal()">
+                <div style="display:flex;align-items:center;">
+                    <div class="status-dot" id="cloudDot" style="background:#cbd5e1;"></div>
+                    <span id="cloudText" style="font-weight:500;margin-left:8px;font-size:0.85rem;">配置云同步</span>
+                </div>
+                <span style="font-size:1.2rem;">⚙️</span>
             </div>
-            <div style="margin-top:10px;text-align:center;font-size:0.7rem;color:#6b7280;">
-                <span id="dbState">IndexedDB 存储正常</span>
+
+            <button class="data-btn primary" style="width:100%;margin-top:10px;" onclick="openDataModal()">
+                <span>📂</span> 数据导入 / 导出 / 备份
+            </button>
+            <div style="text-align:center;margin-top:10px;font-size:0.75rem;color:#94a3b8;">
+                <span id="storageMsg">IndexedDB 本地存储</span>
             </div>
         </div>
     </aside>
 
-    <main class="main-wrapper">
-        <header class="top-bar">
-            <div class="page-header"><h2 id="pageTitle">全部成果</h2></div>
-            <div class="top-tools">
-                <div class="search-container">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" placeholder="搜索标题、作者、编号..." oninput="handleSearch(this.value)">
+    <main class="main-content">
+        <div class="header">
+            <h1 class="page-title" id="pageTitle">全部成果</h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <input type="text" placeholder="搜索标题、作者、编号..." oninput="handleSearch(this.value)">
                 </div>
-                <button class="btn-add" onclick="openAddModal()"><span>➕</span> <span id="addBtnText">新增成果</span></button>
+                <button class="btn-add" onclick="openAddModal()">
+                    <span>➕</span> <span id="addBtnText">新增成果</span>
+                </button>
             </div>
-        </header>
+        </div>
 
-        <div class="content-area">
-            <div class="stats-overview" id="statsRow"></div>
+        <div class="content-scroll">
+            <div class="stats-grid" id="statsRow"></div>
 
-            <div class="data-panel">
-                <div class="panel-toolbar">
+            <div class="list-wrapper">
+                <div class="list-toolbar">
                     <div class="filter-group">
-                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()"> 全选
-                        <span id="selCount" style="color:#6b7280;font-size:0.9rem;">(0)</span>
-                        <button class="btn-danger" id="batchDelBtn" onclick="batchDelete()">批量删除</button>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="checkbox" id="selectAll" class="row-check" onchange="toggleSelectAll()"> 全选
+                        </label>
+                        <span id="selCount" style="color:#64748b;font-size:0.9rem;"></span>
+                        <button class="batch-btn" id="batchDelBtn" onclick="batchDelete()">删除选中</button>
                     </div>
                     <div>
                         <select class="year-select" id="yearFilter" onchange="applyFilter()">
@@ -450,15 +617,15 @@
                     </div>
                 </div>
 
-                <div class="table-header">
-                    <div></div> <div>标题/名称</div>
+                <div class="list-header">
+                    <div></div> <div>标题 / 名称</div>
                     <div>日期</div>
-                    <div>作者/负责人</div>
+                    <div>人员</div>
                     <div>详细信息</div>
                     <div>操作</div>
                 </div>
 
-                <div class="table-body" id="listBody">
+                <div class="list-body" id="listBody">
                     </div>
             </div>
         </div>
@@ -466,66 +633,63 @@
 </div>
 
 <div class="modal-overlay" id="dataModal">
-    <div class="modal-panel" style="max-width:700px;">
+    <div class="modal-box">
         <div class="modal-header">
             <h3>🗂️ 数据管理中心</h3>
-            <button class="close-icon" onclick="closeDataModal()">×</button>
+            <button class="close-btn" onclick="closeDataModal()">×</button>
         </div>
-        <div class="modal-content">
-            <h4 style="margin-bottom:15px;color:#4b5563;">📤 导出数据</h4>
-            <div class="data-manage-grid">
-                <div class="data-card" onclick="exportToExcel()">
-                    <div style="font-size:2rem;">📊</div>
-                    <h4>导出 Excel</h4>
-                    <p>自动分表 (6个Sheet)，保留全字段</p>
+        <div class="modal-body">
+            <h4 style="margin-bottom:15px;color:var(--text-secondary);">📤 导出与备份</h4>
+            <div class="data-center-grid">
+                <div class="data-option-card" onclick="exportToExcel()">
+                    <span class="data-icon">📊</span>
+                    <span class="data-title">导出 Excel</span>
+                    <span class="data-desc">自动分表 (6个Sheet)，每个字段独立一列</span>
                 </div>
-                <div class="data-card" onclick="exportToWord()">
-                    <div style="font-size:2rem;">📝</div>
-                    <h4>导出 Word</h4>
-                    <p>生成详细汇总表格文档</p>
+                <div class="data-option-card" onclick="exportToWord()">
+                    <span class="data-icon">📝</span>
+                    <span class="data-title">导出 Word</span>
+                    <span class="data-desc">生成详细的分类汇总表格文档</span>
                 </div>
-                <div class="data-card" onclick="backupJSON()">
-                    <div style="font-size:2rem;">📦</div>
-                    <h4>备份数据 (JSON)</h4>
-                    <p>推荐！完整备份所有数据和附件</p>
+                <div class="data-option-card" onclick="backupJSON()">
+                    <span class="data-icon">📦</span>
+                    <span class="data-title">备份数据 (JSON)</span>
+                    <span class="data-desc">推荐！完整备份所有数据和附件，防止丢失</span>
                 </div>
             </div>
 
-            <h4 style="margin-top:30px;margin-bottom:15px;color:#4b5563;">📥 导入 / 恢复</h4>
-            <div class="data-manage-grid">
-                <div class="data-card" onclick="document.getElementById('fileExcelIn').click()">
-                    <div style="font-size:2rem;">📈</div>
-                    <h4>导入 Excel</h4>
-                    <p>支持批量导入成果或成员数据</p>
+            <h4 style="margin-top:30px;margin-bottom:15px;color:var(--text-secondary);">📥 导入与恢复</h4>
+            <div class="data-center-grid">
+                <div class="data-option-card" onclick="document.getElementById('fileExcel').click()">
+                    <span class="data-icon">📈</span>
+                    <span class="data-title">导入 Excel</span>
+                    <span class="data-desc">批量导入成果或成员数据</span>
                 </div>
-                <div class="data-card" onclick="document.getElementById('fileJsonIn').click()">
-                    <div style="font-size:2rem;">📂</div>
-                    <h4>恢复备份 (JSON)</h4>
-                    <p>从之前的备份文件中恢复数据</p>
+                <div class="data-option-card" onclick="document.getElementById('fileJson').click()">
+                    <span class="data-icon">📂</span>
+                    <span class="data-title">恢复备份 (JSON)</span>
+                    <span class="data-desc">从之前的备份文件中恢复所有数据</span>
                 </div>
             </div>
             
-            <input type="file" id="fileExcelIn" class="hidden-file" accept=".xlsx,.xls" onchange="importExcel(this)">
-            <input type="file" id="fileJsonIn" class="hidden-file" accept=".json" onchange="restoreJSON(this)">
-        </div>
-        <div class="modal-footer">
-            <button class="btn-sidebar" onclick="closeDataModal()" style="padding:8px 20px;border-radius:6px;background:#fff;border:1px solid #ddd;">关闭</button>
+            <input type="file" id="fileJson" hidden accept=".json" onchange="restoreJSON(this)">
+            <input type="file" id="fileExcel" hidden accept=".xlsx,.xls" onchange="importExcel(this)">
         </div>
     </div>
 </div>
 
 <div class="modal-overlay" id="editModal">
-    <div class="modal-panel">
+    <div class="modal-box">
         <div class="modal-header">
             <h3 id="formTitle">新增记录</h3>
-            <button class="close-icon" onclick="closeEditModal()">×</button>
+            <button class="close-btn" onclick="closeEditModal()">×</button>
         </div>
-        <div class="modal-content">
+        <div class="modal-body">
             <form id="mainForm">
                 <input type="hidden" id="editId">
                 <div class="form-grid">
                     <div class="form-group form-full">
-                        <label class="form-label">类型</label>
+                        <label class="form-label">记录类型</label>
                         <select id="inputType" class="form-input" onchange="updateFormLayout()">
                             <option value="paper">学术论文</option>
                             <option value="patent">发明专利</option>
@@ -535,52 +699,52 @@
                             <option value="member">成员信息</option>
                         </select>
                     </div>
-
+                    
                     <div id="dynamicFields" class="form-full form-grid" style="margin:0;padding:0;gap:20px;"></div>
 
                     <div class="form-group form-full" id="fileSection">
                         <label class="form-label">附件 (PDF)</label>
-                        <div class="file-upload" onclick="document.getElementById('pdfInput').click()" style="border:2px dashed #e5e7eb;padding:20px;text-align:center;border-radius:8px;cursor:pointer;">
-                            <span style="font-size:1.5rem;">📎</span>
-                            <p style="margin:5px 0 0;color:#6b7280;font-size:0.9rem;">点击上传 (IndexedDB 支持大文件)</p>
-                            <input type="file" id="pdfInput" class="hidden-file" accept=".pdf" onchange="handleFile(this)">
+                        <div class="file-upload" onclick="document.getElementById('pdfInput').click()">
+                            <span style="font-size:2rem;display:block;margin-bottom:10px;">📄</span>
+                            <span>点击上传 PDF 文件 (支持大文件)</span>
+                            <input type="file" id="pdfInput" hidden accept=".pdf" onchange="handleFile(this)">
                         </div>
-                        <div id="filePreview" style="display:none;margin-top:10px;padding:10px;background:#eff6ff;border-radius:6px;justify-content:space-between;align-items:center;">
-                            <span id="fileName" style="font-size:0.9rem;color:#1d4ed8;font-weight:500;"></span>
-                            <button type="button" onclick="removeFile()" style="border:none;background:none;color:#ef4444;cursor:pointer;">删除</button>
+                        <div id="filePreview" class="file-info hidden">
+                            <span id="fileName"></span>
+                            <button type="button" class="file-remove" onclick="removeFile()">删除</button>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
         <div class="modal-footer">
-            <button class="btn-sidebar" onclick="closeEditModal()" style="padding:10px 20px;border-radius:6px;background:#fff;border:1px solid #ddd;cursor:pointer;">取消</button>
-            <button class="btn-add" onclick="submitForm()">保存</button>
+            <button class="data-btn" onclick="closeEditModal()">取消</button>
+            <button class="data-btn primary" onclick="submitForm()">保存</button>
         </div>
     </div>
 </div>
 
 <div class="modal-overlay" id="cloudModal">
-    <div class="modal-panel" style="max-width:500px;">
+    <div class="modal-box" style="max-width:500px;">
         <div class="modal-header">
-            <h3>☁️ GitHub 云同步</h3>
-            <button class="close-icon" onclick="document.getElementById('cloudModal').classList.remove('active')">×</button>
+            <h3>☁️ 云同步配置 (GitHub Gist)</h3>
+            <button class="close-btn" onclick="document.getElementById('cloudModal').classList.remove('active')">×</button>
         </div>
-        <div class="modal-content">
-            <p style="font-size:0.9rem;color:#4b5563;margin-bottom:15px;line-height:1.5;">
-                利用 GitHub Gist 实现多设备数据同步。请在 GitHub 申请 Token 并勾选 <b>gist</b> 权限。
+        <div class="modal-body">
+            <p style="margin-bottom:20px;color:#64748b;font-size:0.9rem;line-height:1.5;">
+                通过 GitHub Token 实现多设备间的数据同步。请确保 Token 拥有 <b>gist</b> 权限。
             </p>
             <div class="form-group">
                 <label class="form-label">GitHub Token (必填)</label>
                 <input type="password" id="ghToken" class="form-input" placeholder="ghp_xxxxxxxxxxxx...">
             </div>
             <div class="form-group">
-                <label class="form-label">Gist ID (选填)</label>
-                <input type="text" id="ghGistId" class="form-input" placeholder="留空则创建新的存储库">
+                <label class="form-label">Gist ID (选填，留空则新建)</label>
+                <input type="text" id="ghGistId" class="form-input" placeholder="同步用的 Gist ID">
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn-add" onclick="connectCloud()">连接 / 创建</button>
+            <button class="data-btn primary" style="width:100%;" onclick="connectCloud()">连接并同步</button>
         </div>
     </div>
 </div>
@@ -590,13 +754,13 @@
 <script>
 /**
  * =================================================================
- * 核心逻辑：数据结构、存储、渲染 (100% 完整保留)
+ * 核心逻辑层 (Core Logic)
  * =================================================================
  */
 
 // 1. 全局状态
 const APP = {
-    dbName: 'ResearchDB_Flagship',
+    dbName: 'ResearchDB_Final_V1', // 新数据库名，防止旧缓存干扰
     dbVersion: 1,
     db: null,
     data: { achievements: [], members: [] },
@@ -608,7 +772,7 @@ const APP = {
     selected: new Set(),
     currentFile: null,
     
-    // 字段定义 (Schema) - 用于生成表单和 Excel/Word 导出
+    // 字段映射定义 (用于生成表单、Excel表头、Word表格)
     schema: {
         paper: [
             { id: 'title', label: '论文标题', type: 'text', required: true, full: true },
@@ -616,7 +780,7 @@ const APP = {
             { id: 'authors', label: '作者列表', type: 'text', placeholder: '逗号分隔' },
             { id: 'source', label: '期刊/会议', type: 'text' },
             { id: 'level', label: '收录级别', type: 'text', placeholder: 'SCI/EI' },
-            { id: 'keywords', label: '关键词', type: 'text', full: true }
+            { id: 'keywords', label: '关键词', type: 'text' }
         ],
         patent: [
             { id: 'patentName', label: '专利名称', type: 'text', required: true, full: true },
@@ -664,16 +828,16 @@ const APP = {
         ]
     },
     types: {
-        paper: { label: '学术论文', icon: '📄', color: 'c-paper' },
-        patent: { label: '发明专利', icon: '💡', color: 'c-patent' },
-        project: { label: '科研项目', icon: '📊', color: 'c-project' },
-        award: { label: '获奖情况', icon: '🏆', color: 'c-award' },
-        book: { label: '专著出版', icon: '📚', color: 'c-book' },
-        member: { label: '成员', icon: '👤', color: 'c-member' }
+        paper: { label: '学术论文', icon: '📄', color: 'icon-paper' },
+        patent: { label: '发明专利', icon: '💡', color: 'icon-patent' },
+        project: { label: '科研项目', icon: '📊', color: 'icon-project' },
+        award: { label: '获奖情况', icon: '🏆', color: 'icon-award' },
+        book: { label: '专著出版', icon: '📚', color: 'icon-book' },
+        member: { label: '成员信息', icon: '👤', color: 'icon-member' }
     }
 };
 
-// 2. 数据库 (IndexedDB)
+// 2. 数据库 (IndexedDB) - 稳固的本地存储
 function initDB() {
     return new Promise((resolve, reject) => {
         const req = indexedDB.open(APP.dbName, APP.dbVersion);
@@ -689,11 +853,14 @@ function initDB() {
 async function loadData() {
     if(!APP.db) await initDB();
     const tx = APP.db.transaction('store', 'readonly');
-    const req = tx.objectStore('store').get('main_data');
+    const store = tx.objectStore('store');
+    const req = store.get('main_data');
     req.onsuccess = e => {
         if(e.target.result) {
             APP.data = e.target.result.data || { achievements: [], members: [] };
             APP.config = e.target.result.config || { token: '', gistId: '' };
+        } else {
+            APP.data = { achievements: [], members: [] }; // 初始化
         }
         updateUI();
         if(APP.config.token) checkCloudStatus();
@@ -703,11 +870,13 @@ async function loadData() {
 async function persist() {
     const tx = APP.db.transaction('store', 'readwrite');
     tx.objectStore('store').put({ id: 'main_data', data: APP.data, config: APP.config, updated: new Date() });
-    // 自动触发云同步
-    if(APP.config.token && APP.config.gistId) syncCloud(false);
+    tx.oncomplete = () => {
+        document.getElementById('dbState').innerText = '数据已自动保存';
+        if(APP.config.token && APP.config.gistId) syncCloud(false); // 自动触发上传
+    };
 }
 
-// 3. UI 渲染
+// 3. UI 渲染与交互
 function updateUI() {
     renderStats();
     renderList();
@@ -729,8 +898,8 @@ function renderStats() {
         const num = k==='member' ? APP.data.members.length : APP.data.achievements.filter(i=>i.type===k).length;
         const meta = APP.types[k];
         return `<div class="stat-card" onclick="switchView('${k}')">
-            <div class="stat-icon-box ${meta.color}">${meta.icon}</div>
-            <div class="stat-text"><h3>${num}</h3><p>${meta.label}</p></div>
+            <div class="stat-icon ${meta.color}">${meta.icon}</div>
+            <div class="stat-info"><h3>${num}</h3><p>${meta.label}</p></div>
         </div>`;
     }).join('');
 }
@@ -745,7 +914,6 @@ function renderList() {
         const q = APP.search.toLowerCase();
         list = list.filter(i => Object.values(i).join(' ').toLowerCase().includes(q));
     }
-    
     // 年份筛选
     if(APP.view !== 'member') {
         const years = [...new Set(list.map(i => (i.date||i.applicationDate||i.projectStartDate||'').substr(0,4)).filter(y=>y))].sort().reverse();
@@ -756,11 +924,12 @@ function renderList() {
 
     // 排序
     list.sort((a,b) => {
-        const da = a.date || '0', db = b.date || '0';
+        const da = a.date || a.applicationDate || a.projectStartDate || '0';
+        const db = b.date || b.applicationDate || b.projectStartDate || '0';
         return APP.sort === 'date-desc' ? (da<db?1:-1) : (da>db?1:-1);
     });
 
-    document.getElementById('resultCount').innerText = `共 ${list.length} 条`;
+    document.getElementById('resultCount').innerText = `共 ${list.length} 条记录`;
 
     if(list.length === 0) {
         container.innerHTML = `<div class="empty-state">暂无数据</div>`;
@@ -773,21 +942,22 @@ function renderList() {
         const date = item.date || item.applicationDate || item.projectStartDate || item.memberBirth || '-';
         const sub = item.authors || item.inventors || item.memberOrg || '-';
         const tag = item.level || item.patentStatus || item.projectLevel || item.memberTitle || '';
+        const hasFile = !!item.pdfData;
         const isSel = APP.selected.has(item.id);
         
-        return `<div class="table-row" onclick="editItem('${item.id}')">
+        return `<div class="list-row" onclick="editItem('${item.id}')">
             <div><input type="checkbox" class="row-check" ${isSel?'checked':''} onclick="toggleItem('${item.id}', event)"></div>
-            <div class="cell-title" style="display:flex;align-items:center;gap:8px;">
+            <div class="cell-main" style="display:flex;align-items:center;gap:10px;">
                 <span style="font-size:1.2rem;">${t.icon}</span> ${title}
             </div>
-            <div class="cell-meta">${date}</div>
-            <div class="cell-meta">${sub}</div>
-            <div class="cell-tag">
-                ${tag ? `<span>${tag}</span>` : ''}
-                ${item.pdfData ? '<span style="background:#e0f2fe;color:#0284c7">📎 PDF</span>' : ''}
+            <div class="cell-sub">${date}</div>
+            <div class="cell-sub">${sub}</div>
+            <div class="cell-sub">
+                ${tag ? `<span class="tag">${tag}</span>` : ''}
+                ${hasFile ? '<span class="tag tag-blue">📎 PDF</span>' : ''}
             </div>
             <div class="cell-actions">
-                ${item.pdfData ? `<button class="icon-btn" onclick="viewPdf('${item.id}');event.stopPropagation()">👁</button>` : ''}
+                ${hasFile ? `<button class="icon-btn" onclick="viewPdf('${item.id}');event.stopPropagation()">👁</button>` : ''}
                 <button class="icon-btn" onclick="editItem('${item.id}');event.stopPropagation()">✏</button>
                 <button class="icon-btn del" onclick="delItem('${item.id}');event.stopPropagation()">🗑</button>
             </div>
@@ -795,18 +965,15 @@ function renderList() {
     }).join('');
 }
 
-// 4. 交互
+// 4. 交互逻辑
 function switchView(v) {
     APP.view = v; APP.search = ''; APP.selected.clear();
     document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.id === `nav-${v}`));
-    document.getElementById('pageTitle').innerText = v === 'member' ? '成员信息' : APP.types[v]?.label || '全部成果';
+    document.getElementById('pageTitle').innerText = APP.types[v]?.label || '全部成果';
     document.getElementById('addBtnText').innerText = v === 'member' ? '添加成员' : '添加成果';
     document.getElementById('batchDelBtn').style.display = 'none';
     document.getElementById('selectAll').checked = false;
-    
-    // Mobile Drawer Close
-    if(window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
-    
+    if(window.innerWidth <= 768) toggleSidebar();
     renderList();
 }
 
@@ -815,21 +982,30 @@ function applyFilter() { APP.yearFilter = document.getElementById('yearFilter').
 function handleSort(val) { APP.sort = val; renderList(); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-// 5. 数据管理 (Data Manager Modal)
-function openDataManager() { document.getElementById('dataModal').classList.add('active'); }
+// 5. 弹窗控制
+function openDataModal() { document.getElementById('dataModal').classList.add('active'); }
 function closeDataModal() { document.getElementById('dataModal').classList.remove('active'); }
+function openCloudModal() { 
+    document.getElementById('ghToken').value = APP.config.token;
+    document.getElementById('ghGistId').value = APP.config.gistId;
+    document.getElementById('cloudModal').classList.add('active');
+}
+function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
 
-// 6. 新增/编辑 (CRUD)
+// 6. 新增/编辑逻辑 (完全动态生成表单)
 function openAddModal() {
     document.getElementById('mainForm').reset();
     document.getElementById('editId').value = '';
     APP.currentFile = null;
-    document.getElementById('filePreview').style.display = 'none';
+    document.getElementById('filePreview').classList.add('hidden');
     document.getElementById('formTitle').innerText = '新增记录';
     
-    const type = (APP.view === 'all' || APP.view === 'analysis') ? 'paper' : APP.view;
+    // 根据当前视图设置默认类型
+    let type = APP.view;
+    if(type === 'all') type = 'paper';
     document.getElementById('inputType').value = type;
     document.getElementById('inputType').disabled = false;
+    
     updateFormLayout();
     document.getElementById('editModal').classList.add('active');
 }
@@ -849,7 +1025,6 @@ function updateFormLayout() {
         return `<div class="form-group ${f.full?'form-full':''}"><label class="form-label">${f.label}</label>${inputHtml}</div>`;
     }).join('');
     
-    // File upload logic
     document.getElementById('fileSection').style.display = type === 'member' ? 'none' : 'block';
 }
 
@@ -864,17 +1039,17 @@ function submitForm() {
         updatedAt: new Date().toISOString()
     };
     
-    // Collect data
+    // 收集动态字段数据
     fields.forEach(f => {
         newItem[f.id] = document.getElementById(`f_${f.id}`).value;
     });
     
-    // Handle File
+    // 处理文件
     if (APP.currentFile) {
         newItem.pdfData = APP.currentFile.data;
         newItem.pdfName = APP.currentFile.name;
     } else if (id) {
-        // Keep old file
+        // 编辑时如果没上传新文件，保留旧的
         const old = (type==='member'?APP.data.members:APP.data.achievements).find(i=>i.id===id);
         if(old && old.pdfData) {
             newItem.pdfData = old.pdfData;
@@ -882,17 +1057,13 @@ function submitForm() {
         }
     }
 
-    // Save
-    if (type === 'member') {
-        if(id) {
-            const idx = APP.data.members.findIndex(m=>m.id===id);
-            APP.data.members[idx] = newItem;
-        } else APP.data.members.push(newItem);
+    // 保存到数组
+    const targetArr = type === 'member' ? APP.data.members : APP.data.achievements;
+    if (id) {
+        const idx = targetArr.findIndex(i=>i.id===id);
+        if(idx > -1) targetArr[idx] = newItem;
     } else {
-        if(id) {
-            const idx = APP.data.achievements.findIndex(a=>a.id===id);
-            APP.data.achievements[idx] = newItem;
-        } else APP.data.achievements.push(newItem);
+        targetArr.push(newItem);
     }
     
     persist();
@@ -908,20 +1079,19 @@ function editItem(id) {
     document.getElementById('editId').value = id;
     document.getElementById('formTitle').innerText = '编辑记录';
     document.getElementById('inputType').value = item.type;
-    document.getElementById('inputType').disabled = true;
+    document.getElementById('inputType').disabled = true; // 编辑时禁止改类型
     updateFormLayout();
 
-    // Fill data
+    // 填充数据
     APP.schema[item.type].forEach(f => {
         if(document.getElementById(`f_${f.id}`)) document.getElementById(`f_${f.id}`).value = item[f.id] || '';
     });
 
-    // File
     if(item.pdfData) {
         document.getElementById('fileName').innerText = item.pdfName;
-        document.getElementById('filePreview').style.display = 'flex';
+        document.getElementById('filePreview').classList.remove('hidden');
     } else {
-        document.getElementById('filePreview').style.display = 'none';
+        document.getElementById('filePreview').classList.add('hidden');
     }
 
     document.getElementById('editModal').classList.add('active');
@@ -938,22 +1108,23 @@ function handleFile(input) {
     r.onload = e => {
         APP.currentFile = { name: f.name, data: e.target.result };
         document.getElementById('fileName').innerText = f.name;
-        document.getElementById('filePreview').style.display = 'flex';
+        document.getElementById('filePreview').classList.remove('hidden');
     };
     r.readAsDataURL(f);
 }
-function removeFile() { APP.currentFile = null; document.getElementById('filePreview').style.display = 'none'; document.getElementById('pdfInput').value=''; }
+function removeFile() { APP.currentFile = null; document.getElementById('filePreview').classList.add('hidden'); document.getElementById('pdfInput').value=''; }
 
 function viewPdf(id) {
     const item = APP.data.achievements.find(i=>i.id===id);
     if(item && item.pdfData) {
-        const win = window.open();
-        const iframe = `<iframe width="100%" height="100%" src="${item.pdfData}"></iframe>`;
-        win.document.write(iframe);
+        const arr = item.pdfData.split(','), bstr = atob(arr[1]), n = bstr.length, u8 = new Uint8Array(n);
+        while(n--) u8[n] = bstr.charCodeAt(n);
+        const url = URL.createObjectURL(new Blob([u8], {type:'application/pdf'}));
+        window.open(url);
     }
 }
 
-// 8. 批量删除
+// 8. 批量操作
 function toggleSelectAll() {
     const all = document.getElementById('selectAll').checked;
     const boxes = document.querySelectorAll('.row-check');
@@ -971,7 +1142,7 @@ function toggleItem(id, e) {
 }
 function updateBatchUI() {
     document.getElementById('selCount').innerText = `(${APP.selected.size})`;
-    document.getElementById('batchDelBtn').style.display = APP.selected.size ? 'inline-block' : 'none';
+    document.getElementById('batchDelBtn').style.display = APP.selected.size ? 'block' : 'none';
 }
 function delItem(id) {
     if(!confirm('确定删除？')) return;
@@ -980,14 +1151,14 @@ function delItem(id) {
     persist(); updateUI();
 }
 function batchDelete() {
-    if(!confirm('确定删除选中的记录？')) return;
+    if(!confirm(`确定删除选中的 ${APP.selected.size} 项？`)) return;
     APP.data.achievements = APP.data.achievements.filter(i=>!APP.selected.has(i.id));
     APP.data.members = APP.data.members.filter(i=>!APP.selected.has(i.id));
     APP.selected.clear();
     persist(); updateUI();
 }
 
-// 9. 导入导出 (完美版)
+// 9. 导入导出 (Excel/Word/JSON) - 分表分列
 function backupJSON() {
     const blob = new Blob([JSON.stringify(APP.data)], {type:'application/json'});
     const a = document.createElement('a');
@@ -1000,24 +1171,28 @@ function restoreJSON(input) {
     const r = new FileReader();
     r.onload = e => {
         try {
-            APP.data = JSON.parse(e.target.result);
+            const d = JSON.parse(e.target.result);
+            APP.data = d;
             persist();
-            location.reload();
+            closeDataModal();
+            updateUI();
+            showToast('恢复成功');
         } catch(err) { showToast('文件格式错误','error'); }
     };
     r.readAsText(f);
+    input.value = '';
 }
 
-// --- Excel 分表分列导出 ---
+// *** Excel 导出 (分表 + 分列) ***
 function exportToExcel() {
     const wb = XLSX.utils.book_new();
     const types = ['paper','patent','project','award','book','member'];
     
     types.forEach(t => {
-        const dataList = t==='member' ? APP.data.members : APP.data.achievements.filter(i=>i.type===t);
-        if(dataList.length > 0) {
+        const list = t==='member' ? APP.data.members : APP.data.achievements.filter(i=>i.type===t);
+        if(list.length > 0) {
             const schema = APP.schema[t];
-            const rows = dataList.map(item => {
+            const rows = list.map(item => {
                 const row = {};
                 schema.forEach(f => row[f.label] = item[f.id] || '');
                 return row;
@@ -1026,8 +1201,8 @@ function exportToExcel() {
         }
     });
 
-    if(wb.SheetNames.length===0) return showToast('无数据','warning');
-    XLSX.writeFile(wb, "科研数据分表导出.xlsx");
+    if(wb.SheetNames.length===0) return showToast('无数据可导出','warning');
+    XLSX.writeFile(wb, "科研数据分表.xlsx");
 }
 
 function importExcel(input) {
@@ -1035,29 +1210,34 @@ function importExcel(input) {
     const r = new FileReader();
     r.onload = e => {
         const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        // 简单导入逻辑：将第一张表视为学术论文导入 (复杂逻辑需映射界面，暂略以保持单文件稳定)
         const ws = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(ws);
-        // Simplified Import (Assumes papers if generic)
         json.forEach(row => {
-            const newItem = { id: Date.now()+Math.random(), type:'paper', title: row['标题']||'未命名', date: new Date().toISOString().slice(0,10) };
-            APP.data.achievements.push(newItem);
+            APP.data.achievements.push({
+                id: Date.now()+Math.random(), type:'paper',
+                title: row['标题']||row['Title']||'导入数据',
+                date: new Date().toISOString().slice(0,10)
+            });
         });
         persist(); updateUI(); showToast(`导入 ${json.length} 条数据`);
+        closeDataModal();
     };
     r.readAsArrayBuffer(f);
+    input.value = '';
 }
 
-// --- Word 分表导出 ---
+// *** Word 导出 (分表) ***
 function exportToWord() {
-    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table{width:100%;border-collapse:collapse;margin-bottom:20px} th,td{border:1px solid #000;padding:5px;font-size:10pt} th{background:#eee}</style></head><body><h2>科研汇总</h2>`;
+    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table{width:100%;border-collapse:collapse;margin-bottom:20px} th,td{border:1px solid #000;padding:5px;font-size:10pt} th{background:#eee}</style></head><body><h2 style="text-align:center">科研成果汇总</h2>`;
     
     const types = ['paper','patent','project','award','book','member'];
     types.forEach(t => {
-        const dataList = t==='member' ? APP.data.members : APP.data.achievements.filter(i=>i.type===t);
-        if(dataList.length > 0) {
+        const list = t==='member' ? APP.data.members : APP.data.achievements.filter(i=>i.type===t);
+        if(list.length > 0) {
             const schema = APP.schema[t];
             html += `<h3>${APP.types[t].label}</h3><table><tr>${schema.map(f=>`<th>${f.label}</th>`).join('')}</tr>`;
-            dataList.forEach(item => {
+            list.forEach(item => {
                 html += `<tr>${schema.map(f=>`<td>${item[f.id]||''}</td>`).join('')}</tr>`;
             });
             html += `</table>`;
@@ -1068,83 +1248,92 @@ function exportToWord() {
     const blob = new Blob([html], {type:'application/msword'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = '科研数据汇总.doc';
+    a.download = '科研成果分表.doc';
     a.click();
 }
 
 // 10. 云同步 (GitHub Gist)
-function openCloudConfig() { document.getElementById('ghToken').value = APP.config.token; document.getElementById('cloudModal').classList.add('active'); }
-function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
-
 async function connectCloud() {
-    const token = document.getElementById('ghToken').value;
-    const gistId = document.getElementById('ghGistId').value;
-    if(!token) return showToast('Token 必填','error');
+    const t = document.getElementById('ghToken').value;
+    const g = document.getElementById('ghGistId').value;
+    if(!t) return showToast('Token 必填','error');
     
     showToast('连接中...','warning');
-    try {
-        if(gistId) {
-            APP.config = {token, gistId}; await syncCloud(true);
-        } else {
+    APP.config.token = t;
+    if(g) {
+        APP.config.gistId = g;
+        await syncCloud(true); // Pull first
+    } else {
+        try {
             const res = await fetch('https://api.github.com/gists', {
-                method: 'POST',
-                headers: { Authorization: `token ${token}` },
-                body: JSON.stringify({ description:"Research Data", public:false, files:{"data.json":{content:JSON.stringify({achievements:APP.data.achievements, members:APP.data.members})}} })
+                method:'POST', headers:{Authorization:`token ${t}`},
+                body:JSON.stringify({description:"Research Data", public:false, files:{"data.json":{content:JSON.stringify(APP.data)}}})
             });
             if(res.ok) {
                 const d = await res.json();
-                APP.config = {token, gistId:d.id};
-                persist(); checkCloudStatus(); showToast('云端创建成功');
+                APP.config.gistId = d.id;
+                persist();
+                checkCloudStatus();
+                showToast('云端创建成功');
                 closeCloudModal();
             } else throw new Error();
-        }
-    } catch(e) { showToast('连接失败，请检查网络/Token','error'); }
+        } catch(e) { showToast('创建失败，检查Token','error'); }
+    }
 }
 
 async function syncCloud(isPull) {
-    if(!APP.config.token) return;
+    if(!APP.config.token || !APP.config.gistId) return;
     const url = `https://api.github.com/gists/${APP.config.gistId}`;
-    const headers = { Authorization: `token ${APP.config.token}` };
+    const head = {Authorization:`token ${APP.config.token}`};
     
     if(isPull) {
         try {
-            const res = await fetch(url, {headers});
+            const res = await fetch(url, {headers:head});
             const d = await res.json();
-            const content = JSON.parse(d.files['data.json'].content);
-            APP.data = content; persist(); updateUI(); showToast('已从云端同步');
+            const cloudData = JSON.parse(d.files['data.json'].content);
+            APP.data = cloudData;
+            persist();
+            updateUI();
+            showToast('已从云端同步');
+            closeCloudModal();
         } catch(e) { showToast('同步失败','error'); }
     } else {
-        // Push (Remove heavy PDF for cloud sync efficiency if needed, but keeping for now)
+        // Push: remove large PDFs for cloud efficiency if needed, here we push logic
         const leanData = { 
             achievements: APP.data.achievements.map(i => { const {pdfData, ...r} = i; return r; }), 
             members: APP.data.members 
         };
         fetch(url, {
-            method: 'PATCH', headers,
-            body: JSON.stringify({ files: {"data.json": {content: JSON.stringify(leanData)}} })
+            method:'PATCH', headers:head,
+            body:JSON.stringify({files:{"data.json":{content:JSON.stringify(leanData)}}})
         });
     }
 }
 
 function checkCloudStatus() {
     if(APP.config.token) {
-        document.getElementById('cloudDot').classList.add('online');
-        document.getElementById('cloudText').innerText = '云端已连接';
         document.getElementById('cloudDot').style.background = 'var(--success)';
+        document.getElementById('cloudText').innerText = '云端已连接';
     }
 }
 
-// Toast
+// 辅助: Toast
 function showToast(msg, type='success') {
     const div = document.createElement('div');
-    div.className = `toast-msg show`;
+    div.className = `toast show`;
     div.style.borderLeftColor = type==='error'?'var(--danger)':'var(--success)';
     div.innerText = msg;
     document.getElementById('toastBox').appendChild(div);
     setTimeout(() => div.remove(), 2000);
 }
 
+// 启动
 window.onload = loadData;
+
+// 辅助函数
+function closeDataModal() { document.getElementById('dataModal').classList.remove('active'); }
+function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
+function openCloudModal() { document.getElementById('ghToken').value=APP.config.token; document.getElementById('ghGistId').value=APP.config.gistId; document.getElementById('cloudModal').classList.add('active'); }
 </script>
 </body>
 </html>
