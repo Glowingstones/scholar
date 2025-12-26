@@ -462,7 +462,7 @@
                     <div class="form-group"><label>专利名称 *</label><input type="text" id="patentName"></div>
                     <div class="form-row"><div class="form-group"><label>类型</label><select id="patentType"><option value="发明专利">发明专利</option><option value="实用新型">实用新型</option><option value="外观设计">外观设计</option></select></div><div class="form-group"><label>状态</label><select id="patentStatus"><option value="受理">受理</option><option value="授权">授权</option><option value="审中">审中</option><option value="失效">失效</option></select></div></div>
                     <div class="form-row"><div class="form-group"><label>发明人</label><input type="text" id="inventors"></div><div class="form-group"><label>专利权人</label><input type="text" id="patentOwner"></div></div>
-                    <div class="form-row"><div class="form-group"><label>申请日</label><input type="date" id="applicationDate"></div><div class="form-group"><label>授权日</label><input type="date" id="grantDate"></div></div>
+                    <div class="form-row"><div class="form-group"><label>申请日</label><input type="date" id="applicationDate"></div><div class="form-group"><label>受理/授权日</label><input type="date" id="grantDate"></div></div>
                     <div class="form-group"><label>专利号</label><input type="text" id="patentNumber"></div>
                 </div>
                 <div id="projectFields" class="hidden">
@@ -1021,7 +1021,7 @@
                 addMeta('🔖', item.patentStatus);
                 addMeta('🏭', item.patentOwner);
                 addMeta('🏷️', item.patentType);
-                if(item.grantDate) addMeta('🏁', '授权日:' + item.grantDate);
+                if(item.grantDate) addMeta('🏁', '受理/授权日:' + item.grantDate);
             } else if (item.type === 'project') {
                 displayTitle = item.projectName;
                 addMeta('📅', item.projectStartDate);
@@ -1105,7 +1105,7 @@
         document.getElementById('detailTitle').textContent = typeConfig[item.type]?.label + ' 详情';
         var content = ''; var fields = [];
         if (item.type === 'patent') {
-            fields = [{ l: '专利名称', v: item.patentName }, { l: '专利类型', v: item.patentType }, { l: '状态', v: item.patentStatus }, { l: '专利号', v: item.patentNumber }, { l: '发明人', v: item.inventors }, { l: '专利权人', v: item.patentOwner }, { l: '申请日', v: item.applicationDate }, { l: '授权日', v: item.grantDate }];
+            fields = [{ l: '专利名称', v: item.patentName }, { l: '专利类型', v: item.patentType }, { l: '状态', v: item.patentStatus }, { l: '专利号', v: item.patentNumber }, { l: '发明人', v: item.inventors }, { l: '专利权人', v: item.patentOwner }, { l: '申请日', v: item.applicationDate }, { l: '受理/授权日', v: item.grantDate }];
         } else if (item.type === 'project') {
             fields = [{ l: '项目名称', v: item.projectName }, { l: '级别', v: item.projectLevel }, { l: '编号', v: item.projectNumber }, { l: '所属单位', v: item.projectOrg }, { l: '开始时间', v: item.projectStartDate }, { l: '结束时间', v: item.projectEndDate }];
         } else if (item.type === 'award') {
@@ -1220,3 +1220,4 @@
     function closeAllMenus() { document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.classList.remove('show'); }); }
     window.onload = function() { OneDriveService.init(); loadFromLocal().then(function() { updateStats(); renderResults(); }); };
 </script>
+
