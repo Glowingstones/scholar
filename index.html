@@ -31,8 +31,10 @@
             --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
             --radius: 12px;
             --radius-sm: 8px;
-            --github-color: #238636;
-            --github-light: #d1f7dd;
+            
+            /* OneDrive / Local Backup Colors */
+            --onedrive-color: #0078D4;
+            --onedrive-light: #E5F3FF;
         }
 
         html.dark {
@@ -49,7 +51,7 @@
             --success-light: #064e3b;
             --warning-light: #78350f;
             --danger-light: #7f1d1d;
-            --github-light: #064e3b;
+            --onedrive-light: #004C87;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -129,8 +131,20 @@
             display: flex; align-items: center; justify-content: center; gap: 4px;
         }
         .data-btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent); }
-        .data-btn.github { border-color: var(--github-color); color: var(--github-color); }
-        .data-btn.github:hover { background: var(--github-light); }
+        
+        /* OneDrive Style Buttons */
+        .data-btn.onedrive { border-color: var(--onedrive-color); color: var(--onedrive-color); }
+        .data-btn.onedrive:hover { background: var(--onedrive-light); }
+        
+        .btn-onedrive { background: var(--onedrive-color); color: white; }
+        .btn-onedrive:hover { background: #005a9e; }
+
+        .backup-section { 
+            background: var(--onedrive-light); border: 1px solid var(--onedrive-color); 
+            border-radius: var(--radius); padding: 16px; margin-bottom: 20px; 
+        }
+        .backup-section h4 { color: var(--onedrive-color); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .backup-info { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
 
         /* Dropdown Menu */
         .dropdown-menu {
@@ -148,8 +162,6 @@
         }
         .menu-item:last-child { border-bottom: none; }
         .menu-item:hover { background: var(--bg-hover); color: var(--accent); }
-        .menu-item.github { color: var(--github-color); }
-        .menu-item.github:hover { background: var(--github-light); }
 
         /* Main Content */
         .main-content { 
@@ -185,8 +197,6 @@
         .btn-secondary:hover { background: var(--border); }
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #dc2626; }
-        .btn-github { background: var(--github-color); color: white; }
-        .btn-github:hover { background: #2ea043; }
         .btn-sm { padding: 8px 14px; font-size: 0.85rem; min-height: 36px; }
 
         .stats-grid { 
@@ -374,16 +384,6 @@
         .mapping-row label { font-weight: 500; color: var(--text-secondary); font-size: 0.9rem; }
         .mapping-row select { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); font-size: 16px; }
 
-        /* GitHub Sync Section */
-        .github-section { 
-            background: var(--github-light); border: 1px solid var(--github-color); 
-            border-radius: var(--radius); padding: 16px; margin-bottom: 20px; 
-        }
-        .github-section h4 { color: var(--github-color); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .github-info { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
-        .github-input-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        .github-input-group input { flex: 1; min-width: 200px; }
-
         /* Toast */
         .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
         .toast { 
@@ -510,7 +510,7 @@
                 <div class="logo-icon">🔬</div>
                 <div>
                     <div>科研成果管理</div>
-                    <div style="font-size:0.7rem;color:var(--text-muted);font-weight:400;">支持云端同步</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);font-weight:400;">支持 OneDrive/本地备份</div>
                 </div>
             </div>
         </div>
@@ -550,21 +550,20 @@
 
         <div class="sidebar-footer">
             <div class="storage-status" id="storageStatus">
-                ✓ 数据已保存
-                <span class="sync-info" id="syncInfo"></span>
+                ✓ 数据已本地保存
             </div>
             <div class="data-actions">
                 <button class="data-btn" onclick="toggleMenu('exportMenu')">📤 导出</button>
                 <button class="data-btn" onclick="toggleMenu('importMenu')">📥 导入</button>
-                <button class="data-btn github" onclick="openGithubModal()" style="grid-column: span 2;">
-                    ☁️ GitHub 云备份
+                <button class="data-btn onedrive" onclick="openBackupModal()" style="grid-column: span 2;">
+                    ☁️ 数据备份与恢复
                 </button>
             </div>
             
             <div id="exportMenu" class="dropdown-menu">
                 <div class="menu-item" onclick="exportToExcelFile()">📊 导出 Excel</div>
                 <div class="menu-item" onclick="exportToWordFile()">📝 导出 Word</div>
-                <div class="menu-item" onclick="exportData()">📦 备份 JSON</div>
+                <div class="menu-item" onclick="exportData()">📦 导出纯 JSON</div>
             </div>
 
             <div id="importMenu" class="dropdown-menu">
@@ -968,44 +967,48 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="githubModal">
+<div class="modal-overlay" id="backupModal">
     <div class="modal">
         <div class="modal-header">
-            <h2>☁️ GitHub 云备份</h2>
-            <button class="modal-close" onclick="closeGithubModal()">✕</button>
+            <h2>☁️ 数据备份与恢复</h2>
+            <button class="modal-close" onclick="closeBackupModal()">✕</button>
         </div>
         <div class="modal-body">
-            <div class="github-section">
-                <h4>🔑 配置 GitHub Token</h4>
-                <div class="github-info">
-                    需要 GitHub Personal Access Token（需要 gist 权限）。
+            <div class="backup-section">
+                <h4>📥 备份到 OneDrive / 本地</h4>
+                <div class="backup-info">
+                    由于数据量较大（含PDF附件），建议使用此方式。
                     <br>
-                    <a href="https://github.com/settings/tokens/new?scopes=gist&description=Research-Data-Backup" target="_blank" style="color:var(--github-color);">
-                        👉 点此创建 Token
-                    </a>
+                    <strong>操作指南：</strong>点击下方按钮，将生成的 <code style="background:rgba(0,0,0,0.1);padding:2px 4px;border-radius:4px;">.json</code> 备份文件直接保存到您的 <strong>OneDrive 同步文件夹</strong>中，即可实现云端备份。
                 </div>
+                
                 <div class="form-group">
-                    <input type="password" id="githubToken" placeholder="粘贴您的 GitHub Token">
-                    <div class="form-hint">Token 仅保存在本地，不会上传到任何服务器</div>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="includePdfInBackup" checked style="width:18px;height:18px;">
+                        包含 PDF 附件文件
+                    </label>
+                    <div class="form-hint">如果不勾选，仅备份文字信息，文件体积会非常小。</div>
+                </div>
+
+                <div class="form-group" style="margin-top:10px;">
+                    <button class="btn btn-onedrive" onclick="performBackup()" style="width:100%;justify-content:center;">
+                        ☁️ 导出备份文件 (保存到 OneDrive)
+                    </button>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Gist ID（可选，用于恢复数据）</label>
-                <input type="text" id="gistId" placeholder="留空将创建新的 Gist">
-                <div class="form-hint" id="gistIdHint">如果已有备份，请输入 Gist ID 来恢复数据</div>
+            <div style="border-top:1px solid var(--border); padding-top:20px; margin-top:20px;">
+                <h4 style="margin-bottom:12px;font-size:1rem;">📤 从备份恢复</h4>
+                <div class="backup-info">
+                    从您的 OneDrive 文件夹或本地磁盘选择之前的备份文件进行恢复。
+                </div>
+                
+                <div class="file-upload" onclick="document.getElementById('restoreInput').click()" style="padding:20px;">
+                    <input type="file" id="restoreInput" accept=".json" onchange="performRestore(event)">
+                    <div class="file-upload-icon" style="font-size:2rem;margin-bottom:8px;">📂</div>
+                    <div class="file-upload-text">点击选择备份文件 (.json)</div>
+                </div>
             </div>
-
-            <div style="display:grid;gap:12px;margin-top:20px;">
-                <button class="btn btn-github" onclick="backupToGithub()" id="backupBtn">
-                    ☁️ 备份到 GitHub
-                </button>
-                <button class="btn btn-secondary" onclick="restoreFromGithub()" id="restoreBtn">
-                    📥 从 GitHub 恢复
-                </button>
-            </div>
-
-            <div id="githubStatus" style="margin-top:16px;padding:12px;border-radius:var(--radius-sm);display:none;"></div>
         </div>
     </div>
 </div>
@@ -1046,8 +1049,6 @@
     var excelData = null;
     var excelHeaders = [];
     var selectedItems = new Set();
-    var githubTokenKey = 'research_github_token';
-    var gistIdKey = 'research_gist_id';
 
     var typeConfig = {
         paper: { icon: '📄', label: '学术论文', class: 'type-paper' },
@@ -1179,183 +1180,151 @@
         var status = document.getElementById('storageStatus');
         if (ok) {
             status.className = 'storage-status';
-            status.innerHTML = '✓ 数据已保存 <span class="sync-info" id="syncInfo"></span>';
+            status.innerHTML = '✓ 数据已本地保存';
         } else {
             status.className = 'storage-status warning';
             status.textContent = '⚠ 保存失败';
         }
-        updateSyncInfo();
     }
 
-    function updateSyncInfo() {
-        var syncInfo = document.getElementById('syncInfo');
-        var savedGistId = getStoredValue(gistIdKey);
-        if (savedGistId && syncInfo) {
-            syncInfo.textContent = '已关联云端';
-            syncInfo.style.color = 'var(--github-color)';
-        }
-    }
-
-    // Simple storage helpers (memory-based for iframe)
-    var memoryStorage = {};
-    function getStoredValue(key) {
-        return memoryStorage[key] || '';
-    }
-    function setStoredValue(key, value) {
-        memoryStorage[key] = value;
-    }
-
-    // GitHub Gist Functions
-    function openGithubModal() {
-        document.getElementById('githubToken').value = getStoredValue(githubTokenKey);
-        document.getElementById('gistId').value = getStoredValue(gistIdKey);
-        document.getElementById('githubStatus').style.display = 'none';
-        document.getElementById('githubModal').classList.add('active');
+    // --- Backup & Restore Functions (Replacing GitHub) ---
+    
+    function openBackupModal() {
+        document.getElementById('backupModal').classList.add('active');
         closeAllMenus();
     }
 
-    function closeGithubModal() {
-        document.getElementById('githubModal').classList.remove('active');
+    function closeBackupModal() {
+        document.getElementById('backupModal').classList.remove('active');
     }
 
-    function showGithubStatus(message, isError) {
-        var statusEl = document.getElementById('githubStatus');
-        statusEl.style.display = 'block';
-        statusEl.style.background = isError ? 'var(--danger-light)' : 'var(--success-light)';
-        statusEl.style.color = isError ? 'var(--danger)' : 'var(--success)';
-        statusEl.style.border = '1px solid ' + (isError ? 'var(--danger)' : 'var(--success)');
-        statusEl.innerHTML = message;
-    }
-
-    async function backupToGithub() {
-        var token = document.getElementById('githubToken').value.trim();
-        var gistId = document.getElementById('gistId').value.trim();
+    function performBackup() {
+        var includePdf = document.getElementById('includePdfInBackup').checked;
         
-        if (!token) {
-            showGithubStatus('❌ 请输入 GitHub Token', true);
-            return;
-        }
+        var btn = document.querySelector('.btn-onedrive');
+        var originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span>正在打包...';
 
-        setStoredValue(githubTokenKey, token);
-        
-        var backupBtn = document.getElementById('backupBtn');
-        backupBtn.disabled = true;
-        backupBtn.innerHTML = '<span class="loading-spinner"></span>正在备份...';
+        // 使用 setTimeout 让 UI 有机会渲染 loading 状态
+        setTimeout(function() {
+            try {
+                // 1. 准备数据
+                var dataToBackup = {
+                    version: '4.1', 
+                    backupDate: new Date().toISOString(),
+                    system: 'ResearchManager',
+                    achievements: [],
+                    members: members
+                };
 
-        var data = {
-            version: '4.0',
-            exportDate: new Date().toISOString(),
-            achievements: achievements,
-            members: members
-        };
-
-        var gistData = {
-            description: '科研成果管理系统备份 - ' + new Date().toLocaleString('zh-CN'),
-            public: false,
-            files: {
-                'research_backup.json': {
-                    content: JSON.stringify(data, null, 2)
+                // 2. 处理 PDF (根据用户选择决定是否包含)
+                if (includePdf) {
+                    dataToBackup.achievements = achievements;
+                } else {
+                    // 深拷贝并移除 PDF 数据以减小体积
+                    dataToBackup.achievements = achievements.map(function(item) {
+                        var copy = Object.assign({}, item);
+                        if (copy.pdfData) {
+                            copy.pdfData = null; // 清空内容
+                            copy.pdfName = (item.pdfName || 'Unknown') + " (附件未备份)";
+                        }
+                        return copy;
+                    });
                 }
-            }
-        };
 
-        try {
-            var url = gistId ? 'https://api.github.com/gists/' + gistId : 'https://api.github.com/gists';
-            var method = gistId ? 'PATCH' : 'POST';
-            
-            var response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Authorization': 'token ' + token,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/vnd.github.v3+json'
-                },
-                body: JSON.stringify(gistData)
-            });
-
-            if (!response.ok) {
-                var errorData = await response.json();
-                throw new Error(errorData.message || '备份失败');
-            }
-
-            var result = await response.json();
-            setStoredValue(gistIdKey, result.id);
-            document.getElementById('gistId').value = result.id;
-            
-            showGithubStatus('✅ 备份成功！<br><small>Gist ID: ' + result.id + '</small><br><small>请保存此 ID 以便在其他设备恢复数据</small>', false);
-            showToast('云端备份成功', 'success');
-            updateSyncInfo();
-        } catch (error) {
-            showGithubStatus('❌ ' + error.message, true);
-            showToast('备份失败: ' + error.message, 'error');
-        } finally {
-            backupBtn.disabled = false;
-            backupBtn.innerHTML = '☁️ 备份到 GitHub';
-        }
-    }
-
-    async function restoreFromGithub() {
-        var token = document.getElementById('githubToken').value.trim();
-        var gistId = document.getElementById('gistId').value.trim();
-        
-        if (!token) {
-            showGithubStatus('❌ 请输入 GitHub Token', true);
-            return;
-        }
-        if (!gistId) {
-            showGithubStatus('❌ 请输入 Gist ID', true);
-            return;
-        }
-
-        setStoredValue(githubTokenKey, token);
-        setStoredValue(gistIdKey, gistId);
-
-        var restoreBtn = document.getElementById('restoreBtn');
-        restoreBtn.disabled = true;
-        restoreBtn.innerHTML = '<span class="loading-spinner"></span>正在恢复...';
-
-        try {
-            var response = await fetch('https://api.github.com/gists/' + gistId, {
-                headers: {
-                    'Authorization': 'token ' + token,
-                    'Accept': 'application/vnd.github.v3+json'
+                // 3. 转换为 Blob
+                var jsonStr = JSON.stringify(dataToBackup, null, 2);
+                var blob = new Blob([jsonStr], { type: 'application/json' });
+                
+                // 4. 计算大小并提示
+                var sizeInMB = (blob.size / (1024 * 1024)).toFixed(2);
+                if (sizeInMB > 100) {
+                    if (!confirm('备份文件较大 (' + sizeInMB + ' MB)，下载可能需要一点时间。是否继续？')) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
+                    }
                 }
-            });
 
-            if (!response.ok) {
-                var errorData = await response.json();
-                throw new Error(errorData.message || '获取备份失败');
-            }
+                // 5. 触发下载
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                // 文件名加上时间戳，方便在 OneDrive 中管理版本
+                var timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                a.download = 'Research_Backup_' + timestamp + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
 
-            var result = await response.json();
-            var backupFile = result.files['research_backup.json'];
-            
-            if (!backupFile) {
-                throw new Error('备份文件不存在');
-            }
+                showToast('✓ 备份已生成，请保存到 OneDrive', 'success');
+                closeBackupModal();
 
-            var data = JSON.parse(backupFile.content);
-            
-            if (data.achievements || data.members) {
-                achievements = data.achievements || [];
-                members = data.members || [];
-                await saveToLocal();
-                updateStats();
-                renderResults();
-                showGithubStatus('✅ 数据恢复成功！<br><small>共恢复 ' + achievements.length + ' 条成果, ' + members.length + ' 位成员</small>', false);
-                showToast('从云端恢复成功', 'success');
-                updateSyncInfo();
-            } else {
-                throw new Error('无效的备份数据');
+            } catch (err) {
+                console.error(err);
+                showToast('❌ 备份失败: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
-        } catch (error) {
-            showGithubStatus('❌ ' + error.message, true);
-            showToast('恢复失败: ' + error.message, 'error');
-        } finally {
-            restoreBtn.disabled = false;
-            restoreBtn.innerHTML = '📥 从 GitHub 恢复';
-        }
+        }, 100);
     }
+
+    function performRestore(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var data = JSON.parse(e.target.result);
+                
+                // 简单的格式校验
+                if (!data.achievements && !data.members) {
+                    throw new Error('文件格式不正确，未找到数据');
+                }
+
+                var newAchievements = data.achievements || [];
+                var newMembers = data.members || [];
+                var msg = '解析成功！\n';
+                msg += '包含成果: ' + newAchievements.length + ' 条\n';
+                msg += '包含成员: ' + newMembers.length + ' 人\n\n';
+                msg += '点击“确定”将合并当前数据(相同ID覆盖)，点击“取消”终止。';
+
+                if (confirm(msg)) {
+                    // 恢复逻辑：直接覆盖 (或者你可以改为合并逻辑)
+                    // 这里采用合并逻辑：ID相同的覆盖，不同的添加
+                    
+                    newMembers.forEach(function(nm) {
+                        var idx = members.findIndex(function(m){ return m.id === nm.id; });
+                        if (idx !== -1) members[idx] = nm;
+                        else members.push(nm);
+                    });
+
+                    newAchievements.forEach(function(na) {
+                        var idx = achievements.findIndex(function(a){ return a.id === na.id; });
+                        if (idx !== -1) achievements[idx] = na;
+                        else achievements.push(na);
+                    });
+
+                    saveToLocal();
+                    updateStats();
+                    renderResults();
+                    closeBackupModal();
+                    showToast('✓ 成功恢复数据', 'success');
+                }
+            } catch (err) {
+                alert('恢复失败：文件可能已损坏或格式错误。\n' + err.message);
+            }
+            // 清空 input 防止无法再次选择同一文件
+            document.getElementById('restoreInput').value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    // --- End Backup Logic ---
 
     // Utility Functions
     function base64ToBlob(base64Data) {
@@ -1893,25 +1862,6 @@
         renderResults();
     }
 
-    // Menu Functions
-    function toggleMenu(id) {
-        var menu = document.getElementById(id);
-        var isVisible = menu.classList.contains('show');
-        closeAllMenus();
-        if (!isVisible) menu.classList.add('show');
-    }
-
-    function closeAllMenus() {
-        document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.classList.remove('show'); });
-    }
-
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.data-actions') && !event.target.closest('.dropdown-menu')) {
-            closeAll
-Menus();
-        }
-    });
-
     function exportData() {
         var data = {
             version: '4.0',
@@ -2300,6 +2250,24 @@ Menus();
         }, 3000);
     }
 
+    // Menu Functions
+    function toggleMenu(id) {
+        var menu = document.getElementById(id);
+        var isVisible = menu.classList.contains('show');
+        closeAllMenus();
+        if (!isVisible) menu.classList.add('show');
+    }
+
+    function closeAllMenus() {
+        document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.classList.remove('show'); });
+    }
+
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.data-actions') && !event.target.closest('.dropdown-menu')) {
+            closeAllMenus();
+        }
+    });
+
     // Initialize
     window.onload = function() {
         // Try load from IndexedDB
@@ -2310,7 +2278,6 @@ Menus();
             }
             updateStats();
             renderResults();
-            updateSyncInfo();
             document.getElementById('loadingSpinner')?.remove();
         });
 
