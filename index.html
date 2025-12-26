@@ -3,950 +3,1072 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>科研成果管理系统 (移动端修复版)</title>
+    <title>科研成果管理系统 (旗舰完整版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* =================================================================
-           1. CSS 变量定义
+           1. 样式系统 (CSS Design System)
            ================================================================= */
         :root {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
+            --bg-body: #f1f5f9;
+            --bg-sidebar: #ffffff;
             --bg-card: #ffffff;
-            --bg-hover: #f1f5f9;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
+            --bg-hover: #f8fafc;
+            --bg-active: #eff6ff;
+            
+            --text-main: #0f172a;
+            --text-sub: #64748b;
             --text-muted: #94a3b8;
-            --border: #e2e8f0;
-            --border-light: #f1f5f9;
-            --accent: #6366f1;
-            --accent-light: #eef2ff;
-            --accent-dark: #4f46e5;
+            --text-white: #ffffff;
+
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+
             --success: #10b981;
-            --success-light: #d1fae5;
             --warning: #f59e0b;
-            --warning-light: #fef3c7;
             --danger: #ef4444;
-            --danger-light: #fee2e2;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
-            --radius: 12px;
-            --radius-sm: 8px;
-            --sidebar-width: 260px;
+
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --radius: 10px;
         }
 
-        html.dark {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-card: #1e293b;
-            --bg-hover: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --border: #334155;
-            --border-light: #1e293b;
-            --accent-light: #312e81;
-            --success-light: #064e3b;
-            --warning-light: #78350f;
-            --danger-light: #7f1d1d;
+        /* 暗色模式 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #0f172a;
+                --bg-sidebar: #1e293b;
+                --bg-card: #1e293b;
+                --bg-hover: #334155;
+                --bg-active: #312e81;
+                
+                --text-main: #f8fafc;
+                --text-sub: #cbd5e1;
+                --text-muted: #64748b;
+                
+                --border: #334155;
+            }
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
             height: 100vh;
-            overflow: hidden; /* Prevent body scroll */
+            overflow: hidden;
+            display: flex;
         }
-
-        .hidden { display: none !important; }
-
-        .app-container { display: flex; height: 100vh; overflow: hidden; }
 
         /* =================================================================
-           2. 侧边栏 (Sidebar) - 移动端适配核心修复
+           2. 侧边栏布局 (Sidebar Layout)
            ================================================================= */
         .sidebar {
-            width: var(--sidebar-width);
-            background: var(--bg-secondary);
+            width: 260px;
+            background: var(--bg-sidebar);
             border-right: 1px solid var(--border);
             display: flex;
-            flex-direction: column; /* 垂直排列 */
-            flex-shrink: 0;
-            height: 100%;
-            z-index: 500;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-direction: column;
+            z-index: 50;
+            transition: transform 0.3s ease;
         }
 
-        .sidebar-header { 
-            padding: 20px; 
-            border-bottom: 1px solid var(--border); 
-            flex-shrink: 0; /* 防止头部被压缩 */
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.1rem; color: var(--text-primary); }
-
-        .logo-icon {
+        .app-logo {
             width: 40px; height: 40px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem;
+            color: white; font-size: 1.5rem;
+            box-shadow: var(--shadow);
         }
 
-        /* 导航菜单区域：占据剩余空间，允许滚动 */
-        .nav-menu { 
-            flex: 1; 
-            padding: 16px 12px; 
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; /* iOS顺滑滚动 */
-        }
+        .app-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
 
-        .nav-section {
-            font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.5px;
-            padding: 12px 12px 8px; margin-top: 8px;
+        .nav-container { flex: 1; overflow-y: auto; padding: 20px 12px; }
+
+        .nav-group { margin-bottom: 24px; }
+        .nav-label {
+            font-size: 0.75rem; color: var(--text-muted); font-weight: 600;
+            text-transform: uppercase; padding-left: 12px; margin-bottom: 8px;
         }
-        .nav-section:first-child { margin-top: 0; }
 
         .nav-item {
-            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-            border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);
-            font-weight: 500; transition: all 0.2s; margin-bottom: 2px;
+            display: flex; align-items: center; padding: 12px;
+            border-radius: var(--radius); cursor: pointer;
+            color: var(--text-sub); transition: all 0.2s;
+            margin-bottom: 4px;
         }
-        .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-        .nav-item.active { background: var(--accent-light); color: var(--accent); }
-
-        .nav-item .badge {
-            margin-left: auto; background: var(--bg-hover); padding: 2px 8px;
-            border-radius: 10px; font-size: 0.75rem; font-weight: 600;
-        }
-        .nav-item.active .badge { background: var(--accent); color: white; }
-
-        /* 侧边栏底部：固定在底部，不随菜单滚动 */
-        .sidebar-footer { 
-            padding: 16px; 
-            border-top: 1px solid var(--border); 
-            background: var(--bg-secondary);
-            flex-shrink: 0; /* 防止被压缩 */
-            position: relative; /* 为下拉菜单定位 */
-            z-index: 600;
+        .nav-item:hover { background: var(--bg-hover); color: var(--text-main); }
+        .nav-item.active { background: var(--bg-active); color: var(--primary); font-weight: 600; }
+        
+        .nav-icon { width: 24px; text-align: center; margin-right: 12px; font-size: 1.1rem; }
+        .nav-count {
+            margin-left: auto; background: var(--bg-hover);
+            padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;
         }
 
-        .cloud-status-bar {
-            background: var(--accent-light);
-            border: 1px solid var(--accent);
-            color: var(--accent-dark);
-            font-size: 0.8rem;
-            padding: 8px 12px;
-            border-radius: var(--radius-sm);
-            margin-bottom: 12px;
-            display: flex; align-items: center; justify-content: space-between;
-            cursor: pointer;
-        }
-        .cloud-status-dot {
-            width: 8px; height: 8px; border-radius: 50%; background: #ccc;
-            margin-right: 6px;
+        .sidebar-footer {
+            padding: 16px; border-top: 1px solid var(--border);
+            background: var(--bg-sidebar); position: relative;
         }
 
-        .data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-        .data-btn {
-            padding: 10px; /* 增加点击区域 */
-            border: 1px solid var(--border); border-radius: var(--radius-sm);
-            background: var(--bg-card); color: var(--text-secondary); font-size: 0.85rem;
-            cursor: pointer; transition: all 0.2s; text-align: center;
-            white-space: nowrap;
+        .storage-indicator {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.8rem; color: var(--success); margin-bottom: 12px;
+            padding: 8px; background: var(--bg-hover); border-radius: var(--radius);
         }
-        .data-btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent); }
-        .btn-full { grid-column: span 2; background: var(--accent); color: white; border: none; }
-        .btn-full:hover { background: var(--accent-dark); }
+        .indicator-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
 
-        /* Dropdown Menu (向上弹出) */
-        .dropdown-menu {
-            position: absolute; 
-            bottom: 100%; /* 向上 */
-            left: 10px; right: 10px; /* 宽度适配 */
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.15); 
-            display: none; z-index: 1000; overflow: hidden;
-            margin-bottom: 10px;
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        
+        .btn-sidebar {
+            padding: 10px; border: 1px solid var(--border); border-radius: var(--radius);
+            background: var(--bg-card); color: var(--text-sub); font-size: 0.85rem;
+            cursor: pointer; text-align: center; transition: all 0.2s;
         }
-        .dropdown-menu.show { display: block; animation: slideUp 0.2s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .menu-item { padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; border-bottom: 1px solid var(--border-light); }
-        .menu-item:last-child { border-bottom: none; }
-        .menu-item:hover { background: var(--bg-hover); color: var(--accent); }
+        .btn-sidebar:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* 弹出菜单 */
+        .popup-menu {
+            position: absolute; bottom: 100%; left: 10px; right: 10px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); box-shadow: var(--shadow-lg);
+            display: none; flex-direction: column; overflow: hidden;
+            margin-bottom: 10px; z-index: 100;
+        }
+        .popup-menu.show { display: flex; animation: slideUp 0.2s; }
+        .menu-option {
+            padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-main);
+        }
+        .menu-option:hover { background: var(--bg-hover); color: var(--primary); }
+        .menu-option:last-child { border-bottom: none; }
+
+        @keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
         /* =================================================================
-           3. 主内容区域
+           3. 主界面布局 (Main Layout)
            ================================================================= */
-        .main-content { 
-            flex: 1; 
-            padding: 24px; 
-            height: 100vh; 
-            overflow: hidden; 
-            display: flex; flex-direction: column;
-            width: 100%; /* 确保占满剩余宽度 */
-        }
-
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0; }
-        .page-title { font-size: 1.75rem; font-weight: 700; color: var(--text-primary); }
-        .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-
-        .search-box input {
-            padding: 10px 16px; border: 2px solid var(--border); border-radius: var(--radius);
-            background: var(--bg-card); color: var(--text-primary); font-size: 0.95rem;
-            width: 280px; transition: all 0.2s;
-        }
-        .search-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
-
-        .btn {
-            padding: 10px 20px; border-radius: var(--radius); font-weight: 600; font-size: 0.95rem;
-            cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 8px;
-        }
-        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: white; box-shadow: var(--shadow); }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
-        .btn-secondary { background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border); }
-        .btn-secondary:hover { background: var(--border); }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
-
-        .stats-grid { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
-            gap: 12px; margin-bottom: 16px; flex-shrink: 0; 
-        }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 12px; }
-        .stat-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         
-        .stat-icon.papers { background: #dbeafe; } .stat-icon.patents { background: #fef3c7; }
-        .stat-icon.projects { background: #d1fae5; } .stat-icon.awards { background: #fce7f3; }
-        .stat-icon.books { background: #e0e7ff; } .stat-icon.members { background: #f3e8ff; }
+        .top-bar {
+            height: 70px; padding: 0 32px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg-body); flex-shrink: 0;
+        }
+        .page-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
         
-        .stat-info h3 { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
-        .stat-info p { font-size: 0.8rem; color: var(--text-secondary); }
-
-        /* List Layout */
-        #listViewContainer { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .filter-container { margin-bottom: 12px; flex-shrink: 0; }
-        .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
-        .filter-chip {
-            padding: 4px 12px; border-radius: 20px; background: var(--bg-card);
-            border: 1px solid var(--border); color: var(--text-secondary); font-size: 0.8rem;
-            font-weight: 500; cursor: pointer; transition: all 0.2s;
+        .top-actions { display: flex; align-items: center; gap: 16px; }
+        .search-wrap { position: relative; }
+        .search-input {
+            width: 280px; padding: 10px 16px 10px 36px;
+            border: 1px solid var(--border); border-radius: var(--radius);
+            background: var(--bg-card); color: var(--text-main);
         }
-        .filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; }
+
+        .btn-primary {
+            background: var(--primary); color: white; border: none;
+            padding: 10px 20px; border-radius: var(--radius); font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            box-shadow: var(--shadow); transition: background 0.2s;
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        .content-scroll { flex: 1; overflow-y: auto; padding: 0 32px 32px; }
+
+        /* 统计卡片 */
+        .stats-row { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; margin-bottom: 24px;
+        }
+        .stat-box {
+            background: var(--bg-card); padding: 20px; border-radius: var(--radius);
+            border: 1px solid var(--border); display: flex; align-items: center; gap: 16px;
+            box-shadow: var(--shadow-sm); transition: transform 0.2s;
+        }
+        .stat-box:hover { transform: translateY(-2px); }
+        .stat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+        }
+        .stat-info h3 { font-size: 1.5rem; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+        .stat-info p { font-size: 0.85rem; color: var(--text-sub); }
+
+        /* 列表区域 */
+        .list-panel {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;
+            min-height: 400px;
+        }
+        .list-toolbar {
+            padding: 16px 24px; border-bottom: 1px solid var(--border);
+            background: var(--bg-hover); display: flex; justify-content: space-between; align-items: center;
+        }
+        .batch-ops { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-sub); }
+        .btn-danger { background: var(--danger); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; display: none; }
         
-        .keyword-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding-top: 8px; border-top: 1px dashed var(--border); }
-        .keyword-chip { font-size: 0.75rem; padding: 2px 10px; background: var(--bg-hover); border-radius: 12px; color: var(--text-secondary); cursor: pointer; border: 1px solid transparent; }
-        .keyword-chip:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
-
-        .results-container { 
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); 
-            display: flex; flex-direction: column; flex: 1; overflow: hidden;
-        }
-        .results-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--bg-secondary); 
-            flex-wrap: wrap; gap: 12px; flex-shrink: 0;
-        }
-        .results-count { color: var(--text-secondary); font-size: 0.85rem; }
-        .batch-actions { display: flex; gap: 12px; align-items: center; }
-        .select-all-wrapper { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .select-all-wrapper input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
+        .list-body { flex: 1; overflow-y: auto; }
         
-        .results-list { flex: 1; overflow-y: auto; max-height: none; -webkit-overflow-scrolling: touch; }
-        .result-item { 
-            display: flex; align-items: center; padding: 12px 16px;
-            border-bottom: 1px solid var(--border-light); cursor: pointer; gap: 14px; 
+        .list-row {
+            padding: 16px 24px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 20px; cursor: pointer;
+            transition: background 0.1s;
         }
-        .result-item:hover { background: var(--bg-hover); }
-        .result-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
-        .result-type { 
-            width: 36px; height: 36px; border-radius: var(--radius-sm); 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 1.1rem; flex-shrink: 0; 
-        }
+        .list-row:hover { background: var(--bg-hover); }
+        .list-row:last-child { border-bottom: none; }
         
-        .result-content { flex: 1; min-width: 0; }
-        .result-title { 
-            font-weight: 600; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 2px; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        .row-check { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+        .row-icon {
+            width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
         }
-        .result-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.8rem; color: var(--text-secondary); }
-        .result-meta span { display: flex; align-items: center; gap: 4px; }
-        .result-meta .has-pdf { color: var(--accent); font-weight: 500; }
+        .type-paper { background: #e0f2fe; color: #0369a1; }
+        .type-patent { background: #fef3c7; color: #b45309; }
+        .type-project { background: #dcfce7; color: #15803d; }
+        .type-award { background: #fee2e2; color: #b91c1c; }
+        .type-book { background: #f3e8ff; color: #7e22ce; }
+        .type-member { background: #ffedd5; color: #c2410c; }
+
+        .row-content { flex: 1; min-width: 0; }
+        .row-title { font-weight: 600; color: var(--text-main); font-size: 1rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .row-meta { display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-sub); }
+        .meta-tag { display: flex; align-items: center; gap: 4px; }
+        .has-file { color: var(--primary); font-weight: 500; }
+
+        .row-actions { display: flex; gap: 8px; opacity: 0; transition: opacity 0.2s; }
+        .list-row:hover .row-actions { opacity: 1; }
+        .icon-btn {
+            width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-sub); background: white; transition: all 0.2s;
+        }
+        .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .icon-btn.delete:hover { border-color: var(--danger); color: var(--danger); }
+
+        .empty-view { padding: 60px; text-align: center; color: var(--text-muted); }
+
+        /* =================================================================
+           4. 弹窗样式 (Modal)
+           ================================================================= */
+        .modal-mask {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+            z-index: 1000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: all 0.3s;
+        }
+        .modal-mask.active { opacity: 1; visibility: visible; }
         
-        .result-actions { display: flex; gap: 8px; flex-shrink: 0; }
-        .action-btn { width: 32px; height: 32px; border: none; background: var(--bg-hover); border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
-        .action-btn:hover { background: var(--accent-light); color: var(--accent); }
-        .action-btn.delete:hover { background: var(--danger-light); color: var(--danger); }
-
-        .empty-state { padding: 60px 20px; text-align: center; color: var(--text-secondary); }
-
-        /* Modal Styles */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1100; opacity: 0; visibility: hidden; transition: all 0.3s; padding: 20px; }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal { background: var(--bg-card); border-radius: var(--radius); width: 100%; max-width: 600px; max-height: 90vh; overflow: hidden; transform: scale(0.95); transition: transform 0.3s; display: flex; flex-direction: column; }
-        .modal-overlay.active .modal { transform: scale(1); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--border); }
-        .modal-header h2 { font-size: 1.2rem; font-weight: 700; }
-        .modal-close { width: 32px; height: 32px; border: none; background: var(--bg-hover); border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
-        .modal-body { padding: 20px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
-        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
-
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); font-size: 0.9rem; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); font-size: 1rem; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-
-        .file-upload { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; background: var(--bg-primary); }
-        .file-upload:active { background: var(--accent-light); border-color: var(--accent); }
-        .file-info { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--accent-light); border-radius: var(--radius-sm); border: 1px solid var(--accent); margin-top: 8px; }
-        .file-remove { color: var(--danger); background: none; border: none; font-weight: bold; cursor: pointer; }
-
-        /* Toast */
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
-        .toast { padding: 12px 20px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-lg); font-weight: 500; transform: translateX(120%); transition: transform 0.3s; display: flex; align-items: center; gap: 8px; }
-        .toast.show { transform: translateX(0); }
-        .toast.success { border-left: 4px solid var(--success); }
-        .toast.error { border-left: 4px solid var(--danger); }
-        .toast.warning { border-left: 4px solid var(--warning); }
-
-        /* Excel Mapping */
-        .excel-preview { max-height: 150px; overflow: auto; border: 1px solid var(--border); margin-bottom: 16px; }
-        .excel-preview table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        .excel-preview th, .excel-preview td { padding: 6px; border: 1px solid #ddd; }
-        .mapping-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .mapping-row select { width: 60%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; }
-
-        /* Mobile Responsive */
-        @media (max-width: 1024px) { 
-            .form-row-3 { grid-template-columns: 1fr 1fr; }
+        .modal-box {
+            background: var(--bg-card); width: 650px; max-width: 90%; max-height: 90vh;
+            border-radius: 16px; display: flex; flex-direction: column;
+            transform: translateY(20px); transition: transform 0.3s;
         }
+        .modal-mask.active .modal-box { transform: translateY(0); }
+
+        .modal-head { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-head h3 { font-size: 1.25rem; font-weight: 700; }
+        .close-btn { font-size: 1.5rem; color: var(--text-muted); background: none; border: none; cursor: pointer; }
+        
+        .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+        .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-span { grid-column: span 2; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
+        .form-input {
+            width: 100%; padding: 10px 12px; border: 2px solid var(--border);
+            border-radius: 8px; background: var(--bg-body); color: var(--text-main);
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--primary); }
+
+        /* 文件上传 */
+        .upload-area {
+            border: 2px dashed var(--border); border-radius: 12px; padding: 24px;
+            text-align: center; cursor: pointer; transition: all 0.2s;
+        }
+        .upload-area:hover { border-color: var(--primary); background: var(--bg-active); }
+        .file-status {
+            margin-top: 10px; padding: 10px; background: var(--primary-light);
+            border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
+            color: var(--primary); font-size: 0.9rem;
+        }
+
+        /* 移动端适配 */
         @media (max-width: 768px) {
-            /* 侧边栏移动端逻辑重写 */
-            .sidebar { 
-                position: fixed; top: 0; left: 0; bottom: 0;
-                transform: translateX(-100%); 
-                width: 85%; /* 更宽一点适应手指 */
-                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            }
+            .sidebar { position: fixed; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
             .sidebar.open { transform: translateX(0); }
-            
-            /* 确保底部按钮可见 */
-            .sidebar-footer { padding-bottom: 30px; /* 避开 iOS 底部横条 */ }
-            
-            .main-content { margin-left: 0; padding: 16px; width: 100%; }
-            .form-row, .form-row-3, .mapping-row { grid-template-columns: 1fr; display: block; }
-            .form-group { margin-bottom: 12px; }
-            .mapping-row { display: block; margin-bottom: 12px; }
-            .mapping-row select { width: 100%; margin-top: 4px; }
-            .search-box input { width: 100%; } 
-            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .header-actions { width: 100%; justify-content: space-between; }
-            
-            /* 汉堡菜单按钮 */
-            .mobile-menu-btn { display: block !important; position: fixed; top: 16px; left: 16px; z-index: 1000; }
-            
-            /* 遮罩层点击关闭侧边栏 */
-            .app-container::after {
-                content: ''; position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
-                z-index: 400; display: none;
-            }
-            .sidebar.open + .main-content { pointer-events: none; } /* 简单的防误触 */
+            .mobile-menu-btn { display: block !important; position: fixed; bottom: 20px; right: 20px; z-index: 1100; width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: var(--shadow-lg); font-size: 1.5rem; }
+            .main-content { padding: 16px; margin-left: 0; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-span { grid-column: span 1; }
+            .row-meta { display: none; } /* 移动端隐藏部分元数据 */
+            .top-bar { padding: 0 16px; }
+            .search-input { width: 150px; }
         }
     </style>
 </head>
 <body>
-<button class="mobile-menu-btn" onclick="toggleSidebar()" style="display:none; width:44px; height:44px; border:none; background:var(--bg-card); border-radius:8px; box-shadow:var(--shadow); font-size:1.5rem; justify-content:center; align-items:center;">☰</button>
+
+<button class="mobile-menu-btn" style="display:none;" onclick="toggleSidebar()">☰</button>
 
 <div class="app-container">
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="logo">
-                <div class="logo-icon">🔬</div>
-                <span>科研成果管理</span>
-            </div>
+            <div class="app-logo">🔬</div>
+            <span class="app-title">科研成果管理</span>
         </div>
 
-        <nav class="nav-menu">
-            <div class="nav-section">成果管理</div>
-            <div class="nav-item active" data-view="all" onclick="setView('all')">
-                📋 <span>全部成果</span><span class="badge" id="totalCount">0</span>
+        <nav class="nav-container">
+            <div class="nav-group">
+                <div class="nav-label">成果库</div>
+                <div class="nav-item active" onclick="switchView('all')" id="nav-all">
+                    <div class="nav-icon">📋</div><span>全部成果</span>
+                    <span class="nav-count" id="count-all">0</span>
+                </div>
+                <div class="nav-item" onclick="switchView('paper')" id="nav-paper">
+                    <div class="nav-icon">📄</div><span>学术论文</span>
+                    <span class="nav-count" id="count-paper">0</span>
+                </div>
+                <div class="nav-item" onclick="switchView('patent')" id="nav-patent">
+                    <div class="nav-icon">💡</div><span>发明专利</span>
+                    <span class="nav-count" id="count-patent">0</span>
+                </div>
+                <div class="nav-item" onclick="switchView('project')" id="nav-project">
+                    <div class="nav-icon">📊</div><span>科研项目</span>
+                    <span class="nav-count" id="count-project">0</span>
+                </div>
+                <div class="nav-item" onclick="switchView('award')" id="nav-award">
+                    <div class="nav-icon">🏆</div><span>获奖情况</span>
+                    <span class="nav-count" id="count-award">0</span>
+                </div>
+                <div class="nav-item" onclick="switchView('book')" id="nav-book">
+                    <div class="nav-icon">📚</div><span>专著出版</span>
+                    <span class="nav-count" id="count-book">0</span>
+                </div>
             </div>
-            <div class="nav-item" data-view="paper" onclick="setView('paper')">
-                📄 <span>学术论文</span><span class="badge" id="paperCount">0</span>
-            </div>
-            <div class="nav-item" data-view="patent" onclick="setView('patent')">
-                💡 <span>发明专利</span><span class="badge" id="patentCount">0</span>
-            </div>
-            <div class="nav-item" data-view="project" onclick="setView('project')">
-                📊 <span>科研项目</span><span class="badge" id="projectCount">0</span>
-            </div>
-            <div class="nav-item" data-view="award" onclick="setView('award')">
-                🏆 <span>获奖情况</span><span class="badge" id="awardCount">0</span>
-            </div>
-            <div class="nav-item" data-view="book" onclick="setView('book')">
-                📚 <span>专著出版</span><span class="badge" id="bookCount">0</span>
-            </div>
-            <div class="nav-section">团队管理</div>
-            <div class="nav-item" data-view="member" onclick="setView('member')">
-                👥 <span>成员信息</span><span class="badge" id="memberCount">0</span>
+            
+            <div class="nav-group">
+                <div class="nav-label">人员</div>
+                <div class="nav-item" onclick="switchView('member')" id="nav-member">
+                    <div class="nav-icon">👥</div><span>成员信息</span>
+                    <span class="nav-count" id="count-member">0</span>
+                </div>
             </div>
         </nav>
 
         <div class="sidebar-footer">
-            <div class="cloud-status-bar" onclick="openCloudConfig()">
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <div id="cloudStatusDot" class="cloud-status-dot" style="background:#ccc;"></div>
-                    <span id="cloudStatusText">☁️ 未配置同步</span>
-                </div>
-                <span style="font-size:0.7rem;">设置</span>
+            <div class="storage-indicator" id="dbStatus">
+                <div class="indicator-dot"></div>
+                <span>数据安全 (IndexedDB)</span>
             </div>
             
-            <div class="data-actions">
-                <button class="data-btn btn-full" onclick="toggleMenu('exportMenu')">📤 导出 / 备份</button>
-                <button class="data-btn" onclick="toggleMenu('importMenu')">📥 导入</button>
-                <button class="data-btn" onclick="triggerRestore()">📂 恢复数据</button>
+            <div class="action-buttons">
+                <button class="btn-sidebar" style="grid-column:span 2;background:var(--primary);color:white;border:none;" onclick="toggleMenu('exportMenu')">📤 导出 / 备份</button>
+                <button class="btn-sidebar" style="grid-column:span 2;" onclick="toggleMenu('importMenu')">📥 导入 / 恢复</button>
+            </div>
+
+            <div id="exportMenu" class="popup-menu">
+                <div class="menu-option" onclick="exportToExcel()">📊 导出 Excel (分表分列)</div>
+                <div class="menu-option" onclick="exportToWord()">📝 导出 Word (详细表格)</div>
+                <div class="menu-option" onclick="backupJSON()">📦 备份数据 (JSON)</div>
+            </div>
+
+            <div id="importMenu" class="popup-menu">
+                <div class="menu-option" onclick="document.getElementById('file-excel').click()">📊 导入 Excel</div>
+                <div class="menu-option" onclick="document.getElementById('file-json').click()">📂 恢复备份 (JSON)</div>
             </div>
             
-            <div id="exportMenu" class="dropdown-menu">
-                <div class="menu-item" onclick="exportToExcelFile()">📊 导出 Excel (分表)</div>
-                <div class="menu-item" onclick="exportToWordFile()">📝 导出 Word (分表)</div>
-                <div class="menu-item" onclick="exportData()">📦 备份数据 (JSON)</div>
-            </div>
-
-            <div id="importMenu" class="dropdown-menu">
-                <div class="menu-item" onclick="openExcelImport()">📊 导入 Excel</div>
-                <div class="menu-item" onclick="showToast('Word导入需转为Excel','warning')">📝 导入 Word (不支持)</div>
-                <div class="menu-item" onclick="triggerRestore()">📂 恢复备份 (JSON)</div>
-            </div>
-
-            <input type="file" id="restoreInput" class="hidden" accept=".json" onchange="performRestore(event)">
+            <input type="file" id="file-json" hidden accept=".json" onchange="restoreJSON(this)">
+            <input type="file" id="file-excel" hidden accept=".xlsx,.xls" onchange="importExcel(this)">
         </div>
     </aside>
 
-    <main class="main-content">
-        <div class="header">
-            <h1 class="page-title" id="pageTitle">全部成果</h1>
-            <div class="header-actions">
-                <div class="search-box" id="searchBoxContainer">
-                    <input type="text" id="searchInput" placeholder="🔍 搜索..." oninput="handleSearch()">
+    <main class="main-wrapper">
+        <header class="top-bar">
+            <div class="page-title">
+                <h1 id="pageTitle">全部成果</h1>
+            </div>
+            <div class="top-actions">
+                <div class="search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索标题、作者、编号..." oninput="handleSearch(this.value)">
                 </div>
-                <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">➕ <span id="addBtnText">添加成果</span></button>
+                <button class="btn-primary" onclick="openAddModal()">
+                    <span>➕</span> <span id="addBtnText">新增成果</span>
+                </button>
             </div>
-        </div>
+        </header>
 
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <div class="stat-icon papers">📄</div>
-                <div class="stat-info"><h3 id="statPaper">0</h3><p>学术论文</p></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon patents">💡</div>
-                <div class="stat-info"><h3 id="statPatent">0</h3><p>发明专利</p></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon projects">📊</div>
-                <div class="stat-info"><h3 id="statProject">0</h3><p>科研项目</p></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon awards">🏆</div>
-                <div class="stat-info"><h3 id="statAward">0</h3><p>获奖情况</p></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon books">📚</div>
-                <div class="stat-info"><h3 id="statBook">0</h3><p>专著出版</p></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon members">👥</div>
-                <div class="stat-info"><h3 id="statMember">0</h3><p>成员</p></div>
-            </div>
-        </div>
-
-        <div id="listViewContainer">
-            <div class="filter-container">
-                <div class="filter-bar" id="filterBar">
-                    <div class="filter-chip active" data-year="all" onclick="setYearFilter('all')">全部年份</div>
+        <div class="content-scroll">
+            <div class="stats-row" id="statsRow">
                 </div>
-            </div>
 
-            <div class="results-container" id="resultsContainer">
-                <div class="results-header">
-                    <div class="batch-actions">
-                        <label class="select-all-wrapper">
-                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                            <span>全选</span>
-                        </label>
-                        <button class="btn btn-danger btn-sm" id="batchDeleteBtn" onclick="batchDelete()" style="display:none;">
-                            🗑 删除
-                        </button>
+            <div class="list-panel">
+                <div class="list-toolbar">
+                    <div class="batch-ops">
+                        <input type="checkbox" id="selectAll" class="row-check" onchange="toggleSelectAll()">
+                        <span id="resultCount">共 0 条记录</span>
+                        <button class="btn-danger" id="batchDelBtn" onclick="batchDelete()">删除选中</button>
                     </div>
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <span class="results-count" id="resultsCount">共 0 条</span>
+                    <div>
+                        <select class="form-input" style="padding:6px;width:auto;" onchange="handleSort(this.value)">
+                            <option value="date-desc">日期最新</option>
+                            <option value="date-asc">日期最早</option>
+                        </select>
                     </div>
                 </div>
-                <div class="results-list" id="resultsList"></div>
+                <div class="list-body" id="listContainer">
+                    </div>
             </div>
         </div>
     </main>
 </div>
 
-<div class="modal-overlay" id="cloudModal">
-    <div class="modal" style="max-width:500px;">
-        <div class="modal-header">
-            <h2>☁️ 云同步配置 (GitHub Gist)</h2>
-            <button class="modal-close" onclick="closeCloudModal()">✕</button>
+<div class="modal-mask" id="editModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3 id="modalTitle">新增记录</h3>
+            <button class="close-btn" onclick="closeModal()">×</button>
         </div>
         <div class="modal-body">
-            <p style="margin-bottom:15px;color:var(--text-secondary);font-size:0.9rem;">
-                输入 Token 和 Gist ID 即可多端同步。需在 GitHub 申请 Token 并勾选 <b>gist</b> 权限。
-            </p>
-            <div class="form-group">
-                <label>GitHub Token</label>
-                <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" class="form-control">
-            </div>
-            <div class="form-group">
-                <label>Gist ID (留空创建新库)</label>
-                <input type="text" id="ghGistId" class="form-control">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeCloudModal()">取消</button>
-            <button class="btn btn-primary" onclick="connectGithub()">连接 / 创建</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="formModal">
-    <div class="modal wide">
-        <div class="modal-header">
-            <h2 id="modalTitle">添加记录</h2>
-            <button class="modal-close" onclick="closeModal()">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="researchForm" onsubmit="handleSubmit(event)">
+            <form id="dataForm" onsubmit="handleFormSubmit(event)">
                 <input type="hidden" id="editId">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>类型 *</label>
-                        <select id="type" required onchange="toggleFormFields()">
+                <div class="form-grid">
+                    <div class="form-group form-span">
+                        <label>类型</label>
+                        <select id="inputType" class="form-input" onchange="updateFormFields()">
                             <option value="paper">学术论文</option>
                             <option value="patent">发明专利</option>
                             <option value="project">科研项目</option>
                             <option value="award">获奖情况</option>
                             <option value="book">专著出版</option>
+                            <option value="member">成员信息</option>
                         </select>
                     </div>
-                    <div class="form-group" id="dateGroup">
-                        <label>日期 *</label>
-                        <input type="date" id="date">
-                    </div>
-                </div>
-                <div id="generalFields">
-                    <div class="form-group"><label>标题/名称</label><input type="text" id="title"></div>
-                    <div class="form-group"><label>作者/负责人</label><input type="text" id="authors"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>期刊/来源/单位</label><input type="text" id="source"></div>
-                        <div class="form-group"><label>级别/状态</label><input type="text" id="level"></div>
-                    </div>
-                    <div class="form-group"><label>关键词</label><input type="text" id="keywords"></div>
-                </div>
-                <div id="patentFields" class="hidden">
-                    <div class="form-group"><label>专利名称</label><input type="text" id="patentName"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>类型</label><select id="patentType"><option value="发明专利">发明专利</option><option value="实用新型">实用新型</option></select></div>
-                        <div class="form-group"><label>状态</label><select id="patentStatus"><option value="授权">授权</option><option value="受理">受理</option></select></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>发明人</label><input type="text" id="inventors"></div>
-                        <div class="form-group"><label>权利人</label><input type="text" id="patentOwner"></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>申请日</label><input type="date" id="applicationDate"></div>
-                        <div class="form-group"><label>授权日</label><input type="date" id="grantDate"></div>
-                    </div>
-                    <div class="form-group"><label>专利号</label><input type="text" id="patentNumber"></div>
-                </div>
-                <div id="projectFields" class="hidden">
-                    <div class="form-group"><label>项目名称</label><input type="text" id="projectName"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>级别</label><select id="projectLevel"><option value="国家级">国家级</option><option value="省部级">省部级</option><option value="横向">横向</option></select></div>
-                        <div class="form-group"><label>编号</label><input type="text" id="projectNumber"></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>开始时间</label><input type="date" id="projectStartDate"></div>
-                        <div class="form-group"><label>结束时间</label><input type="date" id="projectEndDate"></div>
-                    </div>
-                    <div class="form-group"><label>所属单位</label><input type="text" id="projectOrg"></div>
-                </div>
-                <div class="form-group">
-                    <label>📎 PDF 附件</label>
-                    <div class="file-upload" id="fileUpload" onclick="document.getElementById('pdfInput').click()">
-                        <input type="file" id="pdfInput" accept=".pdf" onchange="handleFileSelect(event)">
-                        <div class="file-upload-text">点击上传 (支持大文件)</div>
-                    </div>
-                    <div class="file-info hidden" id="fileInfo">
-                        <span id="fileName"></span>
-                        <button type="button" class="file-remove" onclick="removeFile()">✕</button>
+
+                    <div class="form-group form-span"><label id="lblTitle">标题/名称</label><input type="text" id="inputTitle" class="form-input" required></div>
+                    
+                    <div class="form-group" id="grpDate"><label id="lblDate">日期</label><input type="date" id="inputDate" class="form-input" required></div>
+                    <div class="form-group" id="grpAuthor"><label id="lblAuthor">作者/负责人</label><input type="text" id="inputAuthor" class="form-input"></div>
+                    
+                    <div class="form-group" id="grpSource"><label id="lblSource">来源/单位</label><input type="text" id="inputSource" class="form-input"></div>
+                    <div class="form-group" id="grpLevel"><label id="lblLevel">级别/状态</label><input type="text" id="inputLevel" class="form-input"></div>
+
+                    <div class="form-group hidden" id="grpCode"><label>编号/专利号</label><input type="text" id="inputCode" class="form-input"></div>
+                    <div class="form-group hidden" id="grpEndDate"><label>结束时间</label><input type="date" id="inputEndDate" class="form-input"></div>
+                    <div class="form-group hidden" id="grpExtra1"><label>专利类型</label><select id="inputExtra1" class="form-input"><option>发明专利</option><option>实用新型</option></select></div>
+                    <div class="form-group hidden" id="grpExtra2"><label>授权公告日</label><input type="date" id="inputExtra2" class="form-input"></div>
+
+                    <div class="form-group hidden" id="grpMemNo"><label>工号/学号</label><input type="text" id="inputMemNo" class="form-input"></div>
+                    <div class="form-group hidden" id="grpMemTitle"><label>职称/学位</label><input type="text" id="inputMemTitle" class="form-input"></div>
+                    <div class="form-group hidden" id="grpMemPhone"><label>手机</label><input type="text" id="inputMemPhone" class="form-input"></div>
+                    <div class="form-group hidden" id="grpMemEmail"><label>邮箱</label><input type="text" id="inputMemEmail" class="form-input"></div>
+                    
+                    <div class="form-group form-span" id="grpKeywords"><label>关键词</label><input type="text" id="inputKeywords" class="form-input"></div>
+
+                    <div class="form-group form-span" id="grpFile">
+                        <label>附件 (PDF)</label>
+                        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                            <span style="font-size:1.5rem">📄</span>
+                            <p style="margin-top:5px;color:var(--text-sub);">点击上传文件 (支持大文件)</p>
+                            <input type="file" id="fileInput" hidden accept=".pdf" onchange="handleFileChange(this)">
+                        </div>
+                        <div id="fileStatus" class="file-status hidden">
+                            <span id="fileName"></span>
+                            <button type="button" onclick="clearFile()" style="background:none;border:none;color:var(--danger);cursor:pointer;">删除</button>
+                        </div>
                     </div>
                 </div>
             </form>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal()">取消</button>
-            <button type="submit" form="researchForm" class="btn btn-primary">保存</button>
+        <div class="modal-foot">
+            <button class="btn-sidebar" onclick="closeModal()">取消</button>
+            <button class="btn-primary" onclick="document.getElementById('dataForm').dispatchEvent(new Event('submit'))">保存</button>
         </div>
     </div>
 </div>
-
-<div class="modal-overlay" id="memberModal">
-    <div class="modal wide">
-        <div class="modal-header"><h2>成员信息</h2><button class="modal-close" onclick="closeMemberModal()">✕</button></div>
-        <div class="modal-body">
-            <form id="memberForm" onsubmit="handleMemberSubmit(event)">
-                <input type="hidden" id="memberEditId">
-                <div class="form-row-3">
-                    <div class="form-group"><label>工号</label><input type="text" id="memberNo" required></div>
-                    <div class="form-group"><label>姓名</label><input type="text" id="memberName" required></div>
-                    <div class="form-group"><label>性别</label><select id="memberGender"><option value="男">男</option><option value="女">女</option></select></div>
-                </div>
-                <div class="form-row-3">
-                    <div class="form-group"><label>出生年月</label><input type="month" id="memberBirth"></div>
-                    <div class="form-group"><label>证件类型</label><select id="memberIdType"><option>身份证</option><option>护照</option></select></div>
-                    <div class="form-group"><label>证件号</label><input type="text" id="memberIdNo"></div>
-                </div>
-                <div class="form-row-3">
-                    <div class="form-group"><label>民族</label><input type="text" id="memberNation"></div>
-                    <div class="form-group"><label>国别</label><input type="text" id="memberCountry" value="中国"></div>
-                    <div class="form-group"><label>单位</label><input type="text" id="memberOrg"></div>
-                </div>
-                <div class="form-row-3">
-                    <div class="form-group"><label>职称</label><input type="text" id="memberTitle"></div>
-                    <div class="form-group"><label>在读</label><select id="memberIsStudent"><option value="否">否</option><option value="是">是</option></select></div>
-                    <div class="form-group"><label>学位</label><select id="memberDegree"><option>博士</option><option>硕士</option><option>学士</option></select></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>邮箱</label><input type="email" id="memberEmail"></div>
-                    <div class="form-group"><label>手机</label><input type="tel" id="memberPhone"></div>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeMemberModal()">取消</button>
-            <button type="submit" form="memberForm" class="btn btn-primary">保存</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="excelModal">
-    <div class="modal wide">
-        <div class="modal-header"><h2>导入 Excel</h2><button class="modal-close" onclick="closeExcelModal()">✕</button></div>
-        <div class="modal-body">
-            <div class="form-group"><label>类型</label><select id="excelImportType"><option value="paper">论文</option><option value="member">成员</option></select></div>
-            <div class="file-upload" onclick="document.getElementById('excelInput').click()">
-                <input type="file" id="excelInput" accept=".xlsx,.xls" onchange="handleExcelSelect(event)">
-                点击选择文件
-            </div>
-            <div id="excelPreview" class="excel-preview"></div>
-        </div>
-        <div class="modal-footer"><button class="btn btn-primary" onclick="confirmExcelImport()">确认导入</button></div>
-    </div>
-</div>
-
-<div class="toast-container" id="toastContainer"></div>
 
 <script>
-    // ================== Core Logic ==================
-    var achievements = [], members = [], ghConfig = {token:'', gistId:''};
-    var currentView = 'all', sortOrder = 'date-desc', searchQuery = '', currentYearFilter = 'all';
-    var db; const DB_NAME = 'ResearchDB_Unlimited', DB_VERSION = 1;
-    var selectedItems = new Set();
-    var currentPdfData = null, currentPdfName = null;
-    var excelData = [], excelHeaders = [];
+/**
+ * =================================================================
+ * 核心逻辑 (Core Logic) - IndexedDB + 完整功能
+ * =================================================================
+ */
 
-    // --- Database (IndexedDB) ---
-    function initDB() {
-        return new Promise((resolve, reject) => {
-            const req = indexedDB.open(DB_NAME, DB_VERSION);
-            req.onupgradeneeded = e => { if(!e.target.result.objectStoreNames.contains('appState')) e.target.result.createObjectStore('appState', {keyPath: 'id'}); };
-            req.onsuccess = e => { db = e.target.result; resolve(db); };
-            req.onerror = e => reject(e);
-        });
+// 1. 数据配置
+const APP = {
+    dbName: 'ResearchDB_Pro',
+    dbVersion: 1,
+    db: null,
+    data: { achievements: [], members: [] },
+    view: 'all',
+    search: '',
+    sort: 'date-desc',
+    selected: new Set(),
+    currentFile: null,
+    types: {
+        paper: { label: '学术论文', icon: '📄', color: 'type-paper' },
+        patent: { label: '发明专利', icon: '💡', color: 'type-patent' },
+        project: { label: '科研项目', icon: '📊', color: 'type-project' },
+        award: { label: '获奖情况', icon: '🏆', color: 'type-award' },
+        book: { label: '专著出版', icon: '📚', color: 'type-book' },
+        member: { label: '成员', icon: '👤', color: 'type-member' }
     }
+};
 
-    async function saveToLocal(skipCloud) {
-        if(!db) await initDB();
-        const tx = db.transaction(['appState'], 'readwrite');
-        tx.objectStore('appState').put({ id: 'main_data', achievements, members, ghConfig, updatedAt: new Date().toISOString() });
-        tx.oncomplete = () => {
-            document.getElementById('storageStatus').innerText = '✓ 数据已保存';
-            if(!skipCloud && ghConfig.token) syncToGithub();
+// 2. 初始化 IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(APP.dbName, APP.dbVersion);
+        req.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('store')) db.createObjectStore('store', { keyPath: 'id' });
         };
-    }
+        req.onsuccess = e => { APP.db = e.target.result; resolve(); };
+        req.onerror = e => reject(e);
+    });
+}
 
-    async function loadFromLocal() {
-        if(!db) await initDB();
-        return new Promise(resolve => {
-            const req = db.transaction(['appState'], 'readonly').objectStore('appState').get('main_data');
-            req.onsuccess = e => {
-                if(e.target.result) {
-                    achievements = e.target.result.achievements || [];
-                    members = e.target.result.members || [];
-                    ghConfig = e.target.result.ghConfig || {token:'', gistId:''};
-                    updateCloudUI();
-                }
-                resolve(true);
-            };
-        });
-    }
-
-    // --- Cloud Sync ---
-    function openCloudConfig() { document.getElementById('ghToken').value = ghConfig.token; document.getElementById('ghGistId').value = ghConfig.gistId; document.getElementById('cloudModal').classList.add('active'); }
-    function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
-    async function connectGithub() {
-        const token = document.getElementById('ghToken').value.trim();
-        const gistId = document.getElementById('ghGistId').value.trim();
-        if(!token) return showToast('Token 必填', 'error');
-        showToast('连接中...', 'warning');
-        try {
-            if(gistId) {
-                await fetch(`https://api.github.com/gists/${gistId}`, { headers: {Authorization:`token ${token}`} });
-                ghConfig = {token, gistId}; await syncFromGithub();
-            } else {
-                const res = await fetch('https://api.github.com/gists', { method:'POST', headers:{Authorization:`token ${token}`}, body:JSON.stringify({description:"Research Data", public:false, files:{"data.json":{content:"{}"}}})});
-                if(!res.ok) throw new Error('创建失败');
-                const d = await res.json(); ghConfig = {token, gistId:d.id};
-            }
-            saveToLocal(true); closeCloudModal(); updateCloudUI();
-        } catch(e) { showToast('连接失败', 'error'); }
-    }
-    async function syncToGithub() {
-        if(!ghConfig.gistId) return;
-        // Strip large PDF data for sync to avoid Gist limits
-        const leanAch = achievements.map(a => { const {pdfData, ...rest} = a; return rest; }); 
-        fetch(`https://api.github.com/gists/${ghConfig.gistId}`, { method:'PATCH', headers:{Authorization:`token ${ghConfig.token}`}, body:JSON.stringify({files:{"data.json":{content:JSON.stringify({achievements:leanAch, members})}}})});
-    }
-    async function syncFromGithub() {
-        const res = await fetch(`https://api.github.com/gists/${ghConfig.gistId}`, { headers: {Authorization:`token ${ghConfig.token}`} });
-        const d = await res.json();
-        const content = JSON.parse(d.files['data.json'].content);
-        // Merge strategy: Keep local PDFs if exist
-        achievements = content.achievements || [];
-        members = content.members || [];
-        saveToLocal(true); updateStats(); renderResults(); showToast('云端同步成功');
-    }
-    function updateCloudUI() {
-        const txt = document.getElementById('cloudStatusText');
-        const dot = document.getElementById('cloudStatusDot');
-        if(ghConfig.token) { txt.innerText = '☁️ 云端已连接'; dot.style.background = 'var(--success)'; }
-    }
-
-    // --- UI Logic ---
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-    function setView(v) { 
-        currentView = v; selectedItems.clear(); 
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.view === v));
-        const titles = { all:'全部成果', paper:'学术论文', patent:'发明专利', project:'科研项目', award:'获奖情况', book:'专著出版', member:'成员信息' };
-        document.getElementById('pageTitle').innerText = titles[v];
-        document.getElementById('addBtnText').innerText = v==='member' ? '添加成员' : '添加成果';
-        if(window.innerWidth<=768) document.getElementById('sidebar').classList.remove('open');
-        renderResults();
-    }
-    function toggleMenu(id) { document.getElementById(id).classList.toggle('show'); }
-    document.onclick = e => { if(!e.target.closest('.data-actions, .dropdown-menu')) document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('show')); };
-
-    // --- CRUD ---
-    function openAddModal() {
-        if(currentView==='member') { openMemberModal(); return; }
-        document.getElementById('researchForm').reset(); removeFile();
-        document.getElementById('editId').value = '';
-        document.getElementById('type').value = (currentView!=='all') ? currentView : '';
-        toggleFormFields();
-        document.getElementById('formModal').classList.add('active');
-    }
-    function editAchievement(id) {
-        const item = achievements.find(a=>a.id===id); if(!item) return;
-        document.getElementById('editId').value = id;
-        document.getElementById('type').value = item.type; toggleFormFields();
-        // Fill fields (Simplified mapping)
-        if(item.type==='patent'){
-            document.getElementById('patentName').value = item.patentName; document.getElementById('patentNumber').value = item.patentNumber;
-        } else if(item.type==='project'){
-            document.getElementById('projectName').value = item.projectName; document.getElementById('projectNumber').value = item.projectNumber;
+async function loadData() {
+    if (!APP.db) await initDB();
+    const tx = APP.db.transaction('store', 'readonly');
+    const store = tx.objectStore('store');
+    const req = store.get('main_data');
+    req.onsuccess = e => {
+        if (e.target.result) {
+            APP.data = e.target.result.data;
         } else {
-            document.getElementById('title').value = item.title;
+            // 首次运行或空库
+            APP.data = { achievements: [], members: [] };
         }
-        // ... (Fill rest)
-        document.getElementById('formModal').classList.add('active');
-    }
-    function closeModal() { document.getElementById('formModal').classList.remove('active'); }
-    function handleSubmit(e) {
-        e.preventDefault();
-        const id = document.getElementById('editId').value;
-        const type = document.getElementById('type').value;
-        const data = { id: id||Date.now().toString(), type, pdfData: currentPdfData, pdfName: currentPdfName };
-        
-        if(type==='patent') {
-            data.patentName = document.getElementById('patentName').value; data.patentNumber = document.getElementById('patentNumber').value;
-            data.title = data.patentName; 
-        } else if(type==='project') {
-            data.projectName = document.getElementById('projectName').value; data.projectNumber = document.getElementById('projectNumber').value;
-            data.title = data.projectName;
-        } else {
-            data.title = document.getElementById('title').value;
-        }
-        // ... (Collect rest)
-        data.date = document.getElementById('date').value;
-        data.authors = document.getElementById('authors').value;
+        updateUI();
+    };
+}
 
-        if(id) { const idx = achievements.findIndex(a=>a.id===id); achievements[idx] = {...achievements[idx], ...data}; }
-        else achievements.push(data);
-        saveToLocal(); closeModal(); updateStats(); renderResults();
+async function saveData() {
+    const tx = APP.db.transaction('store', 'readwrite');
+    tx.objectStore('store').put({ id: 'main_data', data: APP.data, updated: new Date() });
+    tx.oncomplete = () => {
+        // 更新 UI 提示
+        const dot = document.querySelector('.indicator-dot');
+        dot.style.boxShadow = '0 0 8px var(--success)';
+        setTimeout(() => dot.style.boxShadow = 'none', 500);
+    };
+}
+
+// 3. UI 渲染与交互
+function updateUI() {
+    renderStats();
+    renderList();
+    updateCounts();
+}
+
+function updateCounts() {
+    const counts = { paper:0, patent:0, project:0, award:0, book:0 };
+    APP.data.achievements.forEach(i => { if(counts[i.type]!==undefined) counts[i.type]++; });
+    document.getElementById('count-all').innerText = APP.data.achievements.length;
+    document.getElementById('count-member').innerText = APP.data.members.length;
+    Object.keys(counts).forEach(k => document.getElementById(`count-${k}`).innerText = counts[k]);
+}
+
+function renderStats() {
+    const statsDiv = document.getElementById('statsRow');
+    const counts = { paper:0, patent:0, project:0, award:0, book:0, member: APP.data.members.length };
+    APP.data.achievements.forEach(i => { if(counts[i.type]!==undefined) counts[i.type]++; });
+    
+    statsDiv.innerHTML = Object.keys(APP.types).map(k => `
+        <div class="stat-box">
+            <div class="stat-icon ${APP.types[k].color}">${APP.types[k].icon}</div>
+            <div class="stat-info"><h3>${counts[k]}</h3><p>${APP.types[k].label}</p></div>
+        </div>
+    `).join('');
+}
+
+function renderList() {
+    const listDiv = document.getElementById('listContainer');
+    let list = APP.view === 'member' ? APP.data.members : APP.data.achievements;
+    
+    // Filter View
+    if (APP.view !== 'all' && APP.view !== 'member') {
+        list = list.filter(i => i.type === APP.view);
     }
     
-    // --- Member CRUD ---
-    function openMemberModal() { document.getElementById('memberForm').reset(); document.getElementById('memberEditId').value=''; document.getElementById('memberModal').classList.add('active'); }
-    function editMember(id) {
-        const m = members.find(x=>x.id===id); if(!m)return;
-        document.getElementById('memberEditId').value=id;
-        document.getElementById('memberName').value=m.memberName; document.getElementById('memberNo').value=m.memberNo;
-        document.getElementById('memberModal').classList.add('active');
-    }
-    function closeMemberModal() { document.getElementById('memberModal').classList.remove('active'); }
-    function handleMemberSubmit(e) {
-        e.preventDefault();
-        const id = document.getElementById('memberEditId').value;
-        const data = { id: id||Date.now().toString(), memberName: document.getElementById('memberName').value, memberNo: document.getElementById('memberNo').value };
-        if(id) { const idx = members.findIndex(m=>m.id===id); members[idx] = {...members[idx], ...data}; }
-        else members.push(data);
-        saveToLocal(); closeMemberModal(); updateStats(); renderResults();
+    // Filter Search
+    if (APP.search) {
+        const q = APP.search.toLowerCase();
+        list = list.filter(i => Object.values(i).join(' ').toLowerCase().includes(q));
     }
 
-    // --- File Handling ---
-    function handleFileSelect(e) {
-        const f = e.target.files[0]; if(!f) return;
-        const r = new FileReader(); r.onload = ev => { currentPdfData = ev.target.result; currentPdfName = f.name; document.getElementById('fileName').innerText=f.name; document.getElementById('fileInfo').classList.remove('hidden'); document.getElementById('fileUpload').classList.add('has-file'); };
-        r.readAsDataURL(f);
-    }
-    function removeFile() { currentPdfData=null; document.getElementById('fileInfo').classList.add('hidden'); document.getElementById('fileUpload').classList.remove('has-file'); }
+    // Sort
+    list.sort((a,b) => {
+        const da = a.date || '0', db = b.date || '0';
+        return APP.sort === 'date-desc' ? (da<db?1:-1) : (da>db?1:-1);
+    });
 
-    // --- Restore ---
-    function triggerRestore() { document.getElementById('restoreInput').click(); }
-    function performRestore(e) {
-        const f = e.target.files[0]; if(!f) return;
-        const r = new FileReader();
-        r.onload = ev => {
-            try {
-                const d = JSON.parse(ev.target.result);
-                if(confirm('恢复将覆盖当前数据，确定吗？')) {
-                    achievements = d.achievements || [];
-                    members = d.members || [];
-                    saveToLocal(true);
-                    setTimeout(() => location.reload(), 500);
-                }
-            } catch(e) { showToast('文件无效', 'error'); }
-        };
-        r.readAsText(f);
+    document.getElementById('resultCount').innerText = `共 ${list.length} 条`;
+
+    if (list.length === 0) {
+        listDiv.innerHTML = `<div class="empty-view">暂无数据</div>`;
+        return;
     }
 
-    // --- Render ---
-    function updateStats() {
-        document.getElementById('totalCount').innerText = achievements.length;
-        document.getElementById('memberCount').innerText = members.length;
-        // ... (Count others)
-    }
+    listDiv.innerHTML = list.map(item => {
+        const typeConf = APP.types[item.type || 'paper'];
+        const title = item.title || item.name;
+        const date = item.date || item.birth || '-';
+        const sub = item.author || item.org || '-';
+        const hasFile = !!item.pdfData;
+        const isSel = APP.selected.has(item.id);
+        const tag = item.code || item.level || item.status || '';
 
-    function renderResults() {
-        const list = document.getElementById('resultsList');
-        const data = currentView==='member' ? members : achievements.filter(a => currentView==='all' || a.type===currentView);
-        document.getElementById('resultsCount').innerText = `共 ${data.length} 条`;
-        
-        if(data.length===0) return list.innerHTML = `<div class="empty-state">暂无数据</div>`;
-
-        list.innerHTML = data.map(i => {
-            const title = i.title || i.patentName || i.projectName || i.memberName;
-            const sub = i.authors || i.memberOrg || '';
-            const date = i.date || i.applicationDate || i.projectStartDate || '';
-            const typeClass = i.type ? `type-${i.type}` : 'type-member';
-            const icon = i.type ? typeConfig[i.type].icon : '👤';
-            
-            return `<div class="result-item" onclick="currentView==='member'?editMember('${i.id}'):editAchievement('${i.id}')">
-                <div class="result-type ${typeClass}">${icon}</div>
-                <div class="result-content">
-                    <div class="result-title">${title}</div>
-                    <div class="result-meta"><span>${date}</span><span>${sub}</span></div>
+        return `
+            <div class="list-row" onclick="editItem('${item.id}')">
+                <input type="checkbox" class="row-check" ${isSel?'checked':''} onclick="toggleSelect('${item.id}', event)">
+                <div class="row-icon ${typeConf.color}">${typeConf.icon}</div>
+                <div class="row-content">
+                    <div class="row-title">${title}</div>
+                    <div class="row-meta">
+                        <div class="meta-tag">📅 ${date}</div>
+                        <div class="meta-badge">👤 ${sub}</div>
+                        ${tag ? `<div class="meta-badge" style="color:var(--primary)">🏷️ ${tag}</div>` : ''}
+                        ${hasFile ? `<div class="meta-tag has-file">📎 附件</div>` : ''}
+                    </div>
                 </div>
-            </div>`;
-        }).join('');
-    }
+                <div class="row-actions">
+                    ${hasFile ? `<button class="icon-btn" onclick="event.stopPropagation();downloadFile('${item.id}')">⬇</button>` : ''}
+                    <button class="icon-btn" onclick="event.stopPropagation();editItem('${item.id}')">✏</button>
+                    <button class="icon-btn delete" onclick="event.stopPropagation();deleteItem('${item.id}')">🗑</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
 
-    function toggleFormFields() {
-        const t = document.getElementById('type').value;
-        document.getElementById('patentFields').classList.toggle('hidden', t!=='patent');
-        document.getElementById('projectFields').classList.toggle('hidden', t!=='project');
-        document.getElementById('generalFields').classList.toggle('hidden', t==='patent'||t==='project');
-    }
+// 4. 操作逻辑
+function switchView(v) {
+    APP.view = v; APP.search = ''; APP.selected.clear();
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.id === `nav-${v}`));
+    
+    // UI Update
+    document.getElementById('addBtnText').innerText = v === 'member' ? '添加成员' : '添加成果';
+    document.getElementById('pageTitle').innerText = APP.types[v]?.label || '全部成果';
+    if(window.innerWidth <= 768) toggleSidebar();
+    
+    renderList();
+    document.getElementById('batchDelBtn').style.display = 'none';
+    document.getElementById('selectAll').checked = false;
+}
 
-    // --- Word Export (Split Tables) ---
-    function exportToWordFile() {
-        let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table{border-collapse:collapse;width:100%;margin-bottom:20px;font-size:10pt} th,td{border:1px solid #000;padding:4px} th{background:#f0f0f0}</style></head><body><h2>科研汇总</h2>`;
+function handleSearch(val) { APP.search = val; renderList(); }
+function handleSort(val) { APP.sort = val; renderList(); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function toggleMenu(id) { document.getElementById(id).classList.toggle('show'); }
+// Close menu when clicking outside
+window.onclick = e => {
+    if (!e.target.closest('.data-actions') && !e.target.closest('.popup-menu')) {
+        document.querySelectorAll('.popup-menu').forEach(m => m.classList.remove('show'));
+    }
+};
+
+// 5. CRUD 表单
+function openAddModal() {
+    document.getElementById('dataForm').reset();
+    document.getElementById('editId').value = '';
+    APP.currentFile = null;
+    document.getElementById('fileStatus').classList.add('hidden');
+    document.getElementById('modalTitle').innerText = '新增记录';
+    
+    // Set default type
+    const defaultType = (APP.view !== 'all' && APP.view !== 'member') ? APP.view : (APP.view === 'member' ? 'member' : 'paper');
+    document.getElementById('inputType').value = defaultType;
+    document.getElementById('inputDate').valueAsDate = new Date();
+    
+    updateFormFields();
+    document.getElementById('editModal').classList.add('active');
+}
+
+function closeModal() { document.getElementById('editModal').classList.remove('active'); }
+
+function updateFormFields() {
+    const type = document.getElementById('inputType').value;
+    const isMem = type === 'member';
+    const show = id => document.getElementById(id).classList.remove('hidden');
+    const hide = id => document.getElementById(id).classList.add('hidden');
+
+    // Reset visibility
+    ['grpDate','grpLevel','grpCode','grpEndDate','grpExtra1','grpExtra2','grpMemNo','grpMemTitle','grpMemPhone','grpMemEmail','grpKeywords','grpFile','grpAuthor','grpSource'].forEach(hide);
+
+    if (isMem) {
+        show('grpMemNo'); show('grpMemTitle'); show('grpMemPhone'); show('grpMemEmail'); show('grpSource'); show('grpDate');
+        document.getElementById('lblTitle').innerText = '姓名';
+        document.getElementById('lblSource').innerText = '所属单位';
+        document.getElementById('lblDate').innerText = '出生年月';
+    } else {
+        show('grpDate'); show('grpAuthor'); show('grpSource'); show('grpLevel'); show('grpKeywords'); show('grpFile');
+        document.getElementById('lblTitle').innerText = '标题/名称';
+        document.getElementById('lblDate').innerText = '日期';
+        document.getElementById('lblAuthor').innerText = '作者/负责人';
+        document.getElementById('lblSource').innerText = '期刊/来源/单位';
+        document.getElementById('lblLevel').innerText = '级别/状态';
+
+        if(type === 'patent') { show('grpCode'); show('grpExtra1'); show('grpExtra2'); document.getElementById('lblLevel').innerText='状态'; }
+        if(type === 'project') { show('grpCode'); show('grpEndDate'); document.getElementById('lblLevel').innerText='级别'; }
+    }
+}
+
+function handleFileChange(input) {
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        APP.currentFile = { name: file.name, data: e.target.result };
+        document.getElementById('fileName').innerText = file.name;
+        document.getElementById('fileStatus').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearFile() { APP.currentFile = null; document.getElementById('fileInput').value=''; document.getElementById('fileStatus').classList.add('hidden'); }
+
+function handleFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    const type = document.getElementById('inputType').value;
+    const isMem = type === 'member';
+
+    const newItem = {
+        id: id || Date.now().toString(),
+        type: type,
+        updatedAt: new Date().toISOString()
+    };
+
+    if (isMem) {
+        newItem.name = document.getElementById('inputTitle').value;
+        newItem.birth = document.getElementById('inputDate').value;
+        newItem.org = document.getElementById('inputSource').value;
+        newItem.no = document.getElementById('inputMemNo').value;
+        newItem.title = document.getElementById('inputMemTitle').value;
+        newItem.phone = document.getElementById('inputMemPhone').value;
+        newItem.email = document.getElementById('inputMemEmail').value;
         
-        const types = ['paper', 'patent', 'project', 'award', 'book'];
-        const headers = {
-            paper: ['标题','作者','日期','来源','级别'],
-            patent: ['专利名','类型','状态','专利号','发明人'],
-            project: ['项目名','编号','级别','单位','时间'],
-            award: ['奖项名','获奖人','日期','级别'],
-            book: ['书名','作者','出版日期','出版社']
-        };
+        // Save to Members
+        if(id) {
+            const idx = APP.data.members.findIndex(m=>m.id===id);
+            if(idx>-1) APP.data.members[idx] = newItem;
+        } else APP.data.members.push(newItem);
 
-        types.forEach(t => {
-            const arr = achievements.filter(a => a.type === t);
-            if(arr.length) {
-                html += `<h3>${typeConfig[t].label}</h3><table><tr>${headers[t].map(h=>`<th>${h}</th>`).join('')}</tr>`;
-                arr.forEach(i => {
-                    let cols = [];
-                    if(t==='paper') cols = [i.title, i.authors, i.date, i.source, i.level];
-                    else if(t==='patent') cols = [i.patentName, i.patentType, i.patentStatus, i.patentNumber, i.inventors];
-                    else if(t==='project') cols = [i.projectName, i.projectNumber, i.projectLevel, i.projectOrg, i.projectStartDate];
-                    else if(t==='award') cols = [i.title, i.authors, i.date, i.level];
-                    else if(t==='book') cols = [i.title, i.authors, i.date, i.source];
-                    html += `<tr>${cols.map(c=>`<td>${c||''}</td>`).join('')}</tr>`;
-                });
-                html += `</table>`;
-            }
-        });
-
-        if(members.length) {
-            html += `<h3>团队成员</h3><table><tr><th>工号</th><th>姓名</th><th>职称</th><th>单位</th></tr>`;
-            members.forEach(m => html += `<tr><td>${m.memberNo}</td><td>${m.memberName}</td><td>${m.memberTitle}</td><td>${m.memberOrg}</td></tr>`);
-            html += `</table>`;
+    } else {
+        newItem.title = document.getElementById('inputTitle').value;
+        newItem.date = document.getElementById('inputDate').value;
+        newItem.author = document.getElementById('inputAuthor').value;
+        newItem.source = document.getElementById('inputSource').value;
+        newItem.level = document.getElementById('inputLevel').value;
+        newItem.keywords = document.getElementById('inputKeywords').value;
+        newItem.code = document.getElementById('inputCode').value; // Patent/Project No
+        
+        // Specific fields
+        if(type==='project') newItem.endDate = document.getElementById('inputEndDate').value;
+        if(type==='patent') {
+            newItem.patentType = document.getElementById('inputExtra1').value;
+            newItem.grantDate = document.getElementById('inputExtra2').value;
         }
+
+        // File
+        if(APP.currentFile) {
+            newItem.pdfData = APP.currentFile.data;
+            newItem.pdfName = APP.currentFile.name;
+        } else if(id) {
+            // Keep old file
+            const old = APP.data.achievements.find(i=>i.id===id);
+            if(old && old.pdfData) { newItem.pdfData = old.pdfData; newItem.pdfName = old.pdfName; }
+        }
+
+        // Save to Achievements
+        if(id) {
+            const idx = APP.data.achievements.findIndex(i=>i.id===id);
+            if(idx>-1) APP.data.achievements[idx] = newItem;
+        } else APP.data.achievements.push(newItem);
+    }
+
+    saveData();
+    closeModal();
+    updateUI();
+}
+
+function editItem(id) {
+    const isMem = APP.data.members.find(m => m.id === id);
+    const item = isMem || APP.data.achievements.find(i => i.id === id);
+    if(!item) return;
+
+    openAddModal();
+    document.getElementById('modalTitle').innerText = '编辑记录';
+    document.getElementById('editId').value = id;
+    document.getElementById('inputType').value = item.type;
+    updateFormFields();
+
+    // Fill Data
+    document.getElementById('inputTitle').value = item.title || item.name;
+    document.getElementById('inputDate').value = item.date || item.birth;
+    document.getElementById('inputSource').value = item.source || item.org;
+    
+    if(isMem) {
+        document.getElementById('inputMemNo').value = item.no;
+        document.getElementById('inputMemTitle').value = item.title;
+        document.getElementById('inputMemPhone').value = item.phone;
+        document.getElementById('inputMemEmail').value = item.email;
+    } else {
+        document.getElementById('inputAuthor').value = item.author;
+        document.getElementById('inputLevel').value = item.level;
+        document.getElementById('inputKeywords').value = item.keywords;
+        document.getElementById('inputCode').value = item.code || '';
+        if(item.endDate) document.getElementById('inputEndDate').value = item.endDate;
+        if(item.patentType) document.getElementById('inputExtra1').value = item.patentType;
+        if(item.grantDate) document.getElementById('inputExtra2').value = item.grantDate;
         
-        html += `</body></html>`;
-        const blob = new Blob([html], {type:'application/msword'});
+        if(item.pdfData) {
+            document.getElementById('fileName').innerText = item.pdfName;
+            document.getElementById('fileStatus').classList.remove('hidden');
+        }
+    }
+}
+
+// 6. 批量操作
+function toggleSelectAll() {
+    const all = document.getElementById('selectAll').checked;
+    const boxes = document.querySelectorAll('.row-check');
+    boxes.forEach(b => {
+        b.checked = all;
+        const id = b.parentElement.getAttribute('onclick').match(/'(.*?)'/)[1];
+        if(all) APP.selected.add(id); else APP.selected.delete(id);
+    });
+    updateBatchBtn();
+}
+
+function toggleSelect(id, e) {
+    e.stopPropagation();
+    if(APP.selected.has(id)) APP.selected.delete(id); else APP.selected.add(id);
+    updateBatchBtn();
+}
+
+function updateBatchBtn() {
+    document.getElementById('batchDelBtn').style.display = APP.selected.size > 0 ? 'block' : 'none';
+}
+
+function batchDelete() {
+    if(!confirm(`确定删除选中的 ${APP.selected.size} 条记录吗？`)) return;
+    
+    if(APP.view === 'member') {
+        APP.data.members = APP.data.members.filter(m => !APP.selected.has(m.id));
+    } else {
+        APP.data.achievements = APP.data.achievements.filter(i => !APP.selected.has(i.id));
+    }
+    
+    APP.selected.clear();
+    saveData();
+    updateUI();
+}
+
+function deleteItem(id) {
+    if(!confirm('确定删除此记录？')) return;
+    APP.data.members = APP.data.members.filter(m => m.id !== id);
+    APP.data.achievements = APP.data.achievements.filter(i => i.id !== id);
+    saveData();
+    updateUI();
+}
+
+// 7. 文件下载
+function downloadFile(id) {
+    const item = APP.data.achievements.find(i => i.id === id);
+    if(item && item.pdfData) {
+        // Base64 to Blob
+        const arr = item.pdfData.split(',');
+        const bstr = atob(arr[1]);
+        let n = bstr.length; const u8arr = new Uint8Array(n);
+        while(n--) u8arr[n] = bstr.charCodeAt(n);
+        const blob = new Blob([u8arr], {type: 'application/pdf'});
+        
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = '科研数据分表汇总.doc';
+        a.download = item.pdfName;
         a.click();
     }
+}
 
-    function showToast(msg) {
-        const t = document.createElement('div'); t.className = 'toast show'; t.innerText = msg;
-        document.getElementById('toastContainer').appendChild(t);
-        setTimeout(() => t.remove(), 2000);
+// 8. 导入导出逻辑 (Import/Export)
+function backupJSON() {
+    const str = JSON.stringify(APP.data);
+    const blob = new Blob([str], {type: "application/json"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `research_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+}
+
+function restoreJSON(input) {
+    const file = input.files[0];
+    if(!file) return;
+    const r = new FileReader();
+    r.onload = e => {
+        try {
+            const d = JSON.parse(e.target.result);
+            if(d.achievements || d.members) {
+                if(confirm('恢复将覆盖当前数据，确定吗？')) {
+                    APP.data = d;
+                    saveData();
+                    updateUI();
+                    alert('恢复成功');
+                }
+            }
+        } catch(err) { alert('文件格式错误'); }
+    };
+    r.readAsText(file);
+    input.value = '';
+}
+
+// === 分表分列 Excel 导出 ===
+function exportToExcel() {
+    const wb = XLSX.utils.book_new();
+
+    // Helper: Add Sheet
+    const addSheet = (name, data) => {
+        if(data.length > 0) {
+            const ws = XLSX.utils.json_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, name);
+        }
+    };
+
+    // 1. 学术论文
+    addSheet("学术论文", APP.data.achievements.filter(i=>i.type==='paper').map(i=>({
+        '标题': i.title, '作者': i.author, '日期': i.date, '期刊': i.source, '级别': i.level, '关键词': i.keywords
+    })));
+
+    // 2. 发明专利
+    addSheet("发明专利", APP.data.achievements.filter(i=>i.type==='patent').map(i=>({
+        '专利名称': i.title, '类型': i.patentType, '发明人': i.author, '权利人': i.source, 
+        '申请日': i.date, '授权日': i.grantDate, '专利号': i.code, '状态': i.level
+    })));
+
+    // 3. 科研项目
+    addSheet("科研项目", APP.data.achievements.filter(i=>i.type==='project').map(i=>({
+        '项目名称': i.title, '编号': i.code, '级别': i.level, '负责人': i.author, 
+        '单位': i.source, '开始时间': i.date, '结束时间': i.endDate
+    })));
+
+    // 4. 获奖
+    addSheet("获奖情况", APP.data.achievements.filter(i=>i.type==='award').map(i=>({
+        '奖项名称': i.title, '获奖人': i.author, '日期': i.date, '级别': i.level
+    })));
+
+    // 5. 著作
+    addSheet("专著出版", APP.data.achievements.filter(i=>i.type==='book').map(i=>({
+        '书名': i.title, '作者': i.author, '出版日期': i.date, '出版社': i.source
+    })));
+
+    // 6. 成员
+    addSheet("成员信息", APP.data.members.map(m=>({
+        '工号': m.no, '姓名': m.name, '性别': m.gender, '出生年月': m.birth, 
+        '职称': m.title, '单位': m.org, '手机': m.phone, '邮箱': m.email
+    })));
+
+    if(wb.SheetNames.length === 0) return alert('无数据可导出');
+    XLSX.writeFile(wb, "科研成果分表导出.xlsx");
+}
+
+function importExcel(input) {
+    const file = input.files[0];
+    if(!file) return;
+    const r = new FileReader();
+    r.onload = e => {
+        const d = new Uint8Array(e.target.result);
+        const wb = XLSX.read(d, {type:'array'});
+        // Simple import logic (assumes 1st sheet is papers for now, or ask user)
+        // For simplicity in this robust version, we import to 'paper' default
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(ws);
+        let count = 0;
+        json.forEach(row => {
+            APP.data.achievements.push({
+                id: Date.now() + Math.random().toString(),
+                type: 'paper',
+                title: row['标题'] || row['Title'] || '导入数据',
+                date: row['日期'] || new Date().toISOString().slice(0,10),
+                author: row['作者'] || '',
+                source: row['期刊'] || '',
+                level: row['级别'] || '',
+                updatedAt: new Date().toISOString()
+            });
+            count++;
+        });
+        saveData();
+        updateUI();
+        alert(`成功导入 ${count} 条数据`);
+    };
+    r.readAsArrayBuffer(file);
+    input.value = '';
+}
+
+// === 分表 Word 导出 ===
+function exportToWord() {
+    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><style>table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10pt}th,td{border:1px solid #000;padding:5px;text-align:center}th{background:#eee}</style></head><body><h2>科研汇总表</h2>`;
+    
+    const groups = {
+        '学术论文': APP.data.achievements.filter(i=>i.type==='paper'),
+        '发明专利': APP.data.achievements.filter(i=>i.type==='patent'),
+        '科研项目': APP.data.achievements.filter(i=>i.type==='project'),
+        '获奖情况': APP.data.achievements.filter(i=>i.type==='award'),
+        '专著出版': APP.data.achievements.filter(i=>i.type==='book'),
+        '成员信息': APP.data.members
+    };
+
+    for(let name in groups) {
+        const arr = groups[name];
+        if(arr.length === 0) continue;
+        html += `<h3>${name}</h3><table><tr>`;
+        
+        // Headers logic
+        if(name==='学术论文') html+=`<th>标题</th><th>作者</th><th>日期</th><th>来源</th><th>级别</th>`;
+        else if(name==='发明专利') html+=`<th>名称</th><th>类型</th><th>状态</th><th>专利号</th><th>申请日</th>`;
+        else if(name==='科研项目') html+=`<th>名称</th><th>编号</th><th>级别</th><th>单位</th><th>起止时间</th>`;
+        else if(name==='成员信息') html+=`<th>工号</th><th>姓名</th><th>职称</th><th>单位</th><th>手机</th>`;
+        else html+=`<th>名称</th><th>人员</th><th>日期</th><th>备注</th>`;
+        html += `</tr>`;
+
+        // Rows logic
+        arr.forEach(i => {
+            html += `<tr>`;
+            if(name==='学术论文') html+=`<td>${i.title}</td><td>${i.author}</td><td>${i.date}</td><td>${i.source}</td><td>${i.level}</td>`;
+            else if(name==='发明专利') html+=`<td>${i.title}</td><td>${i.patentType||''}</td><td>${i.level||''}</td><td>${i.code||''}</td><td>${i.date}</td>`;
+            else if(name==='科研项目') html+=`<td>${i.title}</td><td>${i.code||''}</td><td>${i.level||''}</td><td>${i.source||''}</td><td>${i.date} 至 ${i.endDate||''}</td>`;
+            else if(name==='成员信息') html+=`<td>${i.no}</td><td>${i.name}</td><td>${i.title}</td><td>${i.org}</td><td>${i.phone}</td>`;
+            else html+=`<td>${i.title}</td><td>${i.author}</td><td>${i.date}</td><td>${i.level||''}</td>`;
+            html += `</tr>`;
+        });
+        html += `</table>`;
     }
 
-    window.onload = async () => { await loadFromLocal(); updateStats(); renderResults(); };
+    html += `</body></html>`;
+    const blob = new Blob([html], {type: 'application/msword'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '科研数据分表汇总.doc';
+    a.click();
+}
+
+// Init
+window.onload = loadData;
+
 </script>
 </body>
 </html>
