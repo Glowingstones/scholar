@@ -2,453 +2,450 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>科研成果管理系统 (旗舰完整版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科研成果管理系统 (Windows修复旗舰版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* =================================================================
-           1. 样式系统 (CSS Design System)
+           1. 核心样式重置与变量
            ================================================================= */
         :root {
+            --sidebar-w: 280px; /* 侧边栏加宽，适应Windows显示 */
+            --header-h: 70px;
+            
             --bg-body: #f1f5f9;
-            --bg-sidebar: #ffffff;
+            --bg-sidebar: #1e293b; /* 深色侧边栏，更专业 */
             --bg-card: #ffffff;
             --bg-hover: #f8fafc;
             --bg-active: #eff6ff;
-            
-            --text-main: #0f172a;
-            --text-sub: #64748b;
-            --text-muted: #94a3b8;
-            --text-white: #ffffff;
 
+            --text-main: #0f172a;
+            --text-sidebar: #cbd5e1; /* 侧边栏文字浅灰 */
+            --text-sidebar-active: #ffffff;
+            --text-sub: #64748b;
+            
             --primary: #4f46e5;
             --primary-hover: #4338ca;
-            --primary-light: #eef2ff;
-
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
 
             --border: #e2e8f0;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --radius: 10px;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
 
-        /* 暗色模式 */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-body: #0f172a;
-                --bg-sidebar: #1e293b;
-                --bg-card: #1e293b;
-                --bg-hover: #334155;
-                --bg-active: #312e81;
-                
-                --text-main: #f8fafc;
-                --text-sub: #cbd5e1;
-                --text-muted: #64748b;
-                
-                --border: #334155;
-            }
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-body);
             color: var(--text-main);
             height: 100vh;
-            overflow: hidden;
+            overflow: hidden; /* 禁用 Body 滚动，使用内部滚动 */
             display: flex;
         }
 
         /* =================================================================
-           2. 侧边栏布局 (Sidebar Layout)
+           2. 侧边栏 (Fixed Sidebar) - Windows 适配修复
            ================================================================= */
         .sidebar {
-            width: 260px;
-            background: var(--bg-sidebar);
-            border-right: 1px solid var(--border);
+            width: var(--sidebar-w);
+            background-color: var(--bg-sidebar);
+            color: var(--text-sidebar);
             display: flex;
             flex-direction: column;
-            z-index: 50;
-            transition: transform 0.3s ease;
+            height: 100%;
+            flex-shrink: 0; /* 禁止压缩 */
+            z-index: 1000; /* 确保层级最高 */
+            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
         }
 
         .sidebar-header {
-            padding: 24px;
-            border-bottom: 1px solid var(--border);
+            height: var(--header-h);
             display: flex;
             align-items: center;
-            gap: 12px;
+            padding: 0 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background-color: rgba(0,0,0,0.1);
         }
 
-        .app-logo {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        .logo-box {
+            width: 36px; height: 36px;
+            background: var(--primary);
+            color: #fff;
             border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 1.5rem;
-            box-shadow: var(--shadow);
+            font-size: 1.2rem; margin-right: 12px;
         }
 
-        .app-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+        .logo-text { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: 1px; }
 
-        .nav-container { flex: 1; overflow-y: auto; padding: 20px 12px; }
+        .nav-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+        }
+        /* 自定义侧边栏滚动条 */
+        .nav-scroll::-webkit-scrollbar { width: 4px; }
+        .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
 
-        .nav-group { margin-bottom: 24px; }
-        .nav-label {
-            font-size: 0.75rem; color: var(--text-muted); font-weight: 600;
-            text-transform: uppercase; padding-left: 12px; margin-bottom: 8px;
+        .nav-group-title {
+            font-size: 0.75rem; color: rgba(255,255,255,0.4);
+            text-transform: uppercase; margin: 16px 0 8px 12px;
         }
 
         .nav-item {
-            display: flex; align-items: center; padding: 12px;
-            border-radius: var(--radius); cursor: pointer;
-            color: var(--text-sub); transition: all 0.2s;
+            display: flex; align-items: center;
+            padding: 12px 16px;
             margin-bottom: 4px;
-        }
-        .nav-item:hover { background: var(--bg-hover); color: var(--text-main); }
-        .nav-item.active { background: var(--bg-active); color: var(--primary); font-weight: 600; }
-        
-        .nav-icon { width: 24px; text-align: center; margin-right: 12px; font-size: 1.1rem; }
-        .nav-count {
-            margin-left: auto; background: var(--bg-hover);
-            padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-sidebar);
+            text-decoration: none;
         }
 
+        .nav-item:hover { background-color: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background-color: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); }
+
+        .nav-icon { width: 20px; text-align: center; margin-right: 12px; font-size: 1.1rem; }
+        .nav-badge { margin-left: auto; font-size: 0.75rem; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 10px; }
+
+        /* 侧边栏底部操作区 */
         .sidebar-footer {
-            padding: 16px; border-top: 1px solid var(--border);
-            background: var(--bg-sidebar); position: relative;
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background-color: rgba(0,0,0,0.1);
+            position: relative; /* 关键：用于定位弹出菜单 */
         }
 
-        .storage-indicator {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 0.8rem; color: var(--success); margin-bottom: 12px;
-            padding: 8px; background: var(--bg-hover); border-radius: var(--radius);
+        .cloud-status {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px; background: rgba(255,255,255,0.05);
+            border-radius: var(--radius); cursor: pointer;
+            margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.2s;
         }
-        .indicator-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
+        .cloud-status:hover { background: rgba(255,255,255,0.1); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #64748b; margin-right: 8px; }
+        .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
 
-        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .footer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
-        .btn-sidebar {
-            padding: 10px; border: 1px solid var(--border); border-radius: var(--radius);
-            background: var(--bg-card); color: var(--text-sub); font-size: 0.85rem;
-            cursor: pointer; text-align: center; transition: all 0.2s;
+        .f-btn {
+            padding: 10px; border: none; border-radius: var(--radius);
+            font-size: 0.85rem; cursor: pointer; text-align: center;
+            color: #fff; background: rgba(255,255,255,0.1); transition: 0.2s;
         }
-        .btn-sidebar:hover { border-color: var(--primary); color: var(--primary); }
+        .f-btn:hover { background: rgba(255,255,255,0.2); }
+        .f-btn-primary { background: var(--primary); }
+        .f-btn-primary:hover { background: var(--primary-hover); }
 
-        /* 弹出菜单 */
-        .popup-menu {
-            position: absolute; bottom: 100%; left: 10px; right: 10px;
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: var(--radius); box-shadow: var(--shadow-lg);
-            display: none; flex-direction: column; overflow: hidden;
-            margin-bottom: 10px; z-index: 100;
+        /* 弹出菜单 (修复点击不动的问题) */
+        .popover-menu {
+            position: absolute;
+            bottom: 100%; /* 向上弹出 */
+            left: 10px; right: 10px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+            padding: 8px 0;
+            margin-bottom: 10px;
+            display: none;
+            z-index: 9999; /* 极高层级 */
+            animation: slideUp 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
-        .popup-menu.show { display: flex; animation: slideUp 0.2s; }
-        .menu-option {
-            padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px;
-            border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-main);
+        .popover-menu.show { display: block; }
+        .pop-item {
+            padding: 12px 20px; color: var(--text-main); cursor: pointer;
+            display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
         }
-        .menu-option:hover { background: var(--bg-hover); color: var(--primary); }
-        .menu-option:last-child { border-bottom: none; }
-
+        .pop-item:hover { background: var(--bg-hover); color: var(--primary); }
         @keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
         /* =================================================================
-           3. 主界面布局 (Main Layout)
+           3. 主内容区 (Main Area)
            ================================================================= */
-        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
         .top-bar {
-            height: 70px; padding: 0 32px;
+            height: var(--header-h);
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
             display: flex; align-items: center; justify-content: space-between;
-            background: var(--bg-body); flex-shrink: 0;
+            flex-shrink: 0;
         }
-        .page-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+        .page-title h1 { font-size: 1.5rem; color: var(--text-main); font-weight: 700; }
         
-        .top-actions { display: flex; align-items: center; gap: 16px; }
-        .search-wrap { position: relative; }
+        .top-actions { display: flex; gap: 16px; align-items: center; }
+        .search-box { position: relative; }
         .search-input {
-            width: 280px; padding: 10px 16px 10px 36px;
+            width: 300px; padding: 10px 16px 10px 36px;
             border: 1px solid var(--border); border-radius: var(--radius);
-            background: var(--bg-card); color: var(--text-main);
+            font-size: 0.95rem; transition: 0.3s;
         }
-        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
 
-        .btn-primary {
-            background: var(--primary); color: white; border: none;
-            padding: 10px 20px; border-radius: var(--radius); font-weight: 600;
+        .btn-add {
+            background: var(--primary); color: #fff; border: none;
+            padding: 10px 24px; border-radius: var(--radius); font-weight: 600;
             cursor: pointer; display: flex; align-items: center; gap: 8px;
-            box-shadow: var(--shadow); transition: background 0.2s;
+            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.3); transition: 0.2s;
         }
-        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); }
 
-        .content-scroll { flex: 1; overflow-y: auto; padding: 0 32px 32px; }
+        /* 滚动内容区 */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+        }
 
         /* 统计卡片 */
-        .stats-row { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 20px; margin-bottom: 24px;
+        .stats-deck {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
         }
-        .stat-box {
-            background: var(--bg-card); padding: 20px; border-radius: var(--radius);
+        .stat-card {
+            background: #fff; padding: 24px; border-radius: var(--radius);
             border: 1px solid var(--border); display: flex; align-items: center; gap: 16px;
-            box-shadow: var(--shadow-sm); transition: transform 0.2s;
+            box-shadow: var(--shadow-sm); transition: 0.2s;
         }
-        .stat-box:hover { transform: translateY(-2px); }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
         .stat-icon {
-            width: 48px; height: 48px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            width: 50px; height: 50px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
         }
-        .stat-info h3 { font-size: 1.5rem; font-weight: 700; line-height: 1; margin-bottom: 4px; }
-        .stat-info p { font-size: 0.85rem; color: var(--text-sub); }
+        /* 不同类型颜色 */
+        .c-paper { background: #e0f2fe; color: #0284c7; }
+        .c-patent { background: #fef3c7; color: #d97706; }
+        .c-project { background: #dcfce7; color: #16a34a; }
+        .c-award { background: #fee2e2; color: #dc2626; }
+        .c-book { background: #f3e8ff; color: #9333ea; }
+        .c-member { background: #ffedd5; color: #ea580c; }
 
-        /* 列表区域 */
-        .list-panel {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;
-            min-height: 400px;
+        /* 列表容器 */
+        .list-wrapper {
+            background: #fff; border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden;
+            display: flex; flex-direction: column;
+            min-height: 500px;
         }
+        
         .list-toolbar {
             padding: 16px 24px; border-bottom: 1px solid var(--border);
-            background: var(--bg-hover); display: flex; justify-content: space-between; align-items: center;
+            background: #f8fafc; display: flex; justify-content: space-between; align-items: center;
         }
-        .batch-ops { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-sub); }
-        .btn-danger { background: var(--danger); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; display: none; }
+        
+        .filter-group { display: flex; align-items: center; gap: 12px; }
+        .year-select { padding: 8px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+        
+        .list-header {
+            padding: 12px 24px; border-bottom: 1px solid var(--border);
+            background: #f1f5f9; color: var(--text-sub); font-size: 0.85rem; font-weight: 600;
+            display: grid; grid-template-columns: 40px 2fr 1fr 1fr 1fr 100px; gap: 16px;
+        }
         
         .list-body { flex: 1; overflow-y: auto; }
         
         .list-row {
             padding: 16px 24px; border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; gap: 20px; cursor: pointer;
-            transition: background 0.1s;
+            display: grid; grid-template-columns: 40px 2fr 1fr 1fr 1fr 100px; gap: 16px;
+            align-items: center; transition: 0.1s; cursor: pointer;
         }
-        .list-row:hover { background: var(--bg-hover); }
-        .list-row:last-child { border-bottom: none; }
+        .list-row:hover { background: #f8fafc; }
         
-        .row-check { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
-        .row-icon {
-            width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-        }
-        .type-paper { background: #e0f2fe; color: #0369a1; }
-        .type-patent { background: #fef3c7; color: #b45309; }
-        .type-project { background: #dcfce7; color: #15803d; }
-        .type-award { background: #fee2e2; color: #b91c1c; }
-        .type-book { background: #f3e8ff; color: #7e22ce; }
-        .type-member { background: #ffedd5; color: #c2410c; }
-
-        .row-content { flex: 1; min-width: 0; }
-        .row-title { font-weight: 600; color: var(--text-main); font-size: 1rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .row-meta { display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-sub); }
-        .meta-tag { display: flex; align-items: center; gap: 4px; }
-        .has-file { color: var(--primary); font-weight: 500; }
-
-        .row-actions { display: flex; gap: 8px; opacity: 0; transition: opacity 0.2s; }
+        .cell-main { font-weight: 600; color: var(--text-main); }
+        .cell-sub { color: var(--text-sub); font-size: 0.9rem; }
+        .tag { padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; background: #e2e8f0; color: var(--text-sub); }
+        .tag-blue { background: #e0e7ff; color: var(--primary); }
+        
+        .row-actions { display: flex; gap: 8px; opacity: 0; transition: 0.2s; }
         .list-row:hover .row-actions { opacity: 1; }
+        
         .icon-btn {
             width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
+            background: #fff; color: var(--text-sub); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            color: var(--text-sub); background: white; transition: all 0.2s;
         }
         .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .icon-btn.delete:hover { border-color: var(--danger); color: var(--danger); }
+        .icon-btn.del:hover { border-color: var(--danger); color: var(--danger); }
 
-        .empty-view { padding: 60px; text-align: center; color: var(--text-muted); }
+        .empty-state { padding: 60px; text-align: center; color: var(--text-muted); }
 
         /* =================================================================
-           4. 弹窗样式 (Modal)
+           4. 弹窗 (Modal)
            ================================================================= */
         .modal-mask {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
-            z-index: 1000; display: flex; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; transition: all 0.3s;
+            z-index: 2000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: 0.3s;
         }
         .modal-mask.active { opacity: 1; visibility: visible; }
         
         .modal-box {
-            background: var(--bg-card); width: 650px; max-width: 90%; max-height: 90vh;
-            border-radius: 16px; display: flex; flex-direction: column;
-            transform: translateY(20px); transition: transform 0.3s;
+            background: #fff; width: 650px; max-width: 90%; max-height: 90vh;
+            border-radius: 12px; display: flex; flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: scale(0.95); transition: 0.3s;
         }
-        .modal-mask.active .modal-box { transform: translateY(0); }
+        .modal-mask.active .modal-box { transform: scale(1); }
 
         .modal-head { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-head h3 { font-size: 1.25rem; font-weight: 700; }
-        .close-btn { font-size: 1.5rem; color: var(--text-muted); background: none; border: none; cursor: pointer; }
-        
-        .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
-        .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+        .modal-body { padding: 24px; overflow-y: auto; }
+        .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; background: #f8fafc; border-radius: 0 0 12px 12px; }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .form-span { grid-column: span 2; }
-        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
-        .form-input {
-            width: 100%; padding: 10px 12px; border: 2px solid var(--border);
-            border-radius: 8px; background: var(--bg-body); color: var(--text-main);
-            transition: border-color 0.2s;
-        }
-        .form-input:focus { border-color: var(--primary); }
+        .form-full { grid-column: span 2; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+        .form-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; }
+        .form-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
 
-        /* 文件上传 */
-        .upload-area {
-            border: 2px dashed var(--border); border-radius: 12px; padding: 24px;
-            text-align: center; cursor: pointer; transition: all 0.2s;
-        }
-        .upload-area:hover { border-color: var(--primary); background: var(--bg-active); }
-        .file-status {
-            margin-top: 10px; padding: 10px; background: var(--primary-light);
-            border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
-            color: var(--primary); font-size: 0.9rem;
-        }
+        .file-drop { border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .file-drop:hover { border-color: var(--primary); background: #f8fafc; }
+        .file-has { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f1f5f9; border-radius: 6px; margin-top: 10px; }
+
+        /* Toast */
+        .toast-box { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 12px 20px; background: #fff; border-left: 4px solid var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 4px; transform: translateX(100%); transition: 0.3s; font-weight: 500;}
+        .toast.show { transform: translateX(0); }
 
         /* 移动端适配 */
         @media (max-width: 768px) {
-            .sidebar { position: fixed; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+            .sidebar { position: fixed; transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
-            .mobile-menu-btn { display: block !important; position: fixed; bottom: 20px; right: 20px; z-index: 1100; width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: var(--shadow-lg); font-size: 1.5rem; }
-            .main-content { padding: 16px; margin-left: 0; }
-            .form-grid { grid-template-columns: 1fr; }
-            .form-span { grid-column: span 1; }
-            .row-meta { display: none; } /* 移动端隐藏部分元数据 */
+            .main-wrapper { margin-left: 0; }
             .top-bar { padding: 0 16px; }
-            .search-input { width: 150px; }
+            .list-header { display: none; } /* 移动端隐藏表头 */
+            .list-row { grid-template-columns: 1fr; gap: 8px; padding: 16px; }
+            .mobile-toggle { display: block !important; position: fixed; bottom: 20px; right: 20px; z-index: 2000; width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff; border:none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-size: 1.4rem; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-full { grid-column: span 1; }
         }
     </style>
 </head>
 <body>
 
-<button class="mobile-menu-btn" style="display:none;" onclick="toggleSidebar()">☰</button>
+<button class="mobile-toggle" style="display:none;" onclick="toggleSidebar()">☰</button>
 
 <div class="app-container">
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="app-logo">🔬</div>
-            <span class="app-title">科研成果管理</span>
+            <div class="logo-box">🔬</div>
+            <div class="logo-text">科研管理系统</div>
         </div>
 
-        <nav class="nav-container">
-            <div class="nav-group">
-                <div class="nav-label">成果库</div>
-                <div class="nav-item active" onclick="switchView('all')" id="nav-all">
-                    <div class="nav-icon">📋</div><span>全部成果</span>
-                    <span class="nav-count" id="count-all">0</span>
-                </div>
-                <div class="nav-item" onclick="switchView('paper')" id="nav-paper">
-                    <div class="nav-icon">📄</div><span>学术论文</span>
-                    <span class="nav-count" id="count-paper">0</span>
-                </div>
-                <div class="nav-item" onclick="switchView('patent')" id="nav-patent">
-                    <div class="nav-icon">💡</div><span>发明专利</span>
-                    <span class="nav-count" id="count-patent">0</span>
-                </div>
-                <div class="nav-item" onclick="switchView('project')" id="nav-project">
-                    <div class="nav-icon">📊</div><span>科研项目</span>
-                    <span class="nav-count" id="count-project">0</span>
-                </div>
-                <div class="nav-item" onclick="switchView('award')" id="nav-award">
-                    <div class="nav-icon">🏆</div><span>获奖情况</span>
-                    <span class="nav-count" id="count-award">0</span>
-                </div>
-                <div class="nav-item" onclick="switchView('book')" id="nav-book">
-                    <div class="nav-icon">📚</div><span>专著出版</span>
-                    <span class="nav-count" id="count-book">0</span>
-                </div>
-            </div>
+        <nav class="nav-scroll">
+            <div class="nav-group-title">成果管理</div>
+            <a class="nav-item active" onclick="switchView('all')" id="nav-all"><span class="nav-icon">📋</span>全部成果 <span class="nav-badge" id="c-all">0</span></a>
+            <a class="nav-item" onclick="switchView('paper')" id="nav-paper"><span class="nav-icon">📄</span>学术论文 <span class="nav-badge" id="c-paper">0</span></a>
+            <a class="nav-item" onclick="switchView('patent')" id="nav-patent"><span class="nav-icon">💡</span>发明专利 <span class="nav-badge" id="c-patent">0</span></a>
+            <a class="nav-item" onclick="switchView('project')" id="nav-project"><span class="nav-icon">📊</span>科研项目 <span class="nav-badge" id="c-project">0</span></a>
+            <a class="nav-item" onclick="switchView('award')" id="nav-award"><span class="nav-icon">🏆</span>获奖情况 <span class="nav-badge" id="c-award">0</span></a>
+            <a class="nav-item" onclick="switchView('book')" id="nav-book"><span class="nav-icon">📚</span>专著出版 <span class="nav-badge" id="c-book">0</span></a>
             
-            <div class="nav-group">
-                <div class="nav-label">人员</div>
-                <div class="nav-item" onclick="switchView('member')" id="nav-member">
-                    <div class="nav-icon">👥</div><span>成员信息</span>
-                    <span class="nav-count" id="count-member">0</span>
-                </div>
-            </div>
+            <div class="nav-group-title">团队</div>
+            <a class="nav-item" onclick="switchView('member')" id="nav-member"><span class="nav-icon">👥</span>成员信息 <span class="nav-badge" id="c-member">0</span></a>
         </nav>
 
         <div class="sidebar-footer">
-            <div class="storage-indicator" id="dbStatus">
-                <div class="indicator-dot"></div>
-                <span>数据安全 (IndexedDB)</span>
+            <div class="cloud-status" onclick="openCloudModal()">
+                <div style="display:flex;align-items:center;">
+                    <div class="status-dot" id="cloudDot"></div>
+                    <span id="cloudText" style="font-size:0.8rem;">未同步</span>
+                </div>
+                <span style="font-size:0.8rem;">⚙️</span>
             </div>
-            
-            <div class="action-buttons">
-                <button class="btn-sidebar" style="grid-column:span 2;background:var(--primary);color:white;border:none;" onclick="toggleMenu('exportMenu')">📤 导出 / 备份</button>
-                <button class="btn-sidebar" style="grid-column:span 2;" onclick="toggleMenu('importMenu')">📥 导入 / 恢复</button>
-            </div>
-
-            <div id="exportMenu" class="popup-menu">
-                <div class="menu-option" onclick="exportToExcel()">📊 导出 Excel (分表分列)</div>
-                <div class="menu-option" onclick="exportToWord()">📝 导出 Word (详细表格)</div>
-                <div class="menu-option" onclick="backupJSON()">📦 备份数据 (JSON)</div>
+            <div class="footer-btns">
+                <button class="f-btn f-btn-primary" onclick="toggleMenu('exportMenu')">📤 导出</button>
+                <button class="f-btn f-btn-primary" onclick="toggleMenu('importMenu')">📥 导入</button>
             </div>
 
-            <div id="importMenu" class="popup-menu">
-                <div class="menu-option" onclick="document.getElementById('file-excel').click()">📊 导入 Excel</div>
-                <div class="menu-option" onclick="document.getElementById('file-json').click()">📂 恢复备份 (JSON)</div>
+            <div id="exportMenu" class="popover-menu">
+                <div class="pop-item" onclick="exportToExcel()">📊 Excel (分表)</div>
+                <div class="pop-item" onclick="exportToWord()">📝 Word (分表)</div>
+                <div class="pop-item" onclick="backupJSON()">📦 备份数据 (JSON)</div>
+            </div>
+
+            <div id="importMenu" class="popover-menu">
+                <div class="pop-item" onclick="document.getElementById('excelIn').click()">📊 导入 Excel</div>
+                <div class="pop-item" onclick="document.getElementById('jsonIn').click()">📂 恢复备份</div>
             </div>
             
-            <input type="file" id="file-json" hidden accept=".json" onchange="restoreJSON(this)">
-            <input type="file" id="file-excel" hidden accept=".xlsx,.xls" onchange="importExcel(this)">
+            <input type="file" id="jsonIn" hidden accept=".json" onchange="restoreJSON(this)">
+            <input type="file" id="excelIn" hidden accept=".xlsx,.xls" onchange="importExcel(this)">
         </div>
     </aside>
 
     <main class="main-wrapper">
         <header class="top-bar">
-            <div class="page-title">
-                <h1 id="pageTitle">全部成果</h1>
-            </div>
+            <div class="page-title"><h1 id="pageTitle">全部成果</h1></div>
             <div class="top-actions">
-                <div class="search-wrap">
+                <div class="search-box">
                     <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" placeholder="搜索标题、作者、编号..." oninput="handleSearch(this.value)">
+                    <input type="text" class="search-input" placeholder="搜索..." oninput="handleSearch(this.value)">
                 </div>
-                <button class="btn-primary" onclick="openAddModal()">
-                    <span>➕</span> <span id="addBtnText">新增成果</span>
-                </button>
+                <button class="btn-add" onclick="openAddModal()">➕ <span id="addText">新增</span></button>
             </div>
         </header>
 
-        <div class="content-scroll">
-            <div class="stats-row" id="statsRow">
-                </div>
+        <div class="content-area">
+            <div class="stats-deck" id="statsDeck"></div>
 
-            <div class="list-panel">
+            <div class="list-wrapper">
                 <div class="list-toolbar">
-                    <div class="batch-ops">
-                        <input type="checkbox" id="selectAll" class="row-check" onchange="toggleSelectAll()">
-                        <span id="resultCount">共 0 条记录</span>
-                        <button class="btn-danger" id="batchDelBtn" onclick="batchDelete()">删除选中</button>
+                    <div class="filter-group">
+                        <input type="checkbox" id="selectAll" onchange="toggleAll(this)"> 全选
+                        <span style="color:#64748b;font-size:0.9rem;" id="selCount">(0)</span>
+                        <button class="btn-danger" id="batchDel" style="display:none;background:var(--danger);color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;" onclick="batchDelete()">删除</button>
                     </div>
                     <div>
-                        <select class="form-input" style="padding:6px;width:auto;" onchange="handleSort(this.value)">
-                            <option value="date-desc">日期最新</option>
-                            <option value="date-asc">日期最早</option>
+                        <select class="year-select" id="yearFilter" onchange="applyFilter()">
+                            <option value="all">所有年份</option>
                         </select>
                     </div>
                 </div>
-                <div class="list-body" id="listContainer">
+
+                <div class="list-header">
+                    <div></div> <div>标题/名称</div>
+                    <div>日期</div>
+                    <div>人员</div>
+                    <div>详情</div>
+                    <div>操作</div>
+                </div>
+
+                <div class="list-body" id="listBody">
                     </div>
             </div>
         </div>
     </main>
 </div>
 
-<div class="modal-mask" id="editModal">
+<div class="modal-mask" id="dataModal">
     <div class="modal-box">
         <div class="modal-head">
-            <h3 id="modalTitle">新增记录</h3>
+            <h3 id="modalLabel">新增记录</h3>
             <button class="close-btn" onclick="closeModal()">×</button>
         </div>
         <div class="modal-body">
-            <form id="dataForm" onsubmit="handleFormSubmit(event)">
+            <form id="mainForm">
                 <input type="hidden" id="editId">
                 <div class="form-grid">
-                    <div class="form-group form-span">
-                        <label>类型</label>
-                        <select id="inputType" class="form-input" onchange="updateFormFields()">
+                    <div class="form-group form-full">
+                        <label class="form-label">类型</label>
+                        <select id="dataType" class="form-input" onchange="renderFormFields()">
                             <option value="paper">学术论文</option>
                             <option value="patent">发明专利</option>
                             <option value="project">科研项目</option>
@@ -457,118 +454,148 @@
                             <option value="member">成员信息</option>
                         </select>
                     </div>
-
-                    <div class="form-group form-span"><label id="lblTitle">标题/名称</label><input type="text" id="inputTitle" class="form-input" required></div>
                     
-                    <div class="form-group" id="grpDate"><label id="lblDate">日期</label><input type="date" id="inputDate" class="form-input" required></div>
-                    <div class="form-group" id="grpAuthor"><label id="lblAuthor">作者/负责人</label><input type="text" id="inputAuthor" class="form-input"></div>
-                    
-                    <div class="form-group" id="grpSource"><label id="lblSource">来源/单位</label><input type="text" id="inputSource" class="form-input"></div>
-                    <div class="form-group" id="grpLevel"><label id="lblLevel">级别/状态</label><input type="text" id="inputLevel" class="form-input"></div>
+                    <div id="dynamicFields" class="form-full form-grid" style="margin:0;padding:0;gap:20px;"></div>
 
-                    <div class="form-group hidden" id="grpCode"><label>编号/专利号</label><input type="text" id="inputCode" class="form-input"></div>
-                    <div class="form-group hidden" id="grpEndDate"><label>结束时间</label><input type="date" id="inputEndDate" class="form-input"></div>
-                    <div class="form-group hidden" id="grpExtra1"><label>专利类型</label><select id="inputExtra1" class="form-input"><option>发明专利</option><option>实用新型</option></select></div>
-                    <div class="form-group hidden" id="grpExtra2"><label>授权公告日</label><input type="date" id="inputExtra2" class="form-input"></div>
-
-                    <div class="form-group hidden" id="grpMemNo"><label>工号/学号</label><input type="text" id="inputMemNo" class="form-input"></div>
-                    <div class="form-group hidden" id="grpMemTitle"><label>职称/学位</label><input type="text" id="inputMemTitle" class="form-input"></div>
-                    <div class="form-group hidden" id="grpMemPhone"><label>手机</label><input type="text" id="inputMemPhone" class="form-input"></div>
-                    <div class="form-group hidden" id="grpMemEmail"><label>邮箱</label><input type="text" id="inputMemEmail" class="form-input"></div>
-                    
-                    <div class="form-group form-span" id="grpKeywords"><label>关键词</label><input type="text" id="inputKeywords" class="form-input"></div>
-
-                    <div class="form-group form-span" id="grpFile">
-                        <label>附件 (PDF)</label>
-                        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-                            <span style="font-size:1.5rem">📄</span>
-                            <p style="margin-top:5px;color:var(--text-sub);">点击上传文件 (支持大文件)</p>
-                            <input type="file" id="fileInput" hidden accept=".pdf" onchange="handleFileChange(this)">
+                    <div class="form-group form-full" id="fileGroup">
+                        <label class="form-label">附件 (PDF)</label>
+                        <div class="file-drop" onclick="document.getElementById('pdfInput').click()">
+                            点击上传 PDF 文件 (支持大文件)
+                            <input type="file" id="pdfInput" hidden accept=".pdf" onchange="handleFile(this)">
                         </div>
-                        <div id="fileStatus" class="file-status hidden">
+                        <div id="filePreview" class="file-has hidden">
                             <span id="fileName"></span>
-                            <button type="button" onclick="clearFile()" style="background:none;border:none;color:var(--danger);cursor:pointer;">删除</button>
+                            <button type="button" class="file-remove" onclick="removeFile()">删除</button>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
         <div class="modal-foot">
-            <button class="btn-sidebar" onclick="closeModal()">取消</button>
-            <button class="btn-primary" onclick="document.getElementById('dataForm').dispatchEvent(new Event('submit'))">保存</button>
+            <button class="f-btn" style="color:#333;border:1px solid #ccc;" onclick="closeModal()">取消</button>
+            <button class="f-btn f-btn-primary" onclick="saveData()">保存</button>
         </div>
     </div>
 </div>
 
+<div class="modal-mask" id="cloudModal">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-head"><h3>☁️ 云同步配置</h3><button class="close-btn" onclick="document.getElementById('cloudModal').classList.remove('active')">×</button></div>
+        <div class="modal-body">
+            <p style="font-size:0.9rem;color:#666;margin-bottom:15px;">使用 GitHub Gist 同步数据。需申请 Token 并勾选 <b>gist</b> 权限。</p>
+            <div class="form-group"><label class="form-label">GitHub Token</label><input type="password" id="ghToken" class="form-input" placeholder="ghp_..."></div>
+            <div class="form-group"><label class="form-label">Gist ID (选填，留空新建)</label><input type="text" id="ghGist" class="form-input"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="f-btn f-btn-primary" onclick="connectCloud()">连接 / 创建</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
 <script>
 /**
  * =================================================================
- * 核心逻辑 (Core Logic) - IndexedDB + 完整功能
+ * 核心逻辑：数据结构、存储、渲染
  * =================================================================
  */
-
-// 1. 数据配置
 const APP = {
-    dbName: 'ResearchDB_Pro',
-    dbVersion: 1,
-    db: null,
     data: { achievements: [], members: [] },
+    config: { token: '', gistId: '' },
     view: 'all',
-    search: '',
-    sort: 'date-desc',
+    filter: { search: '', year: 'all' },
+    db: null,
     selected: new Set(),
     currentFile: null,
-    types: {
-        paper: { label: '学术论文', icon: '📄', color: 'type-paper' },
-        patent: { label: '发明专利', icon: '💡', color: 'type-patent' },
-        project: { label: '科研项目', icon: '📊', color: 'type-project' },
-        award: { label: '获奖情况', icon: '🏆', color: 'type-award' },
-        book: { label: '专著出版', icon: '📚', color: 'type-book' },
-        member: { label: '成员', icon: '👤', color: 'type-member' }
+    
+    // 字段映射定义 (用于生成表单和导出)
+    schema: {
+        paper: [
+            { id: 'title', label: '论文标题', type: 'text', required: true, full: true },
+            { id: 'date', label: '发表日期', type: 'date', required: true },
+            { id: 'authors', label: '作者列表', type: 'text', placeholder: '逗号分隔' },
+            { id: 'source', label: '期刊/会议', type: 'text' },
+            { id: 'level', label: '收录级别', type: 'text', placeholder: 'SCI/EI' },
+            { id: 'keywords', label: '关键词', type: 'text', full: true }
+        ],
+        patent: [
+            { id: 'patentName', label: '专利名称', type: 'text', required: true, full: true },
+            { id: 'patentNumber', label: '专利号', type: 'text' },
+            { id: 'patentType', label: '类型', type: 'select', opts: ['发明专利','实用新型','外观设计'] },
+            { id: 'patentStatus', label: '状态', type: 'select', opts: ['申请中','实审中','已授权','已转让'] },
+            { id: 'applicationDate', label: '申请日期', type: 'date' },
+            { id: 'grantDate', label: '授权日期', type: 'date' },
+            { id: 'inventors', label: '发明人', type: 'text', full: true },
+            { id: 'patentOwner', label: '权利人', type: 'text' }
+        ],
+        project: [
+            { id: 'projectName', label: '项目名称', type: 'text', required: true, full: true },
+            { id: 'projectNumber', label: '项目编号', type: 'text' },
+            { id: 'projectLevel', label: '级别', type: 'select', opts: ['国家级','省部级','厅局级','横向','校级'] },
+            { id: 'projectOrg', label: '所属单位', type: 'text' },
+            { id: 'projectStartDate', label: '开始时间', type: 'date' },
+            { id: 'projectEndDate', label: '结束时间', type: 'date' },
+            { id: 'authors', label: '负责人/成员', type: 'text', full: true } // Reuse authors
+        ],
+        award: [
+            { id: 'title', label: '获奖名称', type: 'text', required: true, full: true },
+            { id: 'date', label: '获奖日期', type: 'date' },
+            { id: 'level', label: '奖励等级', type: 'text' },
+            { id: 'source', label: '授奖单位', type: 'text' },
+            { id: 'authors', label: '获奖人', type: 'text', full: true }
+        ],
+        book: [
+            { id: 'title', label: '专著名称', type: 'text', required: true, full: true },
+            { id: 'authors', label: '作者', type: 'text' },
+            { id: 'date', label: '出版日期', type: 'date' },
+            { id: 'source', label: '出版社', type: 'text' },
+            { id: 'isbn', label: 'ISBN号', type: 'text' }
+        ],
+        member: [
+            { id: 'memberNo', label: '工号/学号', type: 'text', required: true },
+            { id: 'memberName', label: '姓名', type: 'text', required: true },
+            { id: 'memberGender', label: '性别', type: 'select', opts: ['男','女'] },
+            { id: 'memberBirth', label: '出生年月', type: 'month' },
+            { id: 'memberOrg', label: '所属单位', type: 'text' },
+            { id: 'memberTitle', label: '职称/职务', type: 'text' },
+            { id: 'memberPhone', label: '手机号码', type: 'text' },
+            { id: 'memberEmail', label: '电子邮箱', type: 'text' },
+            { id: 'memberIdNo', label: '证件号码', type: 'text', full: true }
+        ]
     }
 };
 
-// 2. 初始化 IndexedDB
+// --- IndexedDB ---
 function initDB() {
-    return new Promise((resolve, reject) => {
-        const req = indexedDB.open(APP.dbName, APP.dbVersion);
-        req.onupgradeneeded = e => {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains('store')) db.createObjectStore('store', { keyPath: 'id' });
-        };
+    return new Promise((resolve) => {
+        const req = indexedDB.open('ResearchSysDB', 1);
+        req.onupgradeneeded = e => e.target.result.createObjectStore('store', {keyPath:'id'});
         req.onsuccess = e => { APP.db = e.target.result; resolve(); };
-        req.onerror = e => reject(e);
     });
 }
 
 async function loadData() {
-    if (!APP.db) await initDB();
+    if(!APP.db) await initDB();
     const tx = APP.db.transaction('store', 'readonly');
-    const store = tx.objectStore('store');
-    const req = store.get('main_data');
+    const req = tx.objectStore('store').get('main');
     req.onsuccess = e => {
-        if (e.target.result) {
+        if(e.target.result) {
             APP.data = e.target.result.data;
-        } else {
-            // 首次运行或空库
-            APP.data = { achievements: [], members: [] };
+            APP.config = e.target.result.config || {token:'', gistId:''};
         }
         updateUI();
+        if(APP.config.token) checkCloud();
     };
 }
 
-async function saveData() {
+async function persist() {
     const tx = APP.db.transaction('store', 'readwrite');
-    tx.objectStore('store').put({ id: 'main_data', data: APP.data, updated: new Date() });
-    tx.oncomplete = () => {
-        // 更新 UI 提示
-        const dot = document.querySelector('.indicator-dot');
-        dot.style.boxShadow = '0 0 8px var(--success)';
-        setTimeout(() => dot.style.boxShadow = 'none', 500);
-    };
+    tx.objectStore('store').put({ id: 'main', data: APP.data, config: APP.config });
+    if(APP.config.token) syncCloud();
 }
 
-// 3. UI 渲染与交互
+// --- UI Rendering ---
 function updateUI() {
     renderStats();
     renderList();
@@ -576,499 +603,453 @@ function updateUI() {
 }
 
 function updateCounts() {
-    const counts = { paper:0, patent:0, project:0, award:0, book:0 };
-    APP.data.achievements.forEach(i => { if(counts[i.type]!==undefined) counts[i.type]++; });
-    document.getElementById('count-all').innerText = APP.data.achievements.length;
-    document.getElementById('count-member').innerText = APP.data.members.length;
-    Object.keys(counts).forEach(k => document.getElementById(`count-${k}`).innerText = counts[k]);
+    const c = { paper:0, patent:0, project:0, award:0, book:0 };
+    APP.data.achievements.forEach(i => { if(c[i.type]!==undefined) c[i.type]++; });
+    document.getElementById('c-all').innerText = APP.data.achievements.length;
+    document.getElementById('c-member').innerText = APP.data.members.length;
+    Object.keys(c).forEach(k => document.getElementById(`c-${k}`).innerText = c[k]);
 }
 
 function renderStats() {
-    const statsDiv = document.getElementById('statsRow');
-    const counts = { paper:0, patent:0, project:0, award:0, book:0, member: APP.data.members.length };
-    APP.data.achievements.forEach(i => { if(counts[i.type]!==undefined) counts[i.type]++; });
-    
-    statsDiv.innerHTML = Object.keys(APP.types).map(k => `
-        <div class="stat-box">
-            <div class="stat-icon ${APP.types[k].color}">${APP.types[k].icon}</div>
-            <div class="stat-info"><h3>${counts[k]}</h3><p>${APP.types[k].label}</p></div>
-        </div>
-    `).join('');
+    const types = [
+        {k:'paper', t:'学术论文', c:'#e0f2fe', i:'📄'}, {k:'patent', t:'发明专利', c:'#fef3c7', i:'💡'},
+        {k:'project', t:'科研项目', c:'#dcfce7', i:'📊'}, {k:'award', t:'获奖情况', c:'#fee2e2', i:'🏆'},
+        {k:'book', t:'专著出版', c:'#f3e8ff', i:'📚'}, {k:'member', t:'团队成员', c:'#ffedd5', i:'👥'}
+    ];
+    const html = types.map(t => {
+        const num = t.k==='member' ? APP.data.members.length : APP.data.achievements.filter(i=>i.type===t.k).length;
+        return `<div class="stat-card" onclick="switchView('${t.k}')" style="cursor:pointer">
+            <div class="stat-icon" style="background:${t.c}">${t.i}</div>
+            <div><h3>${num}</h3><p style="color:#666">${t.t}</p></div>
+        </div>`;
+    }).join('');
+    document.getElementById('statsDeck').innerHTML = html;
 }
 
 function renderList() {
-    const listDiv = document.getElementById('listContainer');
-    let list = APP.view === 'member' ? APP.data.members : APP.data.achievements;
+    const container = document.getElementById('listBody');
+    let list = APP.view==='member' ? APP.data.members : APP.data.achievements;
     
-    // Filter View
-    if (APP.view !== 'all' && APP.view !== 'member') {
-        list = list.filter(i => i.type === APP.view);
-    }
-    
-    // Filter Search
-    if (APP.search) {
-        const q = APP.search.toLowerCase();
+    // Filter
+    if(APP.view !== 'all' && APP.view !== 'member') list = list.filter(i => i.type === APP.view);
+    if(APP.filter.search) {
+        const q = APP.filter.search.toLowerCase();
         list = list.filter(i => Object.values(i).join(' ').toLowerCase().includes(q));
     }
+    
+    // Update Year Filter Options
+    if(APP.view !== 'member') {
+        const years = [...new Set(list.map(i => (i.date||i.applicationDate||i.projectStartDate||'').substr(0,4)).filter(y=>y))].sort().reverse();
+        const sel = document.getElementById('yearFilter');
+        sel.innerHTML = '<option value="all">所有年份</option>' + years.map(y => `<option value="${y}" ${APP.filter.year===y?'selected':''}>${y}年</option>`).join('');
+        if(APP.filter.year !== 'all') list = list.filter(i => (i.date||i.applicationDate||i.projectStartDate||'').startsWith(APP.filter.year));
+    }
 
-    // Sort
-    list.sort((a,b) => {
-        const da = a.date || '0', db = b.date || '0';
-        return APP.sort === 'date-desc' ? (da<db?1:-1) : (da>db?1:-1);
-    });
-
-    document.getElementById('resultCount').innerText = `共 ${list.length} 条`;
-
-    if (list.length === 0) {
-        listDiv.innerHTML = `<div class="empty-view">暂无数据</div>`;
+    if(list.length === 0) {
+        container.innerHTML = '<div class="empty-state">暂无数据</div>';
         return;
     }
 
-    listDiv.innerHTML = list.map(item => {
-        const typeConf = APP.types[item.type || 'paper'];
-        const title = item.title || item.name;
-        const date = item.date || item.birth || '-';
-        const sub = item.author || item.org || '-';
-        const hasFile = !!item.pdfData;
-        const isSel = APP.selected.has(item.id);
-        const tag = item.code || item.level || item.status || '';
-
+    container.innerHTML = list.map(item => {
+        const title = item.title || item.patentName || item.projectName || item.memberName;
+        const date = item.date || item.applicationDate || item.projectStartDate || item.memberBirth || '-';
+        const sub = item.authors || item.inventors || item.memberOrg || '-';
+        const tag = item.level || item.patentStatus || item.projectLevel || item.memberTitle || '';
+        const typeIcon = {paper:'📄',patent:'💡',project:'📊',award:'🏆',book:'📚',member:'👥'}[item.type||'paper'] || '📄';
+        
         return `
-            <div class="list-row" onclick="editItem('${item.id}')">
-                <input type="checkbox" class="row-check" ${isSel?'checked':''} onclick="toggleSelect('${item.id}', event)">
-                <div class="row-icon ${typeConf.color}">${typeConf.icon}</div>
-                <div class="row-content">
-                    <div class="row-title">${title}</div>
-                    <div class="row-meta">
-                        <div class="meta-tag">📅 ${date}</div>
-                        <div class="meta-badge">👤 ${sub}</div>
-                        ${tag ? `<div class="meta-badge" style="color:var(--primary)">🏷️ ${tag}</div>` : ''}
-                        ${hasFile ? `<div class="meta-tag has-file">📎 附件</div>` : ''}
-                    </div>
-                </div>
-                <div class="row-actions">
-                    ${hasFile ? `<button class="icon-btn" onclick="event.stopPropagation();downloadFile('${item.id}')">⬇</button>` : ''}
-                    <button class="icon-btn" onclick="event.stopPropagation();editItem('${item.id}')">✏</button>
-                    <button class="icon-btn delete" onclick="event.stopPropagation();deleteItem('${item.id}')">🗑</button>
-                </div>
+        <div class="list-row" onclick="editItem('${item.id}')">
+            <div><input type="checkbox" class="row-check" value="${item.id}" onchange="updateBatchUI(event)" onclick="event.stopPropagation()"></div>
+            <div class="cell-main" style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.2rem">${typeIcon}</span> ${title}
             </div>
-        `;
+            <div class="cell-sub">${date}</div>
+            <div class="cell-sub">${sub}</div>
+            <div>${tag ? `<span class="tag">${tag}</span>` : ''} ${item.pdfData ? '<span class="tag tag-blue">PDF</span>' : ''}</div>
+            <div class="row-actions">
+                ${item.pdfData ? `<button class="icon-btn" onclick="viewPdf('${item.id}');event.stopPropagation()">👁</button>` : ''}
+                <button class="icon-btn del" onclick="delItem('${item.id}');event.stopPropagation()">🗑</button>
+            </div>
+        </div>`;
     }).join('');
 }
 
-// 4. 操作逻辑
+// --- Interaction ---
 function switchView(v) {
-    APP.view = v; APP.search = ''; APP.selected.clear();
+    APP.view = v;
     document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.id === `nav-${v}`));
-    
-    // UI Update
+    document.getElementById('pageTitle').innerText = v === 'member' ? '团队成员' : (v==='all'?'全部成果':APP.schema[v][0].label.replace('名称','').replace('标题','管理'));
     document.getElementById('addBtnText').innerText = v === 'member' ? '添加成员' : '添加成果';
-    document.getElementById('pageTitle').innerText = APP.types[v]?.label || '全部成果';
-    if(window.innerWidth <= 768) toggleSidebar();
-    
+    APP.selected.clear();
+    updateBatchUI();
     renderList();
-    document.getElementById('batchDelBtn').style.display = 'none';
-    document.getElementById('selectAll').checked = false;
+    if(window.innerWidth<=768) toggleSidebar();
 }
 
-function handleSearch(val) { APP.search = val; renderList(); }
-function handleSort(val) { APP.sort = val; renderList(); }
+function handleSearch(val) { APP.filter.search = val; renderList(); }
+function applyFilter() { APP.filter.year = document.getElementById('yearFilter').value; renderList(); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-function toggleMenu(id) { document.getElementById(id).classList.toggle('show'); }
-// Close menu when clicking outside
+function toggleMenu(id) { 
+    const el = document.getElementById(id);
+    const isShow = el.classList.contains('show');
+    document.querySelectorAll('.popover-menu').forEach(m => m.classList.remove('show'));
+    if(!isShow) el.classList.add('show');
+}
+// Close menu on click outside
 window.onclick = e => {
-    if (!e.target.closest('.data-actions') && !e.target.closest('.popup-menu')) {
-        document.querySelectorAll('.popup-menu').forEach(m => m.classList.remove('show'));
+    if(!e.target.closest('.data-actions') && !e.target.closest('.popover-menu')) {
+        document.querySelectorAll('.popover-menu').forEach(m => m.classList.remove('show'));
     }
-};
+}
 
-// 5. CRUD 表单
+// --- CRUD ---
 function openAddModal() {
-    document.getElementById('dataForm').reset();
+    document.getElementById('mainForm').reset();
     document.getElementById('editId').value = '';
     APP.currentFile = null;
-    document.getElementById('fileStatus').classList.add('hidden');
-    document.getElementById('modalTitle').innerText = '新增记录';
+    document.getElementById('filePreview').classList.add('hidden');
+    document.getElementById('dataType').value = (APP.view === 'all' ? 'paper' : APP.view);
+    document.getElementById('dataType').disabled = false;
+    renderFormFields();
+    document.getElementById('dataModal').classList.add('active');
+}
+
+function renderFormFields() {
+    const type = document.getElementById('dataType').value;
+    const fields = APP.schema[type];
+    const container = document.getElementById('dynamicFields');
+    container.innerHTML = fields.map(f => {
+        let input = '';
+        if(f.type === 'select') {
+            input = `<select id="f_${f.id}" class="form-input">${f.opts.map(o=>`<option>${o}</option>`).join('')}</select>`;
+        } else {
+            input = `<input type="${f.type}" id="f_${f.id}" class="form-input" ${f.required?'required':''} placeholder="${f.placeholder||''}">`;
+        }
+        return `<div class="form-group ${f.full?'form-span':''}"><label class="form-label">${f.label}</label>${input}</div>`;
+    }).join('');
     
-    // Set default type
-    const defaultType = (APP.view !== 'all' && APP.view !== 'member') ? APP.view : (APP.view === 'member' ? 'member' : 'paper');
-    document.getElementById('inputType').value = defaultType;
-    document.getElementById('inputDate').valueAsDate = new Date();
-    
-    updateFormFields();
-    document.getElementById('editModal').classList.add('active');
+    // File upload visibility
+    document.getElementById('fileGroup').style.display = type === 'member' ? 'none' : 'block';
 }
 
-function closeModal() { document.getElementById('editModal').classList.remove('active'); }
-
-function updateFormFields() {
-    const type = document.getElementById('inputType').value;
-    const isMem = type === 'member';
-    const show = id => document.getElementById(id).classList.remove('hidden');
-    const hide = id => document.getElementById(id).classList.add('hidden');
-
-    // Reset visibility
-    ['grpDate','grpLevel','grpCode','grpEndDate','grpExtra1','grpExtra2','grpMemNo','grpMemTitle','grpMemPhone','grpMemEmail','grpKeywords','grpFile','grpAuthor','grpSource'].forEach(hide);
-
-    if (isMem) {
-        show('grpMemNo'); show('grpMemTitle'); show('grpMemPhone'); show('grpMemEmail'); show('grpSource'); show('grpDate');
-        document.getElementById('lblTitle').innerText = '姓名';
-        document.getElementById('lblSource').innerText = '所属单位';
-        document.getElementById('lblDate').innerText = '出生年月';
-    } else {
-        show('grpDate'); show('grpAuthor'); show('grpSource'); show('grpLevel'); show('grpKeywords'); show('grpFile');
-        document.getElementById('lblTitle').innerText = '标题/名称';
-        document.getElementById('lblDate').innerText = '日期';
-        document.getElementById('lblAuthor').innerText = '作者/负责人';
-        document.getElementById('lblSource').innerText = '期刊/来源/单位';
-        document.getElementById('lblLevel').innerText = '级别/状态';
-
-        if(type === 'patent') { show('grpCode'); show('grpExtra1'); show('grpExtra2'); document.getElementById('lblLevel').innerText='状态'; }
-        if(type === 'project') { show('grpCode'); show('grpEndDate'); document.getElementById('lblLevel').innerText='级别'; }
-    }
-}
-
-function handleFileChange(input) {
-    const file = input.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        APP.currentFile = { name: file.name, data: e.target.result };
-        document.getElementById('fileName').innerText = file.name;
-        document.getElementById('fileStatus').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-}
-
-function clearFile() { APP.currentFile = null; document.getElementById('fileInput').value=''; document.getElementById('fileStatus').classList.add('hidden'); }
-
-function handleFormSubmit(e) {
-    e.preventDefault();
+function saveData() {
     const id = document.getElementById('editId').value;
-    const type = document.getElementById('inputType').value;
-    const isMem = type === 'member';
-
-    const newItem = {
+    const type = document.getElementById('dataType').value;
+    const obj = { 
         id: id || Date.now().toString(),
-        type: type,
+        type: type, 
         updatedAt: new Date().toISOString()
     };
+    
+    // Collect Fields
+    APP.schema[type].forEach(f => {
+        obj[f.id] = document.getElementById(`f_${f.id}`).value;
+    });
 
-    if (isMem) {
-        newItem.name = document.getElementById('inputTitle').value;
-        newItem.birth = document.getElementById('inputDate').value;
-        newItem.org = document.getElementById('inputSource').value;
-        newItem.no = document.getElementById('inputMemNo').value;
-        newItem.title = document.getElementById('inputMemTitle').value;
-        newItem.phone = document.getElementById('inputMemPhone').value;
-        newItem.email = document.getElementById('inputMemEmail').value;
-        
-        // Save to Members
-        if(id) {
-            const idx = APP.data.members.findIndex(m=>m.id===id);
-            if(idx>-1) APP.data.members[idx] = newItem;
-        } else APP.data.members.push(newItem);
-
-    } else {
-        newItem.title = document.getElementById('inputTitle').value;
-        newItem.date = document.getElementById('inputDate').value;
-        newItem.author = document.getElementById('inputAuthor').value;
-        newItem.source = document.getElementById('inputSource').value;
-        newItem.level = document.getElementById('inputLevel').value;
-        newItem.keywords = document.getElementById('inputKeywords').value;
-        newItem.code = document.getElementById('inputCode').value; // Patent/Project No
-        
-        // Specific fields
-        if(type==='project') newItem.endDate = document.getElementById('inputEndDate').value;
-        if(type==='patent') {
-            newItem.patentType = document.getElementById('inputExtra1').value;
-            newItem.grantDate = document.getElementById('inputExtra2').value;
-        }
-
-        // File
-        if(APP.currentFile) {
-            newItem.pdfData = APP.currentFile.data;
-            newItem.pdfName = APP.currentFile.name;
-        } else if(id) {
-            // Keep old file
-            const old = APP.data.achievements.find(i=>i.id===id);
-            if(old && old.pdfData) { newItem.pdfData = old.pdfData; newItem.pdfName = old.pdfName; }
-        }
-
-        // Save to Achievements
-        if(id) {
-            const idx = APP.data.achievements.findIndex(i=>i.id===id);
-            if(idx>-1) APP.data.achievements[idx] = newItem;
-        } else APP.data.achievements.push(newItem);
+    // File
+    if(APP.currentFile) { obj.pdfData = APP.currentFile.data; obj.pdfName = APP.currentFile.name; }
+    else if(id) {
+        // Keep existing file if editing
+        const old = (type==='member'?APP.data.members:APP.data.achievements).find(i=>i.id===id);
+        if(old && old.pdfData) { obj.pdfData = old.pdfData; obj.pdfName = old.pdfName; }
     }
 
-    saveData();
+    if(type === 'member') {
+        const idx = APP.data.members.findIndex(m=>m.id===obj.id);
+        if(idx>-1) APP.data.members[idx] = obj; else APP.data.members.push(obj);
+    } else {
+        const idx = APP.data.achievements.findIndex(a=>a.id===obj.id);
+        if(idx>-1) APP.data.achievements[idx] = obj; else APP.data.achievements.push(obj);
+    }
+
+    persist();
     closeModal();
     updateUI();
+    showToast('保存成功');
 }
 
 function editItem(id) {
-    const isMem = APP.data.members.find(m => m.id === id);
-    const item = isMem || APP.data.achievements.find(i => i.id === id);
+    const item = [...APP.data.achievements, ...APP.data.members].find(i => i.id === id);
     if(!item) return;
 
-    openAddModal();
-    document.getElementById('modalTitle').innerText = '编辑记录';
     document.getElementById('editId').value = id;
-    document.getElementById('inputType').value = item.type;
-    updateFormFields();
+    document.getElementById('dataType').value = item.type || 'paper';
+    document.getElementById('dataType').disabled = true; // Cannot change type on edit
+    renderFormFields();
 
-    // Fill Data
-    document.getElementById('inputTitle').value = item.title || item.name;
-    document.getElementById('inputDate').value = item.date || item.birth;
-    document.getElementById('inputSource').value = item.source || item.org;
-    
-    if(isMem) {
-        document.getElementById('inputMemNo').value = item.no;
-        document.getElementById('inputMemTitle').value = item.title;
-        document.getElementById('inputMemPhone').value = item.phone;
-        document.getElementById('inputMemEmail').value = item.email;
-    } else {
-        document.getElementById('inputAuthor').value = item.author;
-        document.getElementById('inputLevel').value = item.level;
-        document.getElementById('inputKeywords').value = item.keywords;
-        document.getElementById('inputCode').value = item.code || '';
-        if(item.endDate) document.getElementById('inputEndDate').value = item.endDate;
-        if(item.patentType) document.getElementById('inputExtra1').value = item.patentType;
-        if(item.grantDate) document.getElementById('inputExtra2').value = item.grantDate;
-        
-        if(item.pdfData) {
-            document.getElementById('fileName').innerText = item.pdfName;
-            document.getElementById('fileStatus').classList.remove('hidden');
-        }
-    }
-}
-
-// 6. 批量操作
-function toggleSelectAll() {
-    const all = document.getElementById('selectAll').checked;
-    const boxes = document.querySelectorAll('.row-check');
-    boxes.forEach(b => {
-        b.checked = all;
-        const id = b.parentElement.getAttribute('onclick').match(/'(.*?)'/)[1];
-        if(all) APP.selected.add(id); else APP.selected.delete(id);
+    // Fill values
+    APP.schema[item.type || 'paper'].forEach(f => {
+        if(document.getElementById(`f_${f.id}`)) document.getElementById(`f_${f.id}`).value = item[f.id] || '';
     });
-    updateBatchBtn();
-}
 
-function toggleSelect(id, e) {
-    e.stopPropagation();
-    if(APP.selected.has(id)) APP.selected.delete(id); else APP.selected.add(id);
-    updateBatchBtn();
-}
-
-function updateBatchBtn() {
-    document.getElementById('batchDelBtn').style.display = APP.selected.size > 0 ? 'block' : 'none';
-}
-
-function batchDelete() {
-    if(!confirm(`确定删除选中的 ${APP.selected.size} 条记录吗？`)) return;
-    
-    if(APP.view === 'member') {
-        APP.data.members = APP.data.members.filter(m => !APP.selected.has(m.id));
+    if(item.pdfData) {
+        document.getElementById('fileName').innerText = item.pdfName;
+        document.getElementById('filePreview').classList.remove('hidden');
     } else {
-        APP.data.achievements = APP.data.achievements.filter(i => !APP.selected.has(i.id));
+        document.getElementById('filePreview').classList.add('hidden');
     }
-    
-    APP.selected.clear();
-    saveData();
-    updateUI();
+
+    document.getElementById('dataModal').classList.add('active');
 }
 
-function deleteItem(id) {
-    if(!confirm('确定删除此记录？')) return;
-    APP.data.members = APP.data.members.filter(m => m.id !== id);
+function closeModal() { document.getElementById('dataModal').classList.remove('active'); }
+
+// --- Batch ---
+function toggleAll(cb) {
+    document.querySelectorAll('.row-check').forEach(c => {
+        c.checked = cb.checked;
+        if(cb.checked) APP.selected.add(c.value); else APP.selected.delete(c.value);
+    });
+    updateBatchUI();
+}
+function updateBatchUI(e) {
+    if(e) {
+        if(e.target.checked) APP.selected.add(e.target.value); else APP.selected.delete(e.target.value);
+    }
+    document.getElementById('selCount').innerText = `(${APP.selected.size})`;
+    document.getElementById('batchDel').style.display = APP.selected.size ? 'inline-block' : 'none';
+}
+function delItem(id) {
+    if(!confirm('确定删除？')) return;
     APP.data.achievements = APP.data.achievements.filter(i => i.id !== id);
-    saveData();
+    APP.data.members = APP.data.members.filter(i => i.id !== id);
+    persist();
+    updateUI();
+}
+function batchDelete() {
+    if(!confirm(`确定删除选中的 ${APP.selected.size} 项？`)) return;
+    APP.data.achievements = APP.data.achievements.filter(i => !APP.selected.has(i.id));
+    APP.data.members = APP.data.members.filter(i => !APP.selected.has(i.id));
+    APP.selected.clear();
+    persist();
     updateUI();
 }
 
-// 7. 文件下载
-function downloadFile(id) {
-    const item = APP.data.achievements.find(i => i.id === id);
+// --- File ---
+function handleFile(input) {
+    const f = input.files[0];
+    if(!f) return;
+    if(f.size > 20*1024*1024) return showToast('文件过大 (>20MB)','warning');
+    const r = new FileReader();
+    r.onload = e => {
+        APP.currentFile = { name: f.name, data: e.target.result };
+        document.getElementById('fileName').innerText = f.name;
+        document.getElementById('filePreview').classList.remove('hidden');
+    };
+    r.readAsDataURL(f);
+}
+function removeFile() { APP.currentFile = null; document.getElementById('filePreview').classList.add('hidden'); }
+function viewPdf(id) {
+    const item = APP.data.achievements.find(i=>i.id===id);
     if(item && item.pdfData) {
-        // Base64 to Blob
-        const arr = item.pdfData.split(',');
-        const bstr = atob(arr[1]);
-        let n = bstr.length; const u8arr = new Uint8Array(n);
-        while(n--) u8arr[n] = bstr.charCodeAt(n);
-        const blob = new Blob([u8arr], {type: 'application/pdf'});
-        
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = item.pdfName;
-        a.click();
+        const arr = item.pdfData.split(','), bstr = atob(arr[1]), n = bstr.length, u8 = new Uint8Array(n);
+        while(n--) u8[n] = bstr.charCodeAt(n);
+        const url = URL.createObjectURL(new Blob([u8], {type:'application/pdf'}));
+        window.open(url);
     }
 }
 
-// 8. 导入导出逻辑 (Import/Export)
+// --- Import/Export ---
 function backupJSON() {
-    const str = JSON.stringify(APP.data);
-    const blob = new Blob([str], {type: "application/json"});
+    const blob = new Blob([JSON.stringify(APP.data)], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `research_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.download = `Backup_${new Date().toISOString().slice(0,10)}.json`;
     a.click();
 }
-
 function restoreJSON(input) {
-    const file = input.files[0];
-    if(!file) return;
+    const f = input.files[0];
+    if(!f) return;
     const r = new FileReader();
     r.onload = e => {
         try {
-            const d = JSON.parse(e.target.result);
-            if(d.achievements || d.members) {
-                if(confirm('恢复将覆盖当前数据，确定吗？')) {
-                    APP.data = d;
-                    saveData();
-                    updateUI();
-                    alert('恢复成功');
-                }
-            }
-        } catch(err) { alert('文件格式错误'); }
+            APP.data = JSON.parse(e.target.result);
+            persist();
+            location.reload();
+        } catch(err) { showToast('文件格式错误','error'); }
     };
-    r.readAsText(file);
-    input.value = '';
+    r.readAsText(f);
 }
 
-// === 分表分列 Excel 导出 ===
+// *** Excel Split Export ***
 function exportToExcel() {
     const wb = XLSX.utils.book_new();
-
-    // Helper: Add Sheet
-    const addSheet = (name, data) => {
-        if(data.length > 0) {
-            const ws = XLSX.utils.json_to_sheet(data);
-            XLSX.utils.book_append_sheet(wb, ws, name);
-        }
+    const sheets = {
+        '学术论文': APP.data.achievements.filter(i=>i.type==='paper'),
+        '发明专利': APP.data.achievements.filter(i=>i.type==='patent'),
+        '科研项目': APP.data.achievements.filter(i=>i.type==='project'),
+        '获奖情况': APP.data.achievements.filter(i=>i.type==='award'),
+        '专著出版': APP.data.achievements.filter(i=>i.type==='book'),
+        '团队成员': APP.data.members
     };
 
-    // 1. 学术论文
-    addSheet("学术论文", APP.data.achievements.filter(i=>i.type==='paper').map(i=>({
-        '标题': i.title, '作者': i.author, '日期': i.date, '期刊': i.source, '级别': i.level, '关键词': i.keywords
-    })));
-
-    // 2. 发明专利
-    addSheet("发明专利", APP.data.achievements.filter(i=>i.type==='patent').map(i=>({
-        '专利名称': i.title, '类型': i.patentType, '发明人': i.author, '权利人': i.source, 
-        '申请日': i.date, '授权日': i.grantDate, '专利号': i.code, '状态': i.level
-    })));
-
-    // 3. 科研项目
-    addSheet("科研项目", APP.data.achievements.filter(i=>i.type==='project').map(i=>({
-        '项目名称': i.title, '编号': i.code, '级别': i.level, '负责人': i.author, 
-        '单位': i.source, '开始时间': i.date, '结束时间': i.endDate
-    })));
-
-    // 4. 获奖
-    addSheet("获奖情况", APP.data.achievements.filter(i=>i.type==='award').map(i=>({
-        '奖项名称': i.title, '获奖人': i.author, '日期': i.date, '级别': i.level
-    })));
-
-    // 5. 著作
-    addSheet("专著出版", APP.data.achievements.filter(i=>i.type==='book').map(i=>({
-        '书名': i.title, '作者': i.author, '出版日期': i.date, '出版社': i.source
-    })));
-
-    // 6. 成员
-    addSheet("成员信息", APP.data.members.map(m=>({
-        '工号': m.no, '姓名': m.name, '性别': m.gender, '出生年月': m.birth, 
-        '职称': m.title, '单位': m.org, '手机': m.phone, '邮箱': m.email
-    })));
-
-    if(wb.SheetNames.length === 0) return alert('无数据可导出');
-    XLSX.writeFile(wb, "科研成果分表导出.xlsx");
+    for(let name in sheets) {
+        if(sheets[name].length > 0) {
+            // Map data to ordered columns based on schema
+            const typeKey = Object.keys(APP.schema).find(k => {
+                if(k==='member' && name==='团队成员') return true;
+                if(APP.types[k].label === name) return true;
+            });
+            const schema = APP.schema[typeKey];
+            
+            const rows = sheets[name].map(item => {
+                const row = {};
+                schema.forEach(field => row[field.label] = item[field.id]);
+                return row;
+            });
+            
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), name);
+        }
+    }
+    
+    if(wb.SheetNames.length===0) return showToast('无数据可导出','warning');
+    XLSX.writeFile(wb, "科研成果分表数据.xlsx");
 }
 
 function importExcel(input) {
-    const file = input.files[0];
-    if(!file) return;
+    const f = input.files[0];
+    if(!f) return;
     const r = new FileReader();
     r.onload = e => {
-        const d = new Uint8Array(e.target.result);
-        const wb = XLSX.read(d, {type:'array'});
-        // Simple import logic (assumes 1st sheet is papers for now, or ask user)
-        // For simplicity in this robust version, we import to 'paper' default
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
         const ws = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(ws);
-        let count = 0;
+        // Simple Import to 'Paper'
         json.forEach(row => {
             APP.data.achievements.push({
-                id: Date.now() + Math.random().toString(),
+                id: Date.now()+Math.random().toString(),
                 type: 'paper',
-                title: row['标题'] || row['Title'] || '导入数据',
-                date: row['日期'] || new Date().toISOString().slice(0,10),
-                author: row['作者'] || '',
-                source: row['期刊'] || '',
-                level: row['级别'] || '',
+                title: row['标题'] || row['Title'] || '未命名',
+                date: new Date().toISOString().slice(0,10),
                 updatedAt: new Date().toISOString()
             });
-            count++;
         });
-        saveData();
+        persist();
         updateUI();
-        alert(`成功导入 ${count} 条数据`);
+        showToast(`导入 ${json.length} 条数据`);
     };
-    r.readAsArrayBuffer(file);
-    input.value = '';
+    r.readAsArrayBuffer(f);
 }
 
-// === 分表 Word 导出 ===
+// *** Word Split Export ***
 function exportToWord() {
-    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><style>table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10pt}th,td{border:1px solid #000;padding:5px;text-align:center}th{background:#eee}</style></head><body><h2>科研汇总表</h2>`;
-    
+    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table{border-collapse:collapse;width:100%;margin-bottom:20px;font-size:10pt} th,td{border:1px solid #000;padding:4px} th{background:#f0f0f0}</style></head><body><h2 style="text-align:center">科研成果汇总表</h2>`;
+
     const groups = {
         '学术论文': APP.data.achievements.filter(i=>i.type==='paper'),
         '发明专利': APP.data.achievements.filter(i=>i.type==='patent'),
         '科研项目': APP.data.achievements.filter(i=>i.type==='project'),
         '获奖情况': APP.data.achievements.filter(i=>i.type==='award'),
         '专著出版': APP.data.achievements.filter(i=>i.type==='book'),
-        '成员信息': APP.data.members
+        '团队成员': APP.data.members
     };
 
     for(let name in groups) {
-        const arr = groups[name];
-        if(arr.length === 0) continue;
-        html += `<h3>${name}</h3><table><tr>`;
-        
-        // Headers logic
-        if(name==='学术论文') html+=`<th>标题</th><th>作者</th><th>日期</th><th>来源</th><th>级别</th>`;
-        else if(name==='发明专利') html+=`<th>名称</th><th>类型</th><th>状态</th><th>专利号</th><th>申请日</th>`;
-        else if(name==='科研项目') html+=`<th>名称</th><th>编号</th><th>级别</th><th>单位</th><th>起止时间</th>`;
-        else if(name==='成员信息') html+=`<th>工号</th><th>姓名</th><th>职称</th><th>单位</th><th>手机</th>`;
-        else html+=`<th>名称</th><th>人员</th><th>日期</th><th>备注</th>`;
-        html += `</tr>`;
+        if(groups[name].length === 0) continue;
+        const typeKey = name === '团队成员' ? 'member' : Object.keys(APP.types).find(k => APP.types[k].label === name);
+        const headers = APP.schema[typeKey].map(f => f.label);
+        const ids = APP.schema[typeKey].map(f => f.id);
 
-        // Rows logic
-        arr.forEach(i => {
-            html += `<tr>`;
-            if(name==='学术论文') html+=`<td>${i.title}</td><td>${i.author}</td><td>${i.date}</td><td>${i.source}</td><td>${i.level}</td>`;
-            else if(name==='发明专利') html+=`<td>${i.title}</td><td>${i.patentType||''}</td><td>${i.level||''}</td><td>${i.code||''}</td><td>${i.date}</td>`;
-            else if(name==='科研项目') html+=`<td>${i.title}</td><td>${i.code||''}</td><td>${i.level||''}</td><td>${i.source||''}</td><td>${i.date} 至 ${i.endDate||''}</td>`;
-            else if(name==='成员信息') html+=`<td>${i.no}</td><td>${i.name}</td><td>${i.title}</td><td>${i.org}</td><td>${i.phone}</td>`;
-            else html+=`<td>${i.title}</td><td>${i.author}</td><td>${i.date}</td><td>${i.level||''}</td>`;
-            html += `</tr>`;
+        html += `<h3>${name}</h3><table><tr><th>序号</th>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>`;
+        groups[name].forEach((item, idx) => {
+            html += `<tr><td>${idx+1}</td>${ids.map(id=>`<td>${item[id]||''}</td>`).join('')}</tr>`;
         });
         html += `</table>`;
     }
 
     html += `</body></html>`;
-    const blob = new Blob([html], {type: 'application/msword'});
+    const blob = new Blob([html], {type:'application/msword'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = '科研数据分表汇总.doc';
+    a.download = '科研成果分表汇总.doc';
     a.click();
 }
 
-// Init
-window.onload = loadData;
+// --- Cloud ---
+function openCloudModal() {
+    document.getElementById('ghToken').value = APP.config.token;
+    document.getElementById('ghGist').value = APP.config.gistId;
+    document.getElementById('cloudModal').classList.add('active');
+}
+function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
 
+async function connectCloud() {
+    const t = document.getElementById('ghToken').value;
+    const g = document.getElementById('ghGist').value;
+    if(!t) return showToast('Token 不能为空','error');
+    
+    showToast('连接中...','warning');
+    APP.config.token = t;
+    if(g) {
+        APP.config.gistId = g;
+        await syncCloud(true); // Pull first
+    } else {
+        // Create
+        try {
+            const res = await fetch('https://api.github.com/gists', {
+                method:'POST', headers:{Authorization:`token ${t}`},
+                body:JSON.stringify({description:"Research Data", public:false, files:{"data.json":{content:JSON.stringify(APP.data)}}})
+            });
+            if(res.ok) {
+                const d = await res.json();
+                APP.config.gistId = d.id;
+                persist();
+                checkCloud();
+                showToast('云端创建成功');
+                closeCloudModal();
+            } else throw new Error();
+        } catch(e) { showToast('创建失败，检查Token','error'); }
+    }
+}
+
+async function syncCloud(isPull) {
+    if(!APP.config.token || !APP.config.gistId) return;
+    const url = `https://api.github.com/gists/${APP.config.gistId}`;
+    const head = {Authorization:`token ${APP.config.token}`};
+    
+    if(isPull) {
+        try {
+            const res = await fetch(url, {headers:head});
+            const d = await res.json();
+            const cloudData = JSON.parse(d.files['data.json'].content);
+            APP.data = cloudData;
+            persist();
+            updateUI();
+            showToast('已从云端同步');
+        } catch(e) { showToast('同步失败','error'); }
+    } else {
+        // Push (Remove heavy PDF blobs for cloud sync to prevent errors)
+        const leanData = { 
+            achievements: APP.data.achievements.map(i => { const {pdfData, ...rest} = i; return rest; }),
+            members: APP.data.members
+        };
+        fetch(url, {
+            method:'PATCH', headers:head,
+            body:JSON.stringify({files:{"data.json":{content:JSON.stringify(leanData)}}})
+        });
+    }
+}
+
+function checkCloud() {
+    const dot = document.getElementById('cloudDot');
+    const txt = document.getElementById('cloudText');
+    if(APP.config.token) {
+        dot.classList.add('online');
+        dot.style.background = 'var(--success)';
+        txt.innerText = '云端已连接';
+    }
+}
+
+function showToast(msg, type='success') {
+    const div = document.createElement('div');
+    div.className = `toast ${type} show`;
+    div.innerText = msg;
+    document.getElementById('toastBox').appendChild(div);
+    setTimeout(() => div.remove(), 2000);
+}
+
+// Start
+window.onload = loadData;
 </script>
 </body>
 </html>
