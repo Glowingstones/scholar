@@ -8,6 +8,7 @@
     <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* --- 保持原有 CSS 不变，仅在 stat-card 处增加 cursor: pointer --- */
         :root {
             --bg-primary: #f8fafc;
             --bg-secondary: #ffffff;
@@ -32,8 +33,6 @@
             --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
             --radius: 12px;
             --radius-sm: 8px;
-            
-            /* OneDrive Brand Colors */
             --od-blue: #0078D4;
             --od-hover: #005a9e;
             --od-light: #f3f9fd;
@@ -73,120 +72,45 @@
         .app-container { display: flex; height: 100vh; height: 100dvh; overflow: hidden; }
 
         /* Sidebar */
-        .sidebar {
-            width: 280px;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            height: 100%;
-            z-index: 100;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
+        .sidebar { width: 280px; background: var(--bg-secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; height: 100%; z-index: 100; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
         .logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.1rem; color: var(--text-primary); }
-        .logo-icon {
-            width: 44px; height: 44px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-            border-radius: var(--radius-sm);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem;
-        }
-
+        .logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
         .nav-menu { flex: 1; padding: 16px 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .nav-section {
-            font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.5px;
-            padding: 12px 12px 8px; margin-top: 8px;
-        }
+        .nav-section { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 12px 8px; margin-top: 8px; }
         .nav-section:first-child { margin-top: 0; }
-
-        .nav-item {
-            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-            border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);
-            font-weight: 500; transition: all 0.2s; margin-bottom: 4px;
-            min-height: 48px;
-        }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary); font-weight: 500; transition: all 0.2s; margin-bottom: 4px; min-height: 48px; }
         .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
         .nav-item.active { background: var(--accent-light); color: var(--accent); }
-        /* 增加禁用样式 */
         .nav-item.disabled { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
-        
-        .nav-item .badge {
-            margin-left: auto; background: var(--bg-hover); padding: 2px 10px;
-            border-radius: 10px; font-size: 0.8rem; font-weight: 600;
-        }
+        .nav-item .badge { margin-left: auto; background: var(--bg-hover); padding: 2px 10px; border-radius: 10px; font-size: 0.8rem; font-weight: 600; }
         .nav-item.active .badge { background: var(--accent); color: white; }
-
         .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); position: relative; }
-        .storage-status {
-            font-size: 0.85rem; color: var(--success); margin-bottom: 12px;
-            display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-        }
+        .storage-status { font-size: 0.85rem; color: var(--success); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .storage-status.warning { color: var(--warning); }
         .storage-status .sync-info { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; }
-
         .data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .data-btn {
-            padding: 10px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-            background: var(--bg-card); color: var(--text-secondary); font-size: 0.85rem;
-            cursor: pointer; transition: all 0.2s; text-align: center; min-height: 44px;
-            display: flex; align-items: center; justify-content: center; gap: 4px;
-        }
+        .data-btn { padding: 10px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-secondary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; text-align: center; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .data-btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent); }
-        /* 增加禁用样式 */
         .data-btn.disabled { opacity: 0.5; pointer-events: none; background: var(--bg-hover); color: var(--text-muted); border-color: var(--border); }
-        
         .data-btn.onedrive { border-color: var(--od-blue); color: var(--od-blue); }
         .data-btn.onedrive:hover { background: var(--od-light); }
-
-        /* Dropdown Menu */
-        .dropdown-menu {
-            position: absolute; bottom: 100%; left: 10px; right: 10px;
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
-            box-shadow: var(--shadow-lg); display: none; z-index: 200; overflow: hidden;
-            margin-bottom: 8px;
-        }
+        .dropdown-menu { position: absolute; bottom: 100%; left: 10px; right: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); display: none; z-index: 200; overflow: hidden; margin-bottom: 8px; }
         .dropdown-menu.show { display: block; animation: slideUp 0.2s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .menu-item { 
-            padding: 14px 16px; cursor: pointer; display: flex; align-items: center; 
-            gap: 10px; font-size: 0.95rem; border-bottom: 1px solid var(--border-light);
-            min-height: 48px;
-        }
+        .menu-item { padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; border-bottom: 1px solid var(--border-light); min-height: 48px; }
         .menu-item:last-child { border-bottom: none; }
         .menu-item:hover { background: var(--bg-hover); color: var(--accent); }
+        .menu-item.disabled { opacity: 0.5; pointer-events: none; color: var(--text-muted); }
 
-        /* Main Content */
-        .main-content { 
-            flex: 1; 
-            padding: 20px; 
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden; 
-            display: flex;
-            flex-direction: column;
-        }
-
+        .main-content { flex: 1; padding: 20px; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0; gap: 12px; flex-wrap: wrap; }
         .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
         .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex: 1; justify-content: flex-end; }
-
         .search-box { flex: 1; min-width: 200px; max-width: 320px; }
-        .search-box input {
-            padding: 12px 16px; border: 2px solid var(--border); border-radius: var(--radius);
-            background: var(--bg-card); color: var(--text-primary); font-size: 16px;
-            width: 100%; transition: all 0.2s;
-        }
+        .search-box input { padding: 12px 16px; border: 2px solid var(--border); border-radius: var(--radius); background: var(--bg-card); color: var(--text-primary); font-size: 16px; width: 100%; transition: all 0.2s; }
         .search-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
-
-        .btn {
-            padding: 12px 20px; border-radius: var(--radius); font-weight: 600; font-size: 0.95rem;
-            cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; 
-            align-items: center; justify-content: center; gap: 8px; white-space: nowrap; min-height: 48px;
-        }
+        .btn { padding: 12px 20px; border-radius: var(--radius); font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; min-height: 48px; }
         .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: white; box-shadow: var(--shadow); }
         .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
         .btn-secondary { background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border); }
@@ -194,129 +118,54 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #dc2626; }
         .btn-sm { padding: 8px 14px; font-size: 0.85rem; min-height: 36px; }
-        /* 禁用按钮样式 */
         .btn:disabled, .btn.disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
-
-        /* OneDrive Specific Buttons */
         .btn-od { background: var(--od-blue); color: white; border: none; }
         .btn-od:hover { background: var(--od-hover); }
         .btn-od-outline { background: transparent; border: 2px solid var(--od-blue); color: var(--od-blue); }
         .btn-od-outline:hover { background: var(--od-light); }
 
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
-            gap: 12px; 
-            margin-bottom: 16px; 
-            flex-shrink: 0; 
-        }
-        .stat-card { 
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); 
-            padding: 14px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; 
-        }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; flex-shrink: 0; }
+        /* 修改：增加鼠标手型 */
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; cursor: pointer; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--accent); }
         .stat-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
-        .stat-icon.papers { background: #dbeafe; } 
-        .stat-icon.patents { background: #fef3c7; }
-        .stat-icon.projects { background: #d1fae5; } 
-        .stat-icon.awards { background: #fce7f3; }
-        .stat-icon.books { background: #e0e7ff; } 
-        .stat-icon.members { background: #f3e8ff; }
+        .stat-icon.papers { background: #dbeafe; } .stat-icon.patents { background: #fef3c7; } .stat-icon.projects { background: #d1fae5; } .stat-icon.awards { background: #fce7f3; } .stat-icon.books { background: #e0e7ff; } .stat-icon.members { background: #f3e8ff; }
         .stat-info h3 { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
         .stat-info p { font-size: 0.75rem; color: var(--text-secondary); }
 
-        /* List Layout */
-        #listViewContainer {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            min-height: 0;
-        }
-
+        #listViewContainer { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
         .filter-container { margin-bottom: 12px; flex-shrink: 0; }
         .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
-        .filter-chip {
-            padding: 6px 14px; border-radius: 20px; background: var(--bg-card);
-            border: 1px solid var(--border); color: var(--text-secondary); font-size: 0.85rem;
-            font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;
-        }
+        .filter-chip { padding: 6px 14px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
         .filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
-        
         .keyword-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding-top: 8px; border-top: 1px dashed var(--border); }
         .keyword-chip { font-size: 0.8rem; padding: 4px 12px; background: var(--bg-hover); border-radius: 12px; color: var(--text-secondary); cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
         .keyword-chip:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
         .keyword-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        .results-container { 
-            background: var(--bg-card); 
-            border: 1px solid var(--border); 
-            border-radius: var(--radius); 
-            display: flex;
-            flex-direction: column;
-            flex: 1; 
-            overflow: hidden;
-            min-height: 0;
-        }
-        .results-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px 16px; 
-            border-bottom: 1px solid var(--border); background: var(--bg-secondary); 
-            flex-wrap: wrap; gap: 10px; 
-            flex-shrink: 0;
-        }
+        .results-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-secondary); flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
         .results-count { color: var(--text-secondary); font-size: 0.85rem; }
         .batch-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .select-all-wrapper { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 10px; border-radius: var(--radius-sm); transition: background 0.2s; }
         .select-all-wrapper:hover { background: var(--bg-hover); }
         .select-all-wrapper input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
-        
-        .results-list { 
-            flex: 1; 
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .result-item { 
-            display: flex; align-items: center; 
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-light); 
-            cursor: pointer; transition: background 0.2s; gap: 12px;
-            min-height: 72px;
-        }
+        .results-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .result-item { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background 0.2s; gap: 12px; min-height: 72px; }
         .result-item:hover { background: var(--bg-hover); }
         .result-item:last-child { border-bottom: none; }
         .result-item:active { background: var(--accent-light); }
         .result-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
-        .result-type { 
-            width: 40px; height: 40px;
-            border-radius: var(--radius-sm); 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 1.2rem; flex-shrink: 0; 
-        }
-        
-        .type-paper { background: #dbeafe; } .type-patent { background: #fef3c7; }
-        .type-project { background: #d1fae5; } .type-award { background: #fce7f3; }
-        .type-book { background: #e0e7ff; } .type-member { background: #f3e8ff; }
-        
+        .result-type { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+        .type-paper { background: #dbeafe; } .type-patent { background: #fef3c7; } .type-project { background: #d1fae5; } .type-award { background: #fce7f3; } .type-book { background: #e0e7ff; } .type-member { background: #f3e8ff; }
         .result-content { flex: 1; min-width: 0; overflow: hidden; }
-        .result-title { 
-            font-weight: 600; color: var(--text-primary); 
-            font-size: 0.95rem; 
-            margin-bottom: 4px; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-        }
+        .result-title { font-weight: 600; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .result-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); }
         .result-meta span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
         .result-meta .has-pdf { color: var(--accent); font-weight: 500; }
-        
         .result-actions { display: flex; gap: 6px; flex-shrink: 0; }
-        .action-btn { 
-            width: 36px; height: 36px; border: none; background: var(--bg-hover); 
-            border-radius: var(--radius-sm); cursor: pointer; display: flex; 
-            align-items: center; justify-content: center; transition: all 0.2s; font-size: 1rem; 
-        }
+        .action-btn { width: 36px; height: 36px; border: none; background: var(--bg-hover); border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 1rem; }
         .action-btn:hover { background: var(--accent-light); color: var(--accent); }
         .action-btn.delete:hover { background: var(--danger-light); color: var(--danger); }
 
@@ -324,54 +173,25 @@
         .empty-state h3 { font-size: 1.25rem; margin-bottom: 8px; color: var(--text-primary); }
         .empty-state p { margin-bottom: 20px; }
 
-        /* Modal Styles */
-        .modal-overlay { 
-            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); 
-            backdrop-filter: blur(4px); display: flex; align-items: flex-end; 
-            justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; 
-            transition: all 0.3s; 
-        }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal { 
-            background: var(--bg-card); border-radius: var(--radius) var(--radius) 0 0; 
-            width: 100%; max-width: 600px; max-height: 90vh; max-height: 90dvh;
-            overflow: hidden; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            display: flex; flex-direction: column; 
-        }
+        .modal { background: var(--bg-card); border-radius: var(--radius) var(--radius) 0 0; width: 100%; max-width: 600px; max-height: 90vh; max-height: 90dvh; overflow: hidden; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
         .modal-overlay.active .modal { transform: translateY(0); }
         .modal.wide { max-width: 800px; }
-        .modal-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
-        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .modal-header h2 { font-size: 1.2rem; font-weight: 700; }
-        .modal-close { 
-            width: 40px; height: 40px; border: none; background: var(--bg-hover); 
-            border-radius: 50%; cursor: pointer; font-size: 1.2rem; 
-            display: flex; align-items: center; justify-content: center; 
-            color: var(--text-secondary); transition: all 0.2s; 
-        }
+        .modal-close { width: 40px; height: 40px; border: none; background: var(--bg-hover); border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all 0.2s; }
         .modal-close:hover { background: var(--danger-light); color: var(--danger); }
         .modal-body { padding: 20px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
         .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; flex-shrink: 0; }
 
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); font-size: 0.9rem; }
-        .form-group input, .form-group select, .form-group textarea { 
-            width: 100%; padding: 14px 16px; border: 2px solid var(--border); 
-            border-radius: var(--radius-sm); background: var(--bg-secondary); 
-            color: var(--text-primary); font-size: 16px; transition: all 0.2s; 
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
-            outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); 
-        }
-        /* 只读输入框样式 */
-        .form-group input:read-only, .form-group select:disabled {
-            background-color: var(--bg-hover); color: var(--text-secondary); cursor: not-allowed;
-        }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); font-size: 16px; transition: all 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+        .form-group input:read-only, .form-group select:disabled { background-color: var(--bg-hover); color: var(--text-secondary); cursor: not-allowed; }
         .form-group textarea { min-height: 100px; resize: vertical; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
         .form-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
 
         .file-upload { border: 2px dashed var(--border); border-radius: var(--radius); padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; }
@@ -392,13 +212,8 @@
         .mapping-row label { font-weight: 500; color: var(--text-secondary); font-size: 0.9rem; }
         .mapping-row select { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); font-size: 16px; }
 
-        /* Toast */
         .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
-        .toast { 
-            padding: 14px 20px; border-radius: var(--radius-sm); background: var(--bg-card); 
-            border: 1px solid var(--border); box-shadow: var(--shadow-lg); font-weight: 500; 
-            transform: translateY(-120%); transition: transform 0.3s; text-align: center;
-        }
+        .toast { padding: 14px 20px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-lg); font-weight: 500; transform: translateY(-120%); transition: transform 0.3s; text-align: center; }
         .toast.show { transform: translateY(0); }
         .toast.success { background: var(--success-light); border-color: var(--success); color: var(--success); }
         .toast.error { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
@@ -410,129 +225,32 @@
         .duplicate-list li { padding: 4px 0; border-bottom: 1px solid var(--warning); }
         .duplicate-list li:last-child { border-bottom: none; }
         
-        /* User Profile in OneDrive Section */
-        .user-profile {
-            display: flex; align-items: center; gap: 12px; 
-            padding: 12px; border-radius: var(--radius-sm);
-            background: var(--bg-hover); margin-bottom: 16px;
-        }
-        .user-avatar {
-            width: 40px; height: 40px; border-radius: 50%; background: var(--od-blue);
-            color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;
-        }
+        .user-profile { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-sm); background: var(--bg-hover); margin-bottom: 16px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--od-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-        /* Mobile Menu Button */
-        .mobile-menu-btn {
-            display: none;
-            position: fixed;
-            top: 12px;
-            left: 12px;
-            z-index: 101;
-            width: 48px;
-            height: 48px;
-            border: none;
-            background: var(--bg-card);
-            border-radius: var(--radius-sm);
-            box-shadow: var(--shadow);
-            font-size: 1.4rem;
-            cursor: pointer;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Sidebar Overlay for Mobile */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 99;
-        }
+        .mobile-menu-btn { display: none; position: fixed; top: 12px; left: 12px; z-index: 101; width: 48px; height: 48px; border: none; background: var(--bg-card); border-radius: var(--radius-sm); box-shadow: var(--shadow); font-size: 1.4rem; cursor: pointer; align-items: center; justify-content: center; }
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
         .sidebar-overlay.active { display: block; }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-        }
+        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
         .loading-spinner.dark { border-color: var(--text-muted); border-top-color: var(--accent); }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Confirm Dialog */
-        .confirm-dialog {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 24px;
-            max-width: 360px;
-            width: 90%;
-            text-align: center;
-        }
+        .confirm-dialog { background: var(--bg-card); border-radius: var(--radius); padding: 24px; max-width: 360px; width: 90%; text-align: center; }
         .confirm-dialog p { margin-bottom: 20px; font-size: 1.05rem; }
         .confirm-dialog .btn-group { display: flex; gap: 12px; justify-content: center; }
-
-        /* --- 新增：登录全屏遮罩 --- */
-        .login-overlay {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-primary);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-        .login-box {
-            background: var(--bg-card);
-            padding: 40px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            border: 1px solid var(--border);
-        }
+        
+        .login-overlay { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
         .login-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; color: var(--accent); }
         .login-desc { color: var(--text-secondary); margin-bottom: 30px; font-size: 0.95rem; }
+        
+        .detail-row { display: flex; padding: 12px 0; border-bottom: 1px solid var(--border-light); }
+        .detail-label { width: 100px; flex-shrink: 0; font-weight: 600; color: var(--text-secondary); }
+        .detail-value { flex: 1; color: var(--text-primary); word-break: break-all; }
 
-        /* --- 新增：详情查看模式样式 --- */
-        .detail-row {
-            display: flex;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-light);
-        }
-        .detail-label {
-            width: 100px;
-            flex-shrink: 0;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-        .detail-value {
-            flex: 1;
-            color: var(--text-primary);
-            word-break: break-all;
-        }
-
-        /* Responsive Design */
-        @media (min-width: 769px) {
-            .modal-overlay { align-items: center; padding: 20px; }
-            .modal { border-radius: var(--radius); max-height: 85vh; }
-        }
-
+        @media (min-width: 769px) { .modal-overlay { align-items: center; padding: 20px; } .modal { border-radius: var(--radius); max-height: 85vh; } }
         @media (max-width: 768px) {
             .mobile-menu-btn { display: flex; }
-            .sidebar { 
-                position: fixed; 
-                left: 0; top: 0; bottom: 0;
-                transform: translateX(-100%); 
-                width: 85%;
-                max-width: 320px;
-            }
+            .sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); width: 85%; max-width: 320px; }
             .sidebar.open { transform: translateX(0); }
             .main-content { padding: 70px 12px 12px; }
             .page-title { font-size: 1.25rem; }
@@ -549,7 +267,6 @@
             .result-item { padding: 12px; }
             .results-header { padding: 10px 12px; }
         }
-
         @media (max-width: 480px) {
             .stats-grid { grid-template-columns: repeat(3, 1fr); }
             .stat-card { padding: 10px 8px; flex-direction: column; gap: 6px; text-align: center; }
@@ -640,7 +357,7 @@
             <div id="exportMenu" class="dropdown-menu">
                 <div class="menu-item" onclick="exportToExcelFile()">📊 导出 Excel</div>
                 <div class="menu-item" onclick="exportToWordFile()">📝 导出 Word</div>
-                <div class="menu-item" onclick="exportData()">📦 导出纯 JSON</div>
+                <div class="menu-item" id="menuExportJson" onclick="exportData()">📦 导出纯 JSON</div>
             </div>
 
             <div id="importMenu" class="dropdown-menu">
@@ -666,12 +383,12 @@
         </div>
 
         <div class="stats-grid" id="statsGrid">
-             <div class="stat-card"><div class="stat-icon papers">📄</div><div class="stat-info"><h3 id="statPaper">0</h3><p>论文</p></div></div>
-             <div class="stat-card"><div class="stat-icon patents">💡</div><div class="stat-info"><h3 id="statPatent">0</h3><p>专利</p></div></div>
-             <div class="stat-card"><div class="stat-icon projects">📊</div><div class="stat-info"><h3 id="statProject">0</h3><p>项目</p></div></div>
-             <div class="stat-card"><div class="stat-icon awards">🏆</div><div class="stat-info"><h3 id="statAward">0</h3><p>获奖</p></div></div>
-             <div class="stat-card"><div class="stat-icon books">📚</div><div class="stat-info"><h3 id="statBook">0</h3><p>著作</p></div></div>
-             <div class="stat-card"><div class="stat-icon members">👥</div><div class="stat-info"><h3 id="statMember">0</h3><p>成员</p></div></div>
+             <div class="stat-card" onclick="setView('paper')"><div class="stat-icon papers">📄</div><div class="stat-info"><h3 id="statPaper">0</h3><p>论文</p></div></div>
+             <div class="stat-card" onclick="setView('patent')"><div class="stat-icon patents">💡</div><div class="stat-info"><h3 id="statPatent">0</h3><p>专利</p></div></div>
+             <div class="stat-card" onclick="setView('project')"><div class="stat-icon projects">📊</div><div class="stat-info"><h3 id="statProject">0</h3><p>项目</p></div></div>
+             <div class="stat-card" onclick="setView('award')"><div class="stat-icon awards">🏆</div><div class="stat-info"><h3 id="statAward">0</h3><p>获奖</p></div></div>
+             <div class="stat-card" onclick="setView('book')"><div class="stat-icon books">📚</div><div class="stat-info"><h3 id="statBook">0</h3><p>著作</p></div></div>
+             <div class="stat-card" onclick="setView('member')"><div class="stat-icon members">👥</div><div class="stat-info"><h3 id="statMember">0</h3><p>成员</p></div></div>
         </div>
 
         <div id="listViewContainer">
@@ -707,6 +424,7 @@
         </div>
     </main>
 </div>
+
 <div class="modal-overlay" id="formModal">
     <div class="modal wide">
         <div class="modal-header">
@@ -753,11 +471,11 @@
                     <div class="form-group"><label>单位</label><input type="text" id="projectOrg"></div>
                 </div>
                 <div class="form-group">
-                    <label>📎 PDF 附件</label>
+                    <label>📎 附件 (PDF, Word, Excel, PPT, Zip 等)</label>
                     <div class="file-upload" id="fileUpload" onclick="document.getElementById('pdfInput').click()">
-                        <input type="file" id="pdfInput" accept=".pdf" onchange="handleFileSelect(event)">
+                        <input type="file" id="pdfInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.txt" onchange="handleFileSelect(event)">
                         <div class="file-upload-icon">📄</div>
-                        <div class="file-upload-text">点击上传 PDF 文件</div>
+                        <div class="file-upload-text">点击上传文件</div>
                     </div>
                     <div class="file-info hidden" id="fileInfo">
                         <span class="file-info-name"><span>📄</span><span id="fileName"></span></span>
@@ -779,8 +497,7 @@
             <h2 id="detailTitle">详细信息</h2>
             <button class="modal-close" onclick="closeDetailModal()">✕</button>
         </div>
-        <div class="modal-body" id="detailContent">
-            </div>
+        <div class="modal-body" id="detailContent"></div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">关闭</button>
             <button type="button" class="btn btn-primary" id="detailEditBtn" onclick="editFromDetail()">✎ 编辑</button>
@@ -854,11 +571,9 @@
                     登录微软账号，将数据直接同步到您的 OneDrive 个人空间。<br>
                     路径: <code>/Apps/ResearchManager/backup.json</code>
                 </div>
-
                 <div id="onedrive-login-panel">
                      <button class="btn btn-od" onclick="OneDriveService.signIn()" style="width:100%">🔑 登录微软账号</button>
                 </div>
-
                 <div id="onedrive-actions-panel" class="hidden">
                     <div class="user-profile">
                         <div class="user-avatar" id="odUserInitials">?</div>
@@ -868,7 +583,6 @@
                         </div>
                         <button class="btn btn-sm btn-secondary" onclick="OneDriveService.signOut()">注销</button>
                     </div>
-
                     <div style="display:grid; gap:10px;">
                         <button class="btn btn-od" id="btnOdUpload" onclick="OneDriveService.upload()">
                             ⬆️ 上传当前数据到云端
@@ -879,12 +593,11 @@
                     </div>
                 </div>
             </div>
-
             <div style="border-top:1px solid var(--border); padding-top:20px; margin-top:20px;">
                 <h4 style="margin-bottom:12px;font-size:1rem;">💾 本地文件备份</h4>
                 <div class="backup-info">将数据导出为 JSON 文件保存到本地磁盘。</div>
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn btn-secondary" style="flex:1;" onclick="exportData()">导出 JSON</button>
+                    <button class="btn btn-secondary" id="btnLocalExport" style="flex:1;" onclick="exportData()">导出 JSON</button>
                     <button class="btn btn-secondary" style="flex:1;" onclick="triggerImport()">导入 JSON</button>
                 </div>
             </div>
@@ -901,9 +614,7 @@
         </div>
     </div>
 </div>
-
 <div class="toast-container" id="toastContainer"></div>
-
 <script>
     // --- Login System ---
     let currentUserRole = null; // 'admin' or 'guest'
@@ -931,57 +642,77 @@
     function applyPermissions() {
         const isAdmin = currentUserRole === 'admin';
         
-        // Disable OneDrive/Export for guest
-        const btnOd = document.getElementById('btnOneDrive');
-        const btnExp = document.getElementById('btnExport');
+        // Elements to control
         const navMember = document.getElementById('navMember');
-        const addBtn = document.getElementById('addBtn');
-        const batchBtn = document.getElementById('batchDeleteBtn');
+        
+        // Modal Buttons (New Logic: Sidebar buttons stay active, inner buttons disabled)
+        const btnOdUpload = document.getElementById('btnOdUpload');
+        const btnLocalExport = document.getElementById('btnLocalExport');
+        const menuExportJson = document.getElementById('menuExportJson');
 
         if (!isAdmin) {
-            btnOd.classList.add('disabled');
-            btnOd.removeAttribute('onclick');
-            btnExp.classList.add('disabled');
-            btnExp.removeAttribute('onclick');
-            
-            // Disable Member Nav
+            // Guest: Disable Member View
             navMember.classList.add('disabled');
             navMember.style.opacity = '0.3';
+
+            // Disable Upload to Cloud in Modal
+            if(btnOdUpload) {
+                btnOdUpload.disabled = true;
+                btnOdUpload.innerHTML = '🚫 暂无上传权限';
+                btnOdUpload.style.opacity = '0.6';
+            }
+
+            // Disable Local JSON Export in Modal
+            if(btnLocalExport) {
+                btnLocalExport.disabled = true;
+                btnLocalExport.innerHTML = '🚫 禁止导出 JSON';
+                btnLocalExport.style.opacity = '0.6';
+            }
             
-            // Hide Add Button if guest? The prompt says specific buttons, let's keep add but maybe simplify
-            // Requirement says "Guest password entered... cannot click upload/export/member info"
-            // It implies other things are viewable. 
-            // We will let them add but not manage members or export.
+            // Disable JSON Export in Menu
+            if(menuExportJson) {
+                menuExportJson.classList.add('disabled');
+                menuExportJson.removeAttribute('onclick');
+                menuExportJson.innerHTML = '🚫 导出纯 JSON (无权限)';
+            }
+
         } else {
-             // Admin restores functionality
-            btnOd.classList.remove('disabled');
-            btnOd.setAttribute('onclick', 'openBackupModal()');
-            btnExp.classList.remove('disabled');
-            btnExp.setAttribute('onclick', "toggleMenu('exportMenu')");
+            // Admin: Restore All
             navMember.classList.remove('disabled');
             navMember.style.opacity = '1';
+
+            if(btnOdUpload) {
+                btnOdUpload.disabled = false;
+                btnOdUpload.innerHTML = '⬆️ 上传当前数据到云端';
+                btnOdUpload.style.opacity = '1';
+            }
+
+            if(btnLocalExport) {
+                btnLocalExport.disabled = false;
+                btnLocalExport.innerHTML = '导出 JSON';
+                btnLocalExport.style.opacity = '1';
+            }
+            
+            if(menuExportJson) {
+                menuExportJson.classList.remove('disabled');
+                menuExportJson.setAttribute('onclick', 'exportData()');
+                menuExportJson.innerHTML = '📦 导出纯 JSON';
+            }
         }
     }
 
     // --- Microsoft Graph / OneDrive Integration ---
     const msalConfig = {
         auth: {
-            clientId: "c453313f-fd40-4534-9d66-6a0847396d3b", // 使用您提供的 Client ID
-            authority: "https://login.microsoftonline.com/common", // 支持个人和工作账号
-            redirectUri: window.location.origin + window.location.pathname // 必须与 Azure 后台一致
+            clientId: "c453313f-fd40-4534-9d66-6a0847396d3b",
+            authority: "https://login.microsoftonline.com/common",
+            redirectUri: window.location.origin + window.location.pathname
         },
-        cache: {
-            cacheLocation: "localStorage",
-            storeAuthStateInCookie: false,
-        }
+        cache: { cacheLocation: "localStorage", storeAuthStateInCookie: false }
     };
 
-    const loginRequest = {
-        scopes: ["User.Read", "Files.ReadWrite"]
-    };
-
+    const loginRequest = { scopes: ["User.Read", "Files.ReadWrite"] };
     let msalInstance = null;
-    let graphToken = null;
 
     const OneDriveService = {
         init: async function() {
@@ -992,50 +723,34 @@
                     msalInstance.setActiveAccount(accounts[0]);
                     this.updateUI(accounts[0]);
                 }
-            } catch (e) {
-                console.error("MSAL Init Error:", e);
-            }
+            } catch (e) { console.error("MSAL Init Error:", e); }
         },
-
         signIn: async function() {
             try {
                 const response = await msalInstance.loginPopup(loginRequest);
                 msalInstance.setActiveAccount(response.account);
                 this.updateUI(response.account);
                 showToast("登录成功", "success");
-            } catch (e) {
-                console.error(e);
-                showToast("登录失败: " + e.message, "error");
-            }
+            } catch (e) { showToast("登录失败: " + e.message, "error"); }
         },
-
         signOut: function() {
-            msalInstance.logoutPopup({
-                postLogoutRedirectUri: window.location.href,
-                mainWindowRedirectUri: window.location.href
-            });
+            msalInstance.logoutPopup({ postLogoutRedirectUri: window.location.href });
             this.updateUI(null);
         },
-
         getToken: async function() {
             const account = msalInstance.getActiveAccount();
             if (!account) throw new Error("未登录");
             try {
-                const response = await msalInstance.acquireTokenSilent({
-                    ...loginRequest,
-                    account: account
-                });
+                const response = await msalInstance.acquireTokenSilent({ ...loginRequest, account: account });
                 return response.accessToken;
             } catch (e) {
                 const response = await msalInstance.acquireTokenPopup(loginRequest);
                 return response.accessToken;
             }
         },
-
         updateUI: function(account) {
             const loginPanel = document.getElementById('onedrive-login-panel');
             const actionPanel = document.getElementById('onedrive-actions-panel');
-            
             if (account) {
                 loginPanel.classList.add('hidden');
                 actionPanel.classList.remove('hidden');
@@ -1047,130 +762,60 @@
                 actionPanel.classList.add('hidden');
             }
         },
-
         upload: async function() {
             if (currentUserRole !== 'admin') { showToast('无权限执行此操作', 'error'); return; }
             const btn = document.getElementById('btnOdUpload');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="loading-spinner"></span> 上传中...';
             btn.disabled = true;
-
             try {
                 const token = await this.getToken();
-                const data = {
-                    version: '4.5',
-                    backupDate: new Date().toISOString(),
-                    system: 'ResearchManager',
-                    achievements: achievements,
-                    members: members
-                };
-                
-                const fileName = "backup.json";
-                const folderName = "ResearchManager";
+                const data = { version: '4.5', backupDate: new Date().toISOString(), system: 'ResearchManager', achievements: achievements, members: members };
                 const content = JSON.stringify(data);
-                const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${folderName}/${fileName}:/content`;
-                
-                const response = await fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: content
-                });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.error?.message || "上传失败");
-                }
-
+                const url = `https://graph.microsoft.com/v1.0/me/drive/root:/ResearchManager/backup.json:/content`;
+                const response = await fetch(url, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: content });
+                if (!response.ok) throw new Error("上传失败");
                 showToast("✅ 云端备份成功", "success");
-
-            } catch (e) {
-                console.error(e);
-                showToast("❌ 上传失败: " + e.message, "error");
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            } catch (e) { showToast("❌ 上传失败: " + e.message, "error"); } finally { btn.innerHTML = originalText; btn.disabled = false; }
         },
-
         download: async function() {
             const btn = document.getElementById('btnOdDownload');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="loading-spinner dark"></span> 下载中...';
             btn.disabled = true;
-
             try {
                 const token = await this.getToken();
-                const fileName = "backup.json";
-                const folderName = "ResearchManager";
-                const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${folderName}/${fileName}:/content`;
-
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
+                const url = `https://graph.microsoft.com/v1.0/me/drive/root:/ResearchManager/backup.json:/content`;
+                const response = await fetch(url, { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
                 if (response.status === 404) throw new Error("云端未找到备份文件");
                 if (!response.ok) throw new Error("下载失败");
-
                 const data = await response.json();
-                
-                if (confirm(`下载成功！\n云端时间: ${data.backupDate || '未知'}\n包含 ${data.achievements?.length || 0} 条成果。\n\n是否合并到当前数据？`)) {
+                if (confirm(`下载成功！是否合并数据？`)) {
                     const newAchievements = data.achievements || [];
                     const newMembers = data.members || [];
                     let count = 0;
-                    
-                    newAchievements.forEach(item => {
-                        if (!achievements.some(exist => exist.id === item.id)) {
-                            achievements.push(item);
-                            count++;
-                        }
-                    });
-                    newMembers.forEach(item => {
-                        if (!members.some(exist => exist.id === item.id)) {
-                            members.push(item);
-                            count++;
-                        }
-                    });
-
-                    saveToLocal();
-                    updateStats();
-                    renderResults();
+                    newAchievements.forEach(item => { if (!achievements.some(exist => exist.id === item.id)) { achievements.push(item); count++; } });
+                    newMembers.forEach(item => { if (!members.some(exist => exist.id === item.id)) { members.push(item); count++; } });
+                    saveToLocal(); updateStats(); renderResults();
                     showToast(`✅ 已合并 ${count} 条新数据`, "success");
                     closeBackupModal();
                 }
-
-            } catch (e) {
-                console.error(e);
-                showToast("❌ 下载失败: " + e.message, "error");
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            } catch (e) { showToast("❌ 下载失败: " + e.message, "error"); } finally { btn.innerHTML = originalText; btn.disabled = false; }
         }
     };
 
-    // Dark mode detection
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-    }
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(event) {
-        event.matches ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
-    });
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => e.matches ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark'));
 
-    // Global State
     var achievements = [];
     var members = [];
     var currentView = 'all';
     var currentYearFilter = 'all';
-    var currentKeywordFilter = null;
     var searchQuery = '';
     var sortOrder = 'date-desc';
     var deleteTargetIds = [];
     var deleteTargetType = 'achievement';
-    var currentPdfData = null;
+    var currentPdfData = null; // 现已支持多种文件，变量名保留为PdfData以兼容
     var currentPdfName = null;
     var excelData = null;
     var excelHeaders = [];
@@ -1187,128 +832,25 @@
     };
 
     var fieldMappings = {
-        paper: [
-            { key: 'title', label: '标题', required: true },
-            { key: 'authors', label: '作者' },
-            { key: 'date', label: '发表日期' },
-            { key: 'source', label: '期刊/来源' },
-            { key: 'level', label: '级别' },
-            { key: 'keywords', label: '关键词' }
-        ],
-        patent: [
-            { key: 'patentName', label: '专利名称', required: true },
-            { key: 'patentType', label: '专利类型' },
-            { key: 'inventors', label: '发明人' },
-            { key: 'patentOwner', label: '专利权人' },
-            { key: 'applicationDate', label: '申请日' },
-            { key: 'grantDate', label: '授权时间' },
-            { key: 'patentNumber', label: '专利号' },
-            { key: 'patentStatus', label: '专利状态' }
-        ],
-        project: [
-            { key: 'projectName', label: '项目名称', required: true },
-            { key: 'projectLevel', label: '项目级别' },
-            { key: 'projectNumber', label: '项目编号' },
-            { key: 'projectStartDate', label: '开始时间' },
-            { key: 'projectEndDate', label: '结束时间' },
-            { key: 'projectOrg', label: '所属单位' }
-        ],
-        award: [
-            { key: 'title', label: '奖项名称', required: true },
-            { key: 'authors', label: '获奖人' },
-            { key: 'date', label: '获奖日期' },
-            { key: 'level', label: '级别' }
-        ],
-        book: [
-            { key: 'title', label: '著作名称', required: true },
-            { key: 'authors', label: '作者' },
-            { key: 'date', label: '出版日期' },
-            { key: 'source', label: '出版社' }
-        ],
-        member: [
-            { key: 'memberNo', label: '学号/工号', required: true },
-            { key: 'memberName', label: '姓名', required: true },
-            { key: 'memberGender', label: '性别' },
-            { key: 'memberOrg', label: '工作单位' },
-            { key: 'memberTitle', label: '职称' },
-            { key: 'memberEmail', label: '邮箱' },
-            { key: 'memberIdCard', label: '证件号码' },
-            { key: 'memberDob', label: '出生年月' },
-            { key: 'memberNation', label: '民族' },
-            { key: 'memberPhone', label: '电话' }
-        ]
+        paper: [{ key: 'title', label: '标题', required: true }, { key: 'authors', label: '作者' }, { key: 'date', label: '发表日期' }, { key: 'source', label: '期刊/来源' }, { key: 'level', label: '级别' }, { key: 'keywords', label: '关键词' }],
+        patent: [{ key: 'patentName', label: '专利名称', required: true }, { key: 'patentType', label: '专利类型' }, { key: 'inventors', label: '发明人' }, { key: 'patentOwner', label: '专利权人' }, { key: 'applicationDate', label: '申请日' }, { key: 'grantDate', label: '授权时间' }, { key: 'patentNumber', label: '专利号' }, { key: 'patentStatus', label: '专利状态' }],
+        project: [{ key: 'projectName', label: '项目名称', required: true }, { key: 'projectLevel', label: '项目级别' }, { key: 'projectNumber', label: '项目编号' }, { key: 'projectStartDate', label: '开始时间' }, { key: 'projectEndDate', label: '结束时间' }, { key: 'projectOrg', label: '所属单位' }],
+        award: [{ key: 'title', label: '奖项名称', required: true }, { key: 'authors', label: '获奖人' }, { key: 'date', label: '获奖日期' }, { key: 'level', label: '级别' }],
+        book: [{ key: 'title', label: '著作名称', required: true }, { key: 'authors', label: '作者' }, { key: 'date', label: '出版日期' }, { key: 'source', label: '出版社' }],
+        member: [{ key: 'memberNo', label: '学号/工号', required: true }, { key: 'memberName', label: '姓名', required: true }, { key: 'memberGender', label: '性别' }, { key: 'memberOrg', label: '工作单位' }, { key: 'memberTitle', label: '职称' }, { key: 'memberEmail', label: '邮箱' }, { key: 'memberIdCard', label: '证件号码' }, { key: 'memberDob', label: '出生年月' }, { key: 'memberNation', label: '民族' }, { key: 'memberPhone', label: '电话' }]
     };
 
-    // IndexedDB Storage
     const DB_NAME = 'ResearchDB_V4';
     const DB_VERSION = 1;
     let db;
+    function initDB() { return new Promise((resolve, reject) => { var r = indexedDB.open(DB_NAME, DB_VERSION); r.onerror = e => reject(e); r.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains('appState')) e.target.result.createObjectStore('appState', { keyPath: 'id' }); }; r.onsuccess = e => { db = e.target.result; resolve(db); }; }); }
+    async function saveToLocal() { if (!db) await initDB(); var t = db.transaction(['appState'], 'readwrite'); t.objectStore('appState').put({ id: 'main_data', achievements: achievements, members: members, updatedAt: new Date().toISOString() }); updateStorageStatus(true); }
+    async function loadFromLocal() { if (!db) await initDB(); return new Promise(resolve => { var r = db.transaction(['appState'], 'readonly').objectStore('appState').get('main_data'); r.onsuccess = e => { if (e.target.result) { achievements = e.target.result.achievements || []; members = e.target.result.members || []; resolve(true); } else resolve(false); }; r.onerror = () => resolve(false); }); }
+    function updateStorageStatus(ok) { var s = document.getElementById('storageStatus'); if (ok) { s.className = 'storage-status'; s.innerHTML = '✓ 数据已本地保存'; } else { s.className = 'storage-status warning'; s.textContent = '⚠ 保存失败'; } }
 
-    function initDB() {
-        return new Promise(function(resolve, reject) {
-            var request = indexedDB.open(DB_NAME, DB_VERSION);
-            request.onerror = function(event) { console.error("Database error"); reject(event.target.errorCode); };
-            request.onupgradeneeded = function(event) {
-                var database = event.target.result;
-                if (!database.objectStoreNames.contains('appState')) {
-                    database.createObjectStore('appState', { keyPath: 'id' });
-                }
-            };
-            request.onsuccess = function(event) { db = event.target.result; resolve(db); };
-        });
-    }
-
-    async function saveToLocal() {
-        if (!db) await initDB();
-        var transaction = db.transaction(['appState'], 'readwrite');
-        var store = transaction.objectStore('appState');
-        var dataToSave = {
-            id: 'main_data',
-            achievements: achievements,
-            members: members,
-            updatedAt: new Date().toISOString()
-        };
-        var request = store.put(dataToSave);
-        request.onsuccess = function() { updateStorageStatus(true); };
-        request.onerror = function() { updateStorageStatus(false); showToast("保存失败", "error"); };
-    }
-
-    async function loadFromLocal() {
-        if (!db) await initDB();
-        return new Promise(function(resolve) {
-            var transaction = db.transaction(['appState'], 'readonly');
-            var store = transaction.objectStore('appState');
-            var request = store.get('main_data');
-            request.onsuccess = function(event) {
-                var result = event.target.result;
-                if (result) {
-                    achievements = result.achievements || [];
-                    members = result.members || [];
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            };
-            request.onerror = function() { resolve(false); };
-        });
-    }
-
-    function updateStorageStatus(ok) {
-        var status = document.getElementById('storageStatus');
-        if (ok) {
-            status.className = 'storage-status';
-            status.innerHTML = '✓ 数据已本地保存';
-        } else {
-            status.className = 'storage-status warning';
-            status.textContent = '⚠ 保存失败';
-        }
-    }
-
-    // Modal Functions
     function openBackupModal() { document.getElementById('backupModal').classList.add('active'); closeAllMenus(); }
     function closeBackupModal() { document.getElementById('backupModal').classList.remove('active'); }
 
-    // Utility Functions
     function base64ToBlob(base64Data) {
         var arr = base64Data.split(',');
         var mime = arr[0].match(/:(.*?);/)[1];
@@ -1318,19 +860,14 @@
         while (n--) { u8arr[n] = bstr.charCodeAt(n); }
         return new Blob([u8arr], { type: mime });
     }
+    function escapeHtml(text) { if (!text) return ''; var d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        var div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
+    // --- 修改：支持更多文件格式 ---
     function handleFileSelect(event) {
         var file = event.target.files[0];
         if (!file) return;
         if (file.size > 20 * 1024 * 1024) { showToast('文件过大 (>20MB)', 'error'); return; }
-        if (file.type !== 'application/pdf') { showToast('请选择 PDF 文件', 'error'); return; }
+        // 移除严格的文件类型检查，允许所有上传的文件
         var reader = new FileReader();
         reader.onload = function(e) {
             currentPdfData = e.target.result;
@@ -1341,66 +878,52 @@
         };
         reader.readAsDataURL(file);
     }
+    function removeFile() { currentPdfData = null; currentPdfName = null; document.getElementById('pdfInput').value = ''; document.getElementById('fileInfo').classList.add('hidden'); document.getElementById('fileUpload').classList.remove('hidden'); document.getElementById('fileUpload').classList.remove('has-file'); }
 
-    function removeFile() {
-        currentPdfData = null; currentPdfName = null;
-        document.getElementById('pdfInput').value = '';
-        document.getElementById('fileInfo').classList.add('hidden');
-        document.getElementById('fileUpload').classList.remove('hidden');
-        document.getElementById('fileUpload').classList.remove('has-file');
-    }
-
-    function viewPdf(id) {
+    // --- 修改：重命名 viewPdf 为 viewFile 以反映新功能 ---
+    function viewFile(id) {
         var item = achievements.find(function(a) { return String(a.id) === String(id); });
         if (item && item.pdfData) {
-            try {
-                var blob = base64ToBlob(item.pdfData);
+            var blob = base64ToBlob(item.pdfData);
+            var isPdf = item.pdfName && item.pdfName.toLowerCase().endsWith('.pdf');
+            
+            if (isPdf) {
+                // PDF 直接预览
                 var url = URL.createObjectURL(blob);
                 window.open(url);
-            } catch (e) {
-                showToast("打开失败", "error");
+            } else {
+                // 其他文件直接下载
+                showToast("该格式不支持预览，开始下载...", "warning");
+                downloadPdf(id); // 复用下载逻辑
             }
         }
     }
-
+    // downloadPdf 函数保持逻辑不变，但逻辑上它现在下载任何文件
     function downloadPdf(id) {
         var item = achievements.find(function(a) { return String(a.id) === String(id); });
         if (item && item.pdfData) {
             var a = document.createElement('a');
             a.href = item.pdfData;
-            a.download = item.pdfName || 'document.pdf';
+            a.download = item.pdfName || 'download.file';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
         }
     }
 
-    // Sidebar Functions
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
     function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
 
     function setView(view) {
-        if (view === 'member' && currentUserRole !== 'admin') {
-            showToast('宾客账号无权查看成员信息', 'error');
-            return;
-        }
-        currentView = view;
-        selectedItems.clear();
-        updateBatchDeleteBtn();
+        if (view === 'member' && currentUserRole !== 'admin') { showToast('宾客账号无权查看成员信息', 'error'); return; }
+        currentView = view; selectedItems.clear(); updateBatchDeleteBtn();
         document.querySelectorAll('.nav-item').forEach(function(item) { item.classList.toggle('active', item.dataset.view === view); });
         var titles = { all: '全部成果', paper: '学术论文', patent: '发明专利', project: '科研项目', award: '获奖情况', book: '专著出版', member: '成员信息' };
         document.getElementById('pageTitle').textContent = titles[view];
         document.getElementById('addBtnText').textContent = '添加';
-        closeSidebar();
-        renderResults();
+        closeSidebar(); renderResults();
     }
-
-    function setYearFilter(year) {
-        currentYearFilter = year;
-        document.querySelectorAll('.filter-chip').forEach(function(chip) { chip.classList.toggle('active', chip.dataset.year === year); });
-        renderResults();
-    }
-
+    function setYearFilter(year) { currentYearFilter = year; document.querySelectorAll('.filter-chip').forEach(function(chip) { chip.classList.toggle('active', chip.dataset.year === year); }); renderResults(); }
     function handleSearch() { searchQuery = document.getElementById('searchInput').value.toLowerCase(); renderResults(); }
     function handleSort() { sortOrder = document.getElementById('sortSelect').value; renderResults(); }
 
@@ -1414,112 +937,29 @@
             document.getElementById(t + 'Count').textContent = counts[t];
             document.getElementById('stat' + t.charAt(0).toUpperCase() + t.slice(1)).textContent = counts[t];
         });
-
-        var years = [];
-        achievements.forEach(function(a) {
-            var dateStr = a.date || a.applicationDate || a.projectStartDate;
-            if (dateStr) { var y = dateStr.substring(0, 4); if (years.indexOf(y) === -1) years.push(y); }
-        });
-        years.sort().reverse();
-        var filterBar = document.getElementById('filterBar');
-        var yearHtml = '<div class="filter-chip active" data-year="all" onclick="setYearFilter(\'all\')">全部</div>';
-        years.forEach(function(year) { yearHtml += '<div class="filter-chip" data-year="' + year + '" onclick="setYearFilter(\'' + year + '\')">' + year + '</div>'; });
-        filterBar.innerHTML = yearHtml;
+        var years = []; achievements.forEach(function(a) { var d = a.date || a.applicationDate || a.projectStartDate; if (d) { var y = d.substring(0, 4); if (years.indexOf(y) === -1) years.push(y); } }); years.sort().reverse();
+        var filterBar = document.getElementById('filterBar'); var yearHtml = '<div class="filter-chip active" data-year="all" onclick="setYearFilter(\'all\')">全部</div>'; years.forEach(function(year) { yearHtml += '<div class="filter-chip" data-year="' + year + '" onclick="setYearFilter(\'' + year + '\')">' + year + '</div>'; }); filterBar.innerHTML = yearHtml;
     }
 
-    function toggleSelectAll() {
-        var checked = document.getElementById('selectAll').checked;
-        document.querySelectorAll('.result-checkbox').forEach(function(cb) {
-            cb.checked = checked;
-            if (checked) selectedItems.add(cb.dataset.id); else selectedItems.delete(cb.dataset.id);
-        });
-        updateBatchDeleteBtn();
-    }
+    function toggleSelectAll() { var c = document.getElementById('selectAll').checked; document.querySelectorAll('.result-checkbox').forEach(function(cb) { cb.checked = c; if (c) selectedItems.add(cb.dataset.id); else selectedItems.delete(cb.dataset.id); }); updateBatchDeleteBtn(); }
+    function toggleItemSelect(id, event) { event.stopPropagation(); if (selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id); updateBatchDeleteBtn(); var c = document.querySelectorAll('.result-checkbox'); document.getElementById('selectAll').checked = c.length > 0 && Array.from(c).every(function(cb) { return cb.checked; }); }
+    function updateBatchDeleteBtn() { var c = selectedItems.size; document.getElementById('selectedCount').textContent = c; document.getElementById('batchDeleteBtn').style.display = c > 0 ? 'inline-flex' : 'none'; }
 
-    function toggleItemSelect(id, event) {
-        event.stopPropagation();
-        if (selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id);
-        updateBatchDeleteBtn();
-        var checkboxes = document.querySelectorAll('.result-checkbox');
-        document.getElementById('selectAll').checked = checkboxes.length > 0 && Array.from(checkboxes).every(function(cb) { return cb.checked; });
-    }
-
-    function updateBatchDeleteBtn() {
-        var btn = document.getElementById('batchDeleteBtn');
-        var count = selectedItems.size;
-        document.getElementById('selectedCount').textContent = count;
-        btn.style.display = count > 0 ? 'inline-flex' : 'none';
-    }
-
-    function batchDelete() {
-        if (currentUserRole !== 'admin') { showToast('无权限删除', 'error'); return; }
-        if (selectedItems.size === 0) return;
-        deleteTargetIds = Array.from(selectedItems);
-        deleteTargetType = currentView === 'member' ? 'member' : 'achievement';
-        document.getElementById('confirmMessage').textContent = '确定删除选中的 ' + selectedItems.size + ' 条记录吗？';
-        document.getElementById('confirmModal').classList.add('active');
-    }
-
-    function promptDelete(id, type) {
-        if (currentUserRole !== 'admin') { showToast('无权限删除', 'error'); return; }
-        deleteTargetIds = [id];
-        deleteTargetType = type;
-        document.getElementById('confirmMessage').textContent = '确定要删除这条记录吗？';
-        document.getElementById('confirmModal').classList.add('active');
-    }
-
+    function batchDelete() { if (currentUserRole !== 'admin') { showToast('无权限删除', 'error'); return; } if (selectedItems.size === 0) return; deleteTargetIds = Array.from(selectedItems); deleteTargetType = currentView === 'member' ? 'member' : 'achievement'; document.getElementById('confirmMessage').textContent = '确定删除选中的 ' + selectedItems.size + ' 条记录吗？'; document.getElementById('confirmModal').classList.add('active'); }
+    function promptDelete(id, type) { if (currentUserRole !== 'admin') { showToast('无权限删除', 'error'); return; } deleteTargetIds = [id]; deleteTargetType = type; document.getElementById('confirmMessage').textContent = '确定要删除这条记录吗？'; document.getElementById('confirmModal').classList.add('active'); }
     function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('active'); }
-
-    function confirmDelete() {
-        if (deleteTargetType === 'member') {
-            members = members.filter(function(m) { return deleteTargetIds.indexOf(m.id) === -1; });
-        } else {
-            achievements = achievements.filter(function(a) { return deleteTargetIds.indexOf(a.id) === -1; });
-        }
-        deleteTargetIds.forEach(function(id) { selectedItems.delete(id); });
-        saveToLocal();
-        updateStats();
-        renderResults();
-        updateBatchDeleteBtn();
-        closeConfirmModal();
-        showToast('✓ 已删除', 'success');
-    }
+    function confirmDelete() { if (deleteTargetType === 'member') members = members.filter(function(m) { return deleteTargetIds.indexOf(m.id) === -1; }); else achievements = achievements.filter(function(a) { return deleteTargetIds.indexOf(a.id) === -1; }); deleteTargetIds.forEach(function(id) { selectedItems.delete(id); }); saveToLocal(); updateStats(); renderResults(); updateBatchDeleteBtn(); closeConfirmModal(); showToast('✓ 已删除', 'success'); }
 
     function renderResults() {
         var container = document.getElementById('resultsList');
         if (currentView === 'member') { renderMembers(container); return; }
-
         var filtered = achievements.slice();
         if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; });
-        if (currentYearFilter !== 'all') {
-            filtered = filtered.filter(function(a) {
-                var d = a.date || a.applicationDate || a.projectStartDate || '';
-                return d.indexOf(currentYearFilter) === 0;
-            });
-        }
-        if (searchQuery) {
-            filtered = filtered.filter(function(a) {
-                var searchFields = [a.title, a.authors, a.keywords, a.patentName, a.inventors, a.patentNumber, a.projectName, a.projectNumber].join(' ').toLowerCase();
-                return searchFields.indexOf(searchQuery) !== -1;
-            });
-        }
-
-        filtered.sort(function(a, b) {
-            var dateA = a.date || a.applicationDate || a.projectStartDate || '0';
-            var dateB = b.date || b.applicationDate || b.projectStartDate || '0';
-            if (sortOrder === 'date-desc') return dateB.localeCompare(dateA);
-            if (sortOrder === 'date-asc') return dateA.localeCompare(dateB);
-            if (sortOrder === 'title-asc') return (a.title || a.patentName || a.projectName || '').localeCompare(b.title || b.patentName || b.projectName || '', 'zh-CN');
-            return 0;
-        });
-
+        if (currentYearFilter !== 'all') filtered = filtered.filter(function(a) { var d = a.date || a.applicationDate || a.projectStartDate || ''; return d.indexOf(currentYearFilter) === 0; });
+        if (searchQuery) filtered = filtered.filter(function(a) { var s = [a.title, a.authors, a.keywords, a.patentName, a.inventors, a.patentNumber, a.projectName, a.projectNumber].join(' ').toLowerCase(); return s.indexOf(searchQuery) !== -1; });
+        filtered.sort(function(a, b) { var dA = a.date || a.applicationDate || a.projectStartDate || '0'; var dB = b.date || b.applicationDate || b.projectStartDate || '0'; if (sortOrder === 'date-desc') return dB.localeCompare(dA); if (sortOrder === 'date-asc') return dA.localeCompare(dB); if (sortOrder === 'title-asc') return (a.title || a.patentName || a.projectName || '').localeCompare(b.title || b.patentName || b.projectName || '', 'zh-CN'); return 0; });
         document.getElementById('resultsCount').textContent = '共 ' + filtered.length + ' 条';
-
-        if (filtered.length === 0) {
-            container.innerHTML = '<div class="empty-state"><h3>暂无记录</h3><p>' + (searchQuery ? '没有找到匹配的结果' : '点击添加按钮开始录入') + '</p></div>';
-            return;
-        }
-
+        if (filtered.length === 0) { container.innerHTML = '<div class="empty-state"><h3>暂无记录</h3><p>' + (searchQuery ? '没有找到匹配的结果' : '点击添加按钮开始录入') + '</p></div>'; return; }
         container.innerHTML = filtered.map(function(item) {
             var config = typeConfig[item.type] || typeConfig.paper;
             var displayTitle = item.type === 'patent' ? (item.patentName || item.title) : (item.type === 'project' ? (item.projectName || item.title) : item.title);
@@ -1528,22 +968,18 @@
             var isChecked = selectedItems.has(item.id) ? 'checked' : '';
             var metaHtml = '<span>📅 ' + (displayDate || '-') + '</span>';
             if (displayAuthors) metaHtml += '<span>👤 ' + escapeHtml(displayAuthors.substring(0, 20)) + (displayAuthors.length > 20 ? '...' : '') + '</span>';
-            // 新增：显示专利号和状态
             if (item.type === 'patent' && item.patentNumber) metaHtml += '<span>🔢 ' + escapeHtml(item.patentNumber) + '</span>';
             if (item.type === 'patent' && item.patentStatus) metaHtml += '<span>🔖 ' + escapeHtml(item.patentStatus) + '</span>';
-            
             if (item.pdfData) metaHtml += '<span class="has-pdf">📎</span>';
-
-            // 修改 onclick 为查看详情
+            
+            // 修改：viewPdf -> viewFile
             return '<div class="result-item" onclick="viewDetail(\'' + item.id + '\')">' +
                 '<input type="checkbox" class="result-checkbox" data-id="' + item.id + '" ' + isChecked + ' onclick="toggleItemSelect(\'' + item.id + '\', event)">' +
                 '<div class="result-type ' + config.class + '">' + config.icon + '</div>' +
-                '<div class="result-content">' +
-                '<div class="result-title">' + escapeHtml(displayTitle) + '</div>' +
-                '<div class="result-meta">' + metaHtml + '</div></div>' +
+                '<div class="result-content"><div class="result-title">' + escapeHtml(displayTitle) + '</div><div class="result-meta">' + metaHtml + '</div></div>' +
                 '<div class="result-actions">' +
-                '<button class="action-btn" onclick="event.stopPropagation(); viewPdf(\'' + item.id + '\')" title="预览PDF" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>👁️</button>' +
-                '<button class="action-btn" onclick="event.stopPropagation(); downloadPdf(\'' + item.id + '\')" title="下载PDF" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>⬇️</button>' +
+                '<button class="action-btn" onclick="event.stopPropagation(); viewFile(\'' + item.id + '\')" title="查看/下载附件" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>👁️</button>' +
+                '<button class="action-btn" onclick="event.stopPropagation(); downloadPdf(\'' + item.id + '\')" title="下载附件" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>⬇️</button>' +
                 '<button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + item.id + '\', \'achievement\')" title="删除" ' + (currentUserRole !== 'admin' ? 'disabled style="opacity:0.3"' : '') + '>🗑</button>' +
                 '</div></div>';
         }).join('');
@@ -1551,103 +987,48 @@
 
     function renderMembers(container) {
         var filtered = members.slice();
-        if (searchQuery) {
-            filtered = filtered.filter(function(m) {
-                var searchFields = [m.memberNo, m.memberName, m.memberOrg, m.memberEmail, m.memberTitle, m.memberIdCard].join(' ').toLowerCase();
-                return searchFields.indexOf(searchQuery) !== -1;
-            });
-        }
+        if (searchQuery) filtered = filtered.filter(function(m) { var s = [m.memberNo, m.memberName, m.memberOrg, m.memberEmail, m.memberTitle, m.memberIdCard].join(' ').toLowerCase(); return s.indexOf(searchQuery) !== -1; });
         document.getElementById('resultsCount').textContent = '共 ' + filtered.length + ' 条';
-        if (filtered.length === 0) {
-            container.innerHTML = '<div class="empty-state"><h3>暂无成员</h3></div>';
-            return;
-        }
+        if (filtered.length === 0) { container.innerHTML = '<div class="empty-state"><h3>暂无成员</h3></div>'; return; }
         container.innerHTML = filtered.map(function(m) {
             var isChecked = selectedItems.has(m.id) ? 'checked' : '';
             return '<div class="result-item" onclick="editMember(\'' + m.id + '\')">' +
                 '<input type="checkbox" class="result-checkbox" data-id="' + m.id + '" ' + isChecked + ' onclick="toggleItemSelect(\'' + m.id + '\', event)">' +
                 '<div class="result-type type-member">👤</div>' +
-                '<div class="result-content">' +
-                '<div class="result-title">' + escapeHtml(m.memberName) + '</div>' +
-                '<div class="result-meta"><span>🔢 ' + escapeHtml(m.memberNo) + '</span><span>📱 ' + escapeHtml(m.memberPhone || '-') + '</span></div></div>' +
-                '<div class="result-actions">' +
-                '<button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + m.id + '\', \'member\')" title="删除">🗑</button>' +
-                '</div></div>';
+                '<div class="result-content"><div class="result-title">' + escapeHtml(m.memberName) + '</div><div class="result-meta"><span>🔢 ' + escapeHtml(m.memberNo) + '</span><span>📱 ' + escapeHtml(m.memberPhone || '-') + '</span></div></div>' +
+                '<div class="result-actions"><button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + m.id + '\', \'member\')" title="删除">🗑</button></div></div>';
         }).join('');
     }
 
-    // --- New Feature: View Detail Modal ---
+    // --- View Detail Modal ---
     function viewDetail(id) {
         var item = achievements.find(function(a) { return String(a.id) === String(id); });
         if (!item) return;
-        
         currentDetailId = id;
         document.getElementById('detailTitle').textContent = typeConfig[item.type]?.label + ' 详情';
-        
-        var content = '';
-        var fields = [];
-        
+        var content = ''; var fields = [];
         if (item.type === 'patent') {
-            fields = [
-                { l: '专利名称', v: item.patentName },
-                { l: '专利类型', v: item.patentType },
-                { l: '状态', v: item.patentStatus },
-                { l: '专利号', v: item.patentNumber },
-                { l: '发明人', v: item.inventors },
-                { l: '专利权人', v: item.patentOwner },
-                { l: '申请日', v: item.applicationDate },
-                { l: '授权日', v: item.grantDate }
-            ];
+            fields = [{ l: '专利名称', v: item.patentName }, { l: '专利类型', v: item.patentType }, { l: '状态', v: item.patentStatus }, { l: '专利号', v: item.patentNumber }, { l: '发明人', v: item.inventors }, { l: '专利权人', v: item.patentOwner }, { l: '申请日', v: item.applicationDate }, { l: '授权日', v: item.grantDate }];
         } else if (item.type === 'project') {
-            fields = [
-                { l: '项目名称', v: item.projectName },
-                { l: '级别', v: item.projectLevel },
-                { l: '编号', v: item.projectNumber },
-                { l: '所属单位', v: item.projectOrg },
-                { l: '开始时间', v: item.projectStartDate },
-                { l: '结束时间', v: item.projectEndDate }
-            ];
+            fields = [{ l: '项目名称', v: item.projectName }, { l: '级别', v: item.projectLevel }, { l: '编号', v: item.projectNumber }, { l: '所属单位', v: item.projectOrg }, { l: '开始时间', v: item.projectStartDate }, { l: '结束时间', v: item.projectEndDate }];
         } else {
-            fields = [
-                { l: '标题', v: item.title },
-                { l: '日期', v: item.date },
-                { l: '作者', v: item.authors },
-                { l: '来源/期刊', v: item.source },
-                { l: '级别', v: item.level },
-                { l: '关键词', v: item.keywords }
-            ];
+            fields = [{ l: '标题', v: item.title }, { l: '日期', v: item.date }, { l: '作者', v: item.authors }, { l: '来源/期刊', v: item.source }, { l: '级别', v: item.level }, { l: '关键词', v: item.keywords }];
         }
-        
         content = fields.map(f => `<div class="detail-row"><div class="detail-label">${f.l}</div><div class="detail-value">${escapeHtml(f.v || '-')}</div></div>`).join('');
-        
+        // 修改：在详情中也支持通用文件查看
         if (item.pdfData) {
-            content += `<div class="detail-row" style="margin-top:10px;"><div class="detail-label">附件</div><div class="detail-value"><button class="btn btn-sm btn-secondary" onclick="viewPdf('${item.id}')">查看 PDF</button></div></div>`;
+            content += `<div class="detail-row" style="margin-top:10px;"><div class="detail-label">附件</div><div class="detail-value"><button class="btn btn-sm btn-secondary" onclick="viewFile('${item.id}')">查看/下载附件</button></div></div>`;
         }
-        
         document.getElementById('detailContent').innerHTML = content;
-        
-        // Disable Edit button for Guest
         const editBtn = document.getElementById('detailEditBtn');
-        if (currentUserRole !== 'admin') {
-            editBtn.style.display = 'none';
-        } else {
-            editBtn.style.display = 'inline-flex';
-        }
-
+        if (currentUserRole !== 'admin') editBtn.style.display = 'none'; else editBtn.style.display = 'inline-flex';
         document.getElementById('detailModal').classList.add('active');
     }
-
     function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
-    
-    function editFromDetail() {
-        closeDetailModal();
-        editAchievement(currentDetailId);
-    }
+    function editFromDetail() { closeDetailModal(); editAchievement(currentDetailId); }
 
     function toggleFormFields() {
-        var type = document.getElementById('type').value;
-        var isPatent = type === 'patent';
-        var isProject = type === 'project';
+        var type = document.getElementById('type').value; var isPatent = type === 'patent'; var isProject = type === 'project';
         document.getElementById('patentFields').classList.toggle('hidden', !isPatent);
         document.getElementById('projectFields').classList.toggle('hidden', !isProject);
         document.getElementById('generalFields').classList.toggle('hidden', isPatent || isProject);
@@ -1655,486 +1036,84 @@
     }
 
     function openAddModal() {
-        if (currentUserRole === 'guest') {
-            // Guest can add but maybe restricted. Prompt allows it but let's just proceed.
-        }
         if (currentView === 'member') { openMemberModal(); return; }
-        document.getElementById('modalTitle').textContent = '添加科研成果';
-        document.getElementById('submitBtn').textContent = '保存';
-        document.getElementById('researchForm').reset();
-        document.getElementById('editId').value = '';
-        document.getElementById('date').valueAsDate = new Date();
-        document.getElementById('type').value = (currentView !== 'all' && currentView !== 'member') ? currentView : '';
-        toggleFormFields();
-        removeFile();
-        document.getElementById('formModal').classList.add('active');
+        document.getElementById('modalTitle').textContent = '添加科研成果'; document.getElementById('submitBtn').textContent = '保存'; document.getElementById('researchForm').reset(); document.getElementById('editId').value = ''; document.getElementById('date').valueAsDate = new Date(); document.getElementById('type').value = (currentView !== 'all' && currentView !== 'member') ? currentView : ''; toggleFormFields(); removeFile(); document.getElementById('formModal').classList.add('active');
     }
-
     function editAchievement(id) {
         if (currentUserRole !== 'admin') { showToast('无编辑权限', 'error'); return; }
-        var item = achievements.find(function(a) { return String(a.id) === String(id); });
-        if (!item) return;
-        document.getElementById('modalTitle').textContent = '编辑科研成果';
-        document.getElementById('submitBtn').textContent = '更新';
-        document.getElementById('editId').value = id;
-        document.getElementById('type').value = item.type || '';
-        toggleFormFields();
-
-        if (item.type === 'patent') {
-            document.getElementById('patentName').value = item.patentName || '';
-            document.getElementById('patentType').value = item.patentType || '';
-            document.getElementById('inventors').value = item.inventors || '';
-            document.getElementById('patentOwner').value = item.patentOwner || '';
-            document.getElementById('applicationDate').value = item.applicationDate || '';
-            document.getElementById('grantDate').value = item.grantDate || '';
-            document.getElementById('patentNumber').value = item.patentNumber || '';
-            document.getElementById('patentStatus').value = item.patentStatus || '';
-        } else if (item.type === 'project') {
-            document.getElementById('projectName').value = item.projectName || item.title || '';
-            document.getElementById('projectLevel').value = item.projectLevel || item.level || '';
-            document.getElementById('projectNumber').value = item.projectNumber || '';
-            document.getElementById('projectStartDate').value = item.projectStartDate || item.date || '';
-            document.getElementById('projectEndDate').value = item.projectEndDate || '';
-            document.getElementById('projectOrg').value = item.projectOrg || '';
-        } else {
-            document.getElementById('date').value = item.date || '';
-            document.getElementById('title').value = item.title || '';
-            document.getElementById('authors').value = item.authors || '';
-            document.getElementById('source').value = item.source || '';
-            document.getElementById('level').value = item.level || '';
-            document.getElementById('keywords').value = item.keywords || '';
-        }
+        var item = achievements.find(function(a) { return String(a.id) === String(id); }); if (!item) return;
+        document.getElementById('modalTitle').textContent = '编辑科研成果'; document.getElementById('submitBtn').textContent = '更新'; document.getElementById('editId').value = id; document.getElementById('type').value = item.type || ''; toggleFormFields();
+        if (item.type === 'patent') { document.getElementById('patentName').value = item.patentName || ''; document.getElementById('patentType').value = item.patentType || ''; document.getElementById('inventors').value = item.inventors || ''; document.getElementById('patentOwner').value = item.patentOwner || ''; document.getElementById('applicationDate').value = item.applicationDate || ''; document.getElementById('grantDate').value = item.grantDate || ''; document.getElementById('patentNumber').value = item.patentNumber || ''; document.getElementById('patentStatus').value = item.patentStatus || ''; } else if (item.type === 'project') { document.getElementById('projectName').value = item.projectName || item.title || ''; document.getElementById('projectLevel').value = item.projectLevel || item.level || ''; document.getElementById('projectNumber').value = item.projectNumber || ''; document.getElementById('projectStartDate').value = item.projectStartDate || item.date || ''; document.getElementById('projectEndDate').value = item.projectEndDate || ''; document.getElementById('projectOrg').value = item.projectOrg || ''; } else { document.getElementById('date').value = item.date || ''; document.getElementById('title').value = item.title || ''; document.getElementById('authors').value = item.authors || ''; document.getElementById('source').value = item.source || ''; document.getElementById('level').value = item.level || ''; document.getElementById('keywords').value = item.keywords || ''; }
         removeFile();
-        if (item.pdfData) {
-            currentPdfData = item.pdfData;
-            currentPdfName = item.pdfName;
-            document.getElementById('fileName').textContent = item.pdfName || 'document.pdf';
-            document.getElementById('fileInfo').classList.remove('hidden');
-            document.getElementById('fileUpload').classList.add('has-file');
-        }
+        if (item.pdfData) { currentPdfData = item.pdfData; currentPdfName = item.pdfName; document.getElementById('fileName').textContent = item.pdfName || 'attachment'; document.getElementById('fileInfo').classList.remove('hidden'); document.getElementById('fileUpload').classList.add('has-file'); }
         document.getElementById('formModal').classList.add('active');
     }
-
     function closeModal() { document.getElementById('formModal').classList.remove('active'); }
 
     function handleSubmit(event) {
-        event.preventDefault();
-        var editId = document.getElementById('editId').value;
-        var type = document.getElementById('type').value;
-        var data = {
-            id: editId || Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            type: type,
-            pdfData: currentPdfData,
-            pdfName: currentPdfName,
-            updatedAt: new Date().toISOString()
-        };
-
-        if (type === 'patent') {
-            data.patentName = document.getElementById('patentName').value;
-            data.patentType = document.getElementById('patentType').value;
-            data.inventors = document.getElementById('inventors').value;
-            data.patentOwner = document.getElementById('patentOwner').value;
-            data.applicationDate = document.getElementById('applicationDate').value;
-            data.grantDate = document.getElementById('grantDate').value;
-            data.patentNumber = document.getElementById('patentNumber').value;
-            data.patentStatus = document.getElementById('patentStatus').value;
-            data.title = data.patentName;
-            data.date = data.applicationDate;
-        } else if (type === 'project') {
-            data.projectName = document.getElementById('projectName').value;
-            data.projectLevel = document.getElementById('projectLevel').value;
-            data.projectNumber = document.getElementById('projectNumber').value;
-            data.projectStartDate = document.getElementById('projectStartDate').value;
-            data.projectEndDate = document.getElementById('projectEndDate').value;
-            data.projectOrg = document.getElementById('projectOrg').value;
-            data.title = data.projectName;
-            data.date = data.projectStartDate;
-        } else {
-            data.date = document.getElementById('date').value;
-            data.title = document.getElementById('title').value;
-            data.authors = document.getElementById('authors').value;
-            data.source = document.getElementById('source').value;
-            data.level = document.getElementById('level').value;
-            data.keywords = document.getElementById('keywords').value;
-        }
-
-        if (editId) {
-            var index = achievements.findIndex(function(a) { return String(a.id) === String(editId); });
-            if (index !== -1) { achievements[index] = Object.assign(achievements[index], data); showToast('✓ 已更新', 'success'); }
-        } else {
-            data.createdAt = new Date().toISOString();
-            achievements.push(data);
-            showToast('✓ 已添加', 'success');
-        }
-        saveToLocal();
-        closeModal();
-        updateStats();
-        renderResults();
+        event.preventDefault(); var editId = document.getElementById('editId').value; var type = document.getElementById('type').value;
+        var data = { id: editId || Date.now().toString() + Math.random().toString(36).substr(2, 9), type: type, pdfData: currentPdfData, pdfName: currentPdfName, updatedAt: new Date().toISOString() };
+        if (type === 'patent') { data.patentName = document.getElementById('patentName').value; data.patentType = document.getElementById('patentType').value; data.inventors = document.getElementById('inventors').value; data.patentOwner = document.getElementById('patentOwner').value; data.applicationDate = document.getElementById('applicationDate').value; data.grantDate = document.getElementById('grantDate').value; data.patentNumber = document.getElementById('patentNumber').value; data.patentStatus = document.getElementById('patentStatus').value; data.title = data.patentName; data.date = data.applicationDate; } else if (type === 'project') { data.projectName = document.getElementById('projectName').value; data.projectLevel = document.getElementById('projectLevel').value; data.projectNumber = document.getElementById('projectNumber').value; data.projectStartDate = document.getElementById('projectStartDate').value; data.projectEndDate = document.getElementById('projectEndDate').value; data.projectOrg = document.getElementById('projectOrg').value; data.title = data.projectName; data.date = data.projectStartDate; } else { data.date = document.getElementById('date').value; data.title = document.getElementById('title').value; data.authors = document.getElementById('authors').value; data.source = document.getElementById('source').value; data.level = document.getElementById('level').value; data.keywords = document.getElementById('keywords').value; }
+        if (editId) { var index = achievements.findIndex(function(a) { return String(a.id) === String(editId); }); if (index !== -1) { achievements[index] = Object.assign(achievements[index], data); showToast('✓ 已更新', 'success'); } } else { data.createdAt = new Date().toISOString(); achievements.push(data); showToast('✓ 已添加', 'success'); }
+        saveToLocal(); closeModal(); updateStats(); renderResults();
     }
 
-    // --- Member Handling ---
-    // 新增：处理身份证输入自动填充
     function handleIdCardInput(input) {
         const val = input.value;
         if (val.length >= 14) {
             const birth = val.substring(6, 14);
-            const y = birth.substring(0, 4);
-            const m = birth.substring(4, 6);
-            const d = birth.substring(6, 8);
-            if (y && m && d) {
-                document.getElementById('memberDob').value = `${y}-${m}-${d}`;
-            }
+            const y = birth.substring(0, 4); const m = birth.substring(4, 6); const d = birth.substring(6, 8);
+            if (y && m && d) { document.getElementById('memberDob').value = `${y}-${m}-${d}`; }
         }
     }
-
-    function openMemberModal() { 
-        if (currentUserRole !== 'admin') { showToast('无权操作', 'error'); return; }
-        document.getElementById('memberForm').reset(); 
-        document.getElementById('memberEditId').value = ''; 
-        document.getElementById('memberModalTitle').textContent = '添加成员';
-        document.getElementById('memberModal').classList.add('active'); 
-    }
-    
+    function openMemberModal() { if (currentUserRole !== 'admin') { showToast('无权操作', 'error'); return; } document.getElementById('memberForm').reset(); document.getElementById('memberEditId').value = ''; document.getElementById('memberModalTitle').textContent = '添加成员'; document.getElementById('memberModal').classList.add('active'); }
     function editMember(id) {
         if (currentUserRole !== 'admin') { showToast('无权编辑', 'error'); return; }
-        var m = members.find(function(item) { return String(item.id) === String(id); });
-        if (!m) return;
-        document.getElementById('memberEditId').value = id;
-        document.getElementById('memberModalTitle').textContent = '编辑成员';
-        document.getElementById('memberNo').value = m.memberNo || '';
-        document.getElementById('memberName').value = m.memberName || '';
-        document.getElementById('memberGender').value = m.memberGender || '';
-        document.getElementById('memberOrg').value = m.memberOrg || '';
-        document.getElementById('memberTitle').value = m.memberTitle || '';
-        document.getElementById('memberEmail').value = m.memberEmail || '';
-        // 新增字段
-        document.getElementById('memberIdCard').value = m.memberIdCard || '';
-        document.getElementById('memberDob').value = m.memberDob || '';
-        document.getElementById('memberNation').value = m.memberNation || '';
-        document.getElementById('memberPhone').value = m.memberPhone || '';
-        
+        var m = members.find(function(item) { return String(item.id) === String(id); }); if (!m) return;
+        document.getElementById('memberEditId').value = id; document.getElementById('memberModalTitle').textContent = '编辑成员'; document.getElementById('memberNo').value = m.memberNo || ''; document.getElementById('memberName').value = m.memberName || ''; document.getElementById('memberGender').value = m.memberGender || ''; document.getElementById('memberOrg').value = m.memberOrg || ''; document.getElementById('memberTitle').value = m.memberTitle || ''; document.getElementById('memberEmail').value = m.memberEmail || ''; document.getElementById('memberIdCard').value = m.memberIdCard || ''; document.getElementById('memberDob').value = m.memberDob || ''; document.getElementById('memberNation').value = m.memberNation || ''; document.getElementById('memberPhone').value = m.memberPhone || '';
         document.getElementById('memberModal').classList.add('active');
     }
     function closeMemberModal() { document.getElementById('memberModal').classList.remove('active'); }
-
     function handleMemberSubmit(event) {
-        event.preventDefault();
-        var editId = document.getElementById('memberEditId').value;
-        var data = {
-            id: editId || Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            memberNo: document.getElementById('memberNo').value,
-            memberName: document.getElementById('memberName').value,
-            memberGender: document.getElementById('memberGender').value,
-            memberOrg: document.getElementById('memberOrg').value,
-            memberTitle: document.getElementById('memberTitle').value,
-            memberEmail: document.getElementById('memberEmail').value,
-            // 新增字段
-            memberIdCard: document.getElementById('memberIdCard').value,
-            memberDob: document.getElementById('memberDob').value,
-            memberNation: document.getElementById('memberNation').value,
-            memberPhone: document.getElementById('memberPhone').value,
-            updatedAt: new Date().toISOString()
-        };
-
-        if (editId) {
-            var index = members.findIndex(function(m) { return String(m.id) === String(editId); });
-            if (index !== -1) { members[index] = Object.assign(members[index], data); showToast('✓ 已更新', 'success'); }
-        } else {
-            data.createdAt = new Date().toISOString();
-            members.push(data);
-            showToast('✓ 已添加', 'success');
-        }
-        saveToLocal();
-        closeMemberModal();
-        updateStats();
-        renderResults();
+        event.preventDefault(); var editId = document.getElementById('memberEditId').value;
+        var data = { id: editId || Date.now().toString() + Math.random().toString(36).substr(2, 9), memberNo: document.getElementById('memberNo').value, memberName: document.getElementById('memberName').value, memberGender: document.getElementById('memberGender').value, memberOrg: document.getElementById('memberOrg').value, memberTitle: document.getElementById('memberTitle').value, memberEmail: document.getElementById('memberEmail').value, memberIdCard: document.getElementById('memberIdCard').value, memberDob: document.getElementById('memberDob').value, memberNation: document.getElementById('memberNation').value, memberPhone: document.getElementById('memberPhone').value, updatedAt: new Date().toISOString() };
+        if (editId) { var index = members.findIndex(function(m) { return String(m.id) === String(editId); }); if (index !== -1) { members[index] = Object.assign(members[index], data); showToast('✓ 已更新', 'success'); } } else { data.createdAt = new Date().toISOString(); members.push(data); showToast('✓ 已添加', 'success'); }
+        saveToLocal(); closeMemberModal(); updateStats(); renderResults();
     }
 
     function exportData() {
         if (currentUserRole !== 'admin') { showToast('无导出权限', 'error'); return; }
-        var data = { version: '4.0', exportDate: new Date().toISOString(), achievements: achievements, members: members };
-        var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = 'research_data_backup_' + new Date().toISOString().slice(0, 10) + '.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        showToast('✓ 备份文件已下载', 'success');
-        closeAllMenus();
+        var data = { version: '4.0', exportDate: new Date().toISOString(), achievements: achievements, members: members }; var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = 'research_data_backup_' + new Date().toISOString().slice(0, 10) + '.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); showToast('✓ 备份文件已下载', 'success'); closeAllMenus();
     }
-
     function exportToWordFile() {
-        var content = '';
-        var title = '';
+        var content = ''; var title = '';
         if (currentView === 'member') {
-            title = '团队成员名单';
-            content += '<h1>' + title + '</h1><table border="1" style="border-collapse:collapse;width:100%">';
-            content += '<tr><th>工号</th><th>姓名</th><th>性别</th><th>民族</th><th>出生日期</th><th>电话</th><th>单位</th></tr>';
-            members.forEach(function(m) {
-                content += '<tr>' + 
-                    '<td>' + (m.memberNo || '') + '</td>' +
-                    '<td>' + (m.memberName || '') + '</td>' +
-                    '<td>' + (m.memberGender || '') + '</td>' +
-                    '<td>' + (m.memberNation || '') + '</td>' +
-                    '<td>' + (m.memberDob || '') + '</td>' +
-                    '<td>' + (m.memberPhone || '') + '</td>' +
-                    '<td>' + (m.memberOrg || '') + '</td>' +
-                    '</tr>';
-            });
+            title = '团队成员名单'; content += '<h1>' + title + '</h1><table border="1" style="border-collapse:collapse;width:100%"><tr><th>工号</th><th>姓名</th><th>性别</th><th>民族</th><th>出生日期</th><th>电话</th><th>单位</th></tr>';
+            members.forEach(function(m) { content += '<tr><td>' + (m.memberNo || '') + '</td><td>' + (m.memberName || '') + '</td><td>' + (m.memberGender || '') + '</td><td>' + (m.memberNation || '') + '</td><td>' + (m.memberDob || '') + '</td><td>' + (m.memberPhone || '') + '</td><td>' + (m.memberOrg || '') + '</td></tr>'; });
             content += '</table>';
         } else {
-            var typeName = { all: '全部成果', paper: '学术论文', patent: '发明专利', project: '科研项目', award: '获奖情况', book: '专著出版' };
-            title = typeName[currentView] || '科研成果列表';
-            var filtered = achievements;
-            if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; });
-            content += '<h1>' + title + '</h1>';
-            filtered.forEach(function(item, index) {
-                var itemTitle = item.title || item.patentName || item.projectName;
-                var itemDate = item.date || item.applicationDate || item.projectStartDate;
-                var itemAuth = item.authors || item.inventors || item.projectOrg;
-                content += '<p><strong>' + (index + 1) + '. ' + escapeHtml(itemTitle) + '</strong><br>';
-                content += '日期: ' + (itemDate || '-') + ' | 人员: ' + (itemAuth || '-') + '<br>';
-                if (item.source) content += '来源: ' + escapeHtml(item.source) + '<br>';
-                if (item.level) content += '级别: ' + escapeHtml(item.level) + '<br>';
-                if (item.patentNumber) content += '专利号: ' + escapeHtml(item.patentNumber) + '<br>';
-                content += '</p><hr>';
-            });
+            var typeName = { all: '全部成果', paper: '学术论文', patent: '发明专利', project: '科研项目', award: '获奖情况', book: '专著出版' }; title = typeName[currentView] || '科研成果列表'; var filtered = achievements; if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; }); content += '<h1>' + title + '</h1>';
+            filtered.forEach(function(item, index) { var itemTitle = item.title || item.patentName || item.projectName; var itemDate = item.date || item.applicationDate || item.projectStartDate; var itemAuth = item.authors || item.inventors || item.projectOrg; content += '<p><strong>' + (index + 1) + '. ' + escapeHtml(itemTitle) + '</strong><br>'; content += '日期: ' + (itemDate || '-') + ' | 人员: ' + (itemAuth || '-') + '<br>'; if (item.source) content += '来源: ' + escapeHtml(item.source) + '<br>'; if (item.level) content += '级别: ' + escapeHtml(item.level) + '<br>'; if (item.patentNumber) content += '专利号: ' + escapeHtml(item.patentNumber) + '<br>'; content += '</p><hr>'; });
         }
-        var header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + title + "</title></head><body>";
-        var footer = "</body></html>";
-        var sourceHTML = header + content + footer;
-        var blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = title + '_' + new Date().toISOString().slice(0, 10) + '.doc';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        showToast('✓ Word 导出成功', 'success');
-        closeAllMenus();
+        var header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + title + "</title></head><body>"; var footer = "</body></html>"; var sourceHTML = header + content + footer; var blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' }); var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = title + '_' + new Date().toISOString().slice(0, 10) + '.doc'; document.body.appendChild(a); a.click(); document.body.removeChild(a); showToast('✓ Word 导出成功', 'success'); closeAllMenus();
     }
 
     function triggerImport() { document.getElementById('importInput').click(); closeAllMenus(); }
-    function importData(event) {
-        var file = event.target.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                var data = JSON.parse(e.target.result);
-                if (data.achievements || data.members) {
-                    if (confirm('导入将合并现有数据，是否继续？')) {
-                        var newAchievements = data.achievements || [];
-                        var newMembers = data.members || [];
-                        newAchievements.forEach(function(item) { if (!achievements.some(function(exist) { return exist.id === item.id; })) { achievements.push(item); } });
-                        newMembers.forEach(function(item) { if (!members.some(function(exist) { return exist.id === item.id; })) { members.push(item); } });
-                        saveToLocal(); updateStats(); renderResults(); showToast('✓ 导入成功', 'success');
-                    }
-                }
-            } catch (err) { showToast('文件解析失败', 'error'); }
-        };
-        reader.readAsText(file);
-        event.target.value = '';
-    }
-
+    function importData(event) { var file = event.target.files[0]; if (!file) return; var reader = new FileReader(); reader.onload = function(e) { try { var data = JSON.parse(e.target.result); if (data.achievements || data.members) { if (confirm('导入将合并现有数据，是否继续？')) { var newAchievements = data.achievements || []; var newMembers = data.members || []; newAchievements.forEach(function(item) { if (!achievements.some(function(exist) { return exist.id === item.id; })) { achievements.push(item); } }); newMembers.forEach(function(item) { if (!members.some(function(exist) { return exist.id === item.id; })) { members.push(item); } }); saveToLocal(); updateStats(); renderResults(); showToast('✓ 导入成功', 'success'); } } } catch (err) { showToast('文件解析失败', 'error'); } }; reader.readAsText(file); event.target.value = ''; }
     function exportToExcelFile() {
-        if (currentUserRole !== 'admin') { showToast('无权限', 'error'); return; }
-        if (!typeof XLSX) { showToast('Excel 组件未加载', 'error'); return; }
-        var dataToExport = [];
-        var sheetName = '';
-        if (currentView === 'member') {
-            sheetName = '团队成员';
-            dataToExport = members.map(function(m) {
-                return {
-                    '学号/工号': m.memberNo, '姓名': m.memberName, '性别': m.memberGender,
-                    '单位': m.memberOrg, '职称': m.memberTitle, '邮箱': m.memberEmail,
-                    '证件号码': m.memberIdCard, '出生年月': m.memberDob, '民族': m.memberNation, '电话': m.memberPhone
-                };
-            });
-        } else {
-            var filtered = achievements;
-            if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; });
-            sheetName = '科研成果';
-            dataToExport = filtered.map(function(a) {
-                var base = { '类型': typeConfig[a.type]?.label || a.type };
-                if (a.type === 'patent') {
-                    Object.assign(base, { '专利名称': a.patentName, '专利类型': a.patentType, '发明人': a.inventors, '申请日': a.applicationDate, '专利号': a.patentNumber, '状态': a.patentStatus });
-                } else if (a.type === 'project') {
-                    Object.assign(base, { '项目名称': a.projectName, '级别': a.projectLevel, '编号': a.projectNumber, '开始时间': a.projectStartDate });
-                } else {
-                    Object.assign(base, { '标题': a.title, '作者': a.authors, '日期': a.date, '来源': a.source, '级别': a.level });
-                }
-                return base;
-            });
-        }
-        if (dataToExport.length === 0) { showToast('无数据', 'warning'); return; }
-        var wb = XLSX.utils.book_new();
-        var ws = XLSX.utils.json_to_sheet(dataToExport);
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
-        XLSX.writeFile(wb, sheetName + '_' + new Date().toISOString().slice(0, 10) + '.xlsx');
-        closeAllMenus();
+        if (currentUserRole !== 'admin') { showToast('无权限', 'error'); return; } if (!typeof XLSX) { showToast('Excel 组件未加载', 'error'); return; }
+        var dataToExport = []; var sheetName = '';
+        if (currentView === 'member') { sheetName = '团队成员'; dataToExport = members.map(function(m) { return { '学号/工号': m.memberNo, '姓名': m.memberName, '性别': m.memberGender, '单位': m.memberOrg, '职称': m.memberTitle, '邮箱': m.memberEmail, '证件号码': m.memberIdCard, '出生年月': m.memberDob, '民族': m.memberNation, '电话': m.memberPhone }; }); } else { var filtered = achievements; if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; }); sheetName = '科研成果'; dataToExport = filtered.map(function(a) { var base = { '类型': typeConfig[a.type]?.label || a.type }; if (a.type === 'patent') { Object.assign(base, { '专利名称': a.patentName, '专利类型': a.patentType, '发明人': a.inventors, '申请日': a.applicationDate, '专利号': a.patentNumber, '状态': a.patentStatus }); } else if (a.type === 'project') { Object.assign(base, { '项目名称': a.projectName, '级别': a.projectLevel, '编号': a.projectNumber, '开始时间': a.projectStartDate }); } else { Object.assign(base, { '标题': a.title, '作者': a.authors, '日期': a.date, '来源': a.source, '级别': a.level }); } return base; }); }
+        if (dataToExport.length === 0) { showToast('无数据', 'warning'); return; } var wb = XLSX.utils.book_new(); var ws = XLSX.utils.json_to_sheet(dataToExport); XLSX.utils.book_append_sheet(wb, ws, sheetName); XLSX.writeFile(wb, sheetName + '_' + new Date().toISOString().slice(0, 10) + '.xlsx'); closeAllMenus();
     }
-
-    function openExcelImport() {
-        document.getElementById('excelModal').classList.add('active');
-        document.getElementById('excelInput').value = '';
-        document.getElementById('excelPreviewContainer').classList.add('hidden');
-        document.getElementById('mappingContainer').classList.add('hidden');
-        document.getElementById('importExcelBtn').disabled = true;
-        document.getElementById('duplicateWarning').classList.add('hidden');
-        excelData = null;
-        closeAllMenus();
-    }
-
+    function openExcelImport() { document.getElementById('excelModal').classList.add('active'); document.getElementById('excelInput').value = ''; document.getElementById('excelPreviewContainer').classList.add('hidden'); document.getElementById('mappingContainer').classList.add('hidden'); document.getElementById('importExcelBtn').disabled = true; document.getElementById('duplicateWarning').classList.add('hidden'); excelData = null; closeAllMenus(); }
     function closeExcelModal() { document.getElementById('excelModal').classList.remove('active'); }
-
-    function handleExcelSelect(event) {
-        var file = event.target.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var data = new Uint8Array(e.target.result);
-            var workbook = XLSX.read(data, { type: 'array' });
-            var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            excelData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-            if (excelData.length > 0) {
-                excelHeaders = excelData[0];
-                renderExcelPreview();
-                updateMappingFields();
-                document.getElementById('excelPreviewContainer').classList.remove('hidden');
-                document.getElementById('mappingContainer').classList.remove('hidden');
-                document.getElementById('importExcelBtn').disabled = false;
-            } else {
-                showToast('Excel 文件为空', 'error');
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    function renderExcelPreview() {
-        var html = '<table><thead><tr>';
-        excelHeaders.forEach(function(h) { html += '<th>' + escapeHtml(h) + '</th>'; });
-        html += '</tr></thead><tbody>';
-        for (var i = 1; i < Math.min(excelData.length, 6); i++) {
-            html += '<tr>';
-            var row = excelData[i];
-            excelHeaders.forEach(function(_, idx) { html += '<td>' + escapeHtml(row[idx] || '') + '</td>'; });
-            html += '</tr>';
-        }
-        html += '</tbody></table>';
-        document.getElementById('excelPreview').innerHTML = html;
-    }
-
-    function updateMappingFields() {
-        var type = document.getElementById('excelImportType').value;
-        var fields = fieldMappings[type] || [];
-        var container = document.getElementById('mappingFields');
-        var html = '';
-        fields.forEach(function(field) {
-            html += '<div class="mapping-row"><label>' + field.label + (field.required ? ' *' : '') + '</label><select class="field-map-select" data-key="' + field.key + '" data-required="' + field.required + '"><option value="">(不导入)</option>';
-            excelHeaders.forEach(function(header, idx) {
-                var selected = (header.indexOf(field.label) !== -1 || field.label.indexOf(header) !== -1) ? 'selected' : '';
-                html += '<option value="' + idx + '" ' + selected + '>' + escapeHtml(header) + '</option>';
-            });
-            html += '</select></div>';
-        });
-        container.innerHTML = html;
-    }
-
-    function confirmExcelImport() {
-        var type = document.getElementById('excelImportType').value;
-        var selects = document.querySelectorAll('.field-map-select');
-        var mapConfig = {};
-        var hasError = false;
-        selects.forEach(function(sel) {
-            var key = sel.dataset.key;
-            var idx = sel.value;
-            if (sel.dataset.required === 'true' && idx === '') {
-                showToast('请映射必填字段', 'error');
-                sel.style.borderColor = 'var(--danger)';
-                hasError = true;
-            } else {
-                sel.style.borderColor = 'var(--border)';
-                if (idx !== '') mapConfig[key] = parseInt(idx);
-            }
-        });
-        if (hasError) return;
-
-        var importCount = 0;
-        var duplicateCount = 0;
-        var duplicates = [];
-
-        for (var i = 1; i < excelData.length; i++) {
-            var row = excelData[i];
-            if (!row || row.length === 0) continue;
-            var item = { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), createdAt: new Date().toISOString() };
-            if (type !== 'member') item.type = type;
-
-            for (var key in mapConfig) {
-                var colIdx = mapConfig[key];
-                var val = row[colIdx];
-                if (typeof val === 'number' && key.toLowerCase().includes('date') && val > 20000) {
-                    var dateObj = new Date((val - (25567 + 2)) * 86400 * 1000);
-                    val = dateObj.toISOString().slice(0, 10);
-                }
-                item[key] = val !== undefined ? String(val).trim() : '';
-            }
-
-            var isDuplicate = false;
-            if (type === 'member') {
-                isDuplicate = members.some(function(m) { return m.memberNo === item.memberNo; });
-                if (!isDuplicate) { members.push(item); importCount++; } else { duplicates.push(item.memberName + ' (' + item.memberNo + ')'); duplicateCount++; }
-            } else {
-                var uniqueKey = type === 'patent' ? 'patentName' : (type === 'project' ? 'projectName' : 'title');
-                isDuplicate = achievements.some(function(a) { return a[uniqueKey] === item[uniqueKey] && a.type === type; });
-                if (!isDuplicate) { achievements.push(item); importCount++; } else { duplicates.push(item[uniqueKey]); duplicateCount++; }
-            }
-        }
-        saveToLocal(); updateStats(); renderResults();
-        if (duplicateCount > 0) {
-            var warnList = document.getElementById('duplicateList');
-            warnList.innerHTML = duplicates.map(function(d) { return '<li>' + escapeHtml(d) + '</li>'; }).join('');
-            document.getElementById('duplicateWarning').classList.remove('hidden');
-            showToast('导入成功 ' + importCount + ' 条，跳过 ' + duplicateCount + ' 条重复', 'warning');
-        } else {
-            closeExcelModal();
-            showToast('✓ 成功导入 ' + importCount + ' 条数据', 'success');
-        }
-    }
-
-    function showToast(message, type) {
-        var container = document.getElementById('toastContainer');
-        var toast = document.createElement('div');
-        toast.className = 'toast ' + type;
-        toast.textContent = message;
-        container.appendChild(toast);
-        requestAnimationFrame(function() { toast.classList.add('show'); });
-        setTimeout(function() {
-            toast.classList.remove('show');
-            setTimeout(function() { container.removeChild(toast); }, 300);
-        }, 3000);
-    }
-
-    function toggleMenu(id) {
-        var menu = document.getElementById(id);
-        var isVisible = menu.classList.contains('show');
-        closeAllMenus();
-        if (!isVisible) menu.classList.add('show');
-    }
+    function handleExcelSelect(event) { var file = event.target.files[0]; if (!file) return; var reader = new FileReader(); reader.onload = function(e) { var data = new Uint8Array(e.target.result); var workbook = XLSX.read(data, { type: 'array' }); var firstSheet = workbook.Sheets[workbook.SheetNames[0]]; excelData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }); if (excelData.length > 0) { excelHeaders = excelData[0]; renderExcelPreview(); updateMappingFields(); document.getElementById('excelPreviewContainer').classList.remove('hidden'); document.getElementById('mappingContainer').classList.remove('hidden'); document.getElementById('importExcelBtn').disabled = false; } else { showToast('Excel 文件为空', 'error'); } }; reader.readAsArrayBuffer(file); }
+    function renderExcelPreview() { var html = '<table><thead><tr>'; excelHeaders.forEach(function(h) { html += '<th>' + escapeHtml(h) + '</th>'; }); html += '</tr></thead><tbody>'; for (var i = 1; i < Math.min(excelData.length, 6); i++) { html += '<tr>'; var row = excelData[i]; excelHeaders.forEach(function(_, idx) { html += '<td>' + escapeHtml(row[idx] || '') + '</td>'; }); html += '</tr>'; } html += '</tbody></table>'; document.getElementById('excelPreview').innerHTML = html; }
+    function updateMappingFields() { var type = document.getElementById('excelImportType').value; var fields = fieldMappings[type] || []; var container = document.getElementById('mappingFields'); var html = ''; fields.forEach(function(field) { html += '<div class="mapping-row"><label>' + field.label + (field.required ? ' *' : '') + '</label><select class="field-map-select" data-key="' + field.key + '" data-required="' + field.required + '"><option value="">(不导入)</option>'; excelHeaders.forEach(function(header, idx) { var selected = (header.indexOf(field.label) !== -1 || field.label.indexOf(header) !== -1) ? 'selected' : ''; html += '<option value="' + idx + '" ' + selected + '>' + escapeHtml(header) + '</option>'; }); html += '</select></div>'; }); container.innerHTML = html; }
+    function confirmExcelImport() { var type = document.getElementById('excelImportType').value; var selects = document.querySelectorAll('.field-map-select'); var mapConfig = {}; var hasError = false; selects.forEach(function(sel) { var key = sel.dataset.key; var idx = sel.value; if (sel.dataset.required === 'true' && idx === '') { showToast('请映射必填字段', 'error'); sel.style.borderColor = 'var(--danger)'; hasError = true; } else { sel.style.borderColor = 'var(--border)'; if (idx !== '') mapConfig[key] = parseInt(idx); } }); if (hasError) return; var importCount = 0; var duplicateCount = 0; var duplicates = []; for (var i = 1; i < excelData.length; i++) { var row = excelData[i]; if (!row || row.length === 0) continue; var item = { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), createdAt: new Date().toISOString() }; if (type !== 'member') item.type = type; for (var key in mapConfig) { var colIdx = mapConfig[key]; var val = row[colIdx]; if (typeof val === 'number' && key.toLowerCase().includes('date') && val > 20000) { var dateObj = new Date((val - (25567 + 2)) * 86400 * 1000); val = dateObj.toISOString().slice(0, 10); } item[key] = val !== undefined ? String(val).trim() : ''; } var isDuplicate = false; if (type === 'member') { isDuplicate = members.some(function(m) { return m.memberNo === item.memberNo; }); if (!isDuplicate) { members.push(item); importCount++; } else { duplicates.push(item.memberName + ' (' + item.memberNo + ')'); duplicateCount++; } } else { var uniqueKey = type === 'patent' ? 'patentName' : (type === 'project' ? 'projectName' : 'title'); isDuplicate = achievements.some(function(a) { return a[uniqueKey] === item[uniqueKey] && a.type === type; }); if (!isDuplicate) { achievements.push(item); importCount++; } else { duplicates.push(item[uniqueKey]); duplicateCount++; } } } saveToLocal(); updateStats(); renderResults(); if (duplicateCount > 0) { var warnList = document.getElementById('duplicateList'); warnList.innerHTML = duplicates.map(function(d) { return '<li>' + escapeHtml(d) + '</li>'; }).join(''); document.getElementById('duplicateWarning').classList.remove('hidden'); showToast('导入成功 ' + importCount + ' 条，跳过 ' + duplicateCount + ' 条重复', 'warning'); } else { closeExcelModal(); showToast('✓ 成功导入 ' + importCount + ' 条数据', 'success'); } }
+    function showToast(message, type) { var container = document.getElementById('toastContainer'); var toast = document.createElement('div'); toast.className = 'toast ' + type; toast.textContent = message; container.appendChild(toast); requestAnimationFrame(function() { toast.classList.add('show'); }); setTimeout(function() { toast.classList.remove('show'); setTimeout(function() { container.removeChild(toast); }, 300); }, 3000); }
+    function toggleMenu(id) { var menu = document.getElementById(id); var isVisible = menu.classList.contains('show'); closeAllMenus(); if (!isVisible) menu.classList.add('show'); }
     function closeAllMenus() { document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.classList.remove('show'); }); }
-
-    // Initialize
-    window.onload = function() {
-        OneDriveService.init(); // Initialize MSAL
-        loadFromLocal().then(function() {
-            updateStats();
-            renderResults();
-            // 登录遮罩已在 HTML 中默认显示，无需 JS 触发
-        });
-    };
+    window.onload = function() { OneDriveService.init(); loadFromLocal().then(function() { updateStats(); renderResults(); }); };
 </script>
-</body>
-</html>
