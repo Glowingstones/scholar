@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>科研成果管理系统 (增强版)</title>
+    <title>科研成果管理系统</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -289,7 +289,7 @@
         </div>
         <button class="btn btn-primary" style="width:100%" onclick="checkLogin()">登录</button>
         <div style="margin-top:15px; font-size:0.8rem; color:var(--text-muted);">
-            管理员: admin888 | 宾客: guest666
+            管理员: ***** | 宾客: guest
         </div>
     </div>
 </div>
@@ -548,7 +548,7 @@
     <div class="modal wide">
         <div class="modal-header"><h2>导入 Excel 数据</h2><button class="modal-close" onclick="closeExcelModal()">✕</button></div>
         <div class="modal-body">
-            <div class="form-group"><label>类型</label><select id="excelImportType" onchange="updateMappingFields()"><option value="paper">学术论文</option><option value="patent">发明专利</option><option value="project">科研项目</option><option value="award">获奖情况</option><option value="book">专著出版</option><option value="member">成员</option></select></div>
+            <div class="form-group"><label>类型</label><select id="excelImportType" onchange="updateMappingFields()"><option value="paper">学术论文</option><option value="patent">发明专利</option><option value="project">科研项目</option><option value="award">获奖情况</option><option value="book">专著出版</option><option value="member">成员信息</option></select></div>
             <div class="form-group"><label>文件</label><div class="file-upload" onclick="document.getElementById('excelInput').click()"><input type="file" id="excelInput" accept=".xlsx,.xls,.csv" onchange="handleExcelSelect(event)"><div class="file-upload-icon">📊</div><div class="file-upload-text">点击选择 Excel 文件</div></div></div>
             <div id="excelPreviewContainer" class="hidden"><label>预览</label><div class="excel-preview" id="excelPreview"></div></div>
             <div id="mappingContainer" class="hidden" style="margin-top:20px;"><label>映射</label><div id="mappingFields"></div></div>
@@ -624,12 +624,12 @@
         const overlay = document.getElementById('loginOverlay');
         const errorMsg = "密码错误";
 
-        if (pwd === 'admin888') {
+        if (pwd === '1399') {
             currentUserRole = 'admin';
             overlay.style.display = 'none';
             applyPermissions();
             showToast('管理员登录成功', 'success');
-        } else if (pwd === 'guest666') {
+        } else if (pwd === 'guest') {
             currentUserRole = 'guest';
             overlay.style.display = 'none';
             applyPermissions();
@@ -1117,3 +1117,4 @@
     function closeAllMenus() { document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.classList.remove('show'); }); }
     window.onload = function() { OneDriveService.init(); loadFromLocal().then(function() { updateStats(); renderResults(); }); };
 </script>
+
