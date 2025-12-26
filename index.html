@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>科研成果管理系统</title>
+    <title>科研成果管理系统 - OneDrive同步版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -304,10 +304,8 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
         }
         .result-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); }
-        .result-meta span, .result-meta a { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
-        /* 针对链接的样式调整 */
-        .result-meta .has-pdf { color: var(--accent); font-weight: 500; text-decoration: none; border: 1px solid transparent; padding: 2px 6px; border-radius: 4px; background: var(--accent-light); }
-        .result-meta .has-pdf:hover { background: var(--accent); color: white; }
+        .result-meta span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+        .result-meta .has-pdf { color: var(--accent); font-weight: 500; }
         
         .result-actions { display: flex; gap: 6px; flex-shrink: 0; }
         .action-btn { 
@@ -792,24 +790,16 @@
                         <input type="text" id="projectOrg" placeholder="项目所属单位">
                     </div>
                 </div>
-                
-                <div class="form-group" style="background:var(--accent-light); padding:15px; border-radius:8px; border:1px solid var(--accent);">
-                    <label style="color:var(--accent-dark); font-weight:bold;">📎 PDF 附件关联 (支持超大文件)</label>
-                    <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px; line-height:1.5;">
-                        <strong>重要步骤：</strong><br>
-                        1. 请手动将 PDF 文件放入同级目录的 <code>files</code> 文件夹中。<br>
-                        2. 点击下方按钮，选择该文件（系统仅记录文件名，不占用内存）。
-                    </div>
-                    
+                <div class="form-group">
+                    <label>📎 PDF 附件</label>
                     <div class="file-upload" id="fileUpload" onclick="document.getElementById('pdfInput').click()">
                         <input type="file" id="pdfInput" accept=".pdf" onchange="handleFileSelect(event)">
                         <div class="file-upload-icon">📄</div>
-                        <div class="file-upload-text" id="fileDisplayText">点击关联 files 文件夹中的文件</div>
+                        <div class="file-upload-text">点击上传 PDF 文件</div>
                     </div>
-
                     <div class="file-info hidden" id="fileInfo">
                         <span class="file-info-name">
-                            <span>🔗 已关联：</span>
+                            <span>📄</span>
                             <span id="fileName"></span>
                         </span>
                         <button type="button" class="file-remove" onclick="removeFile()">✕</button>
@@ -987,11 +977,19 @@
             <div class="backup-section">
                 <h4>📥 备份到 OneDrive / 本地</h4>
                 <div class="backup-info">
-                    由于您已使用 <b>files</b> 文件夹直接存储大文件，此处备份仅包含文字信息（database.json），体积极小。
+                    由于数据量较大（含PDF附件），建议使用此方式。
                     <br>
-                    <strong>操作指南：</strong>点击下方按钮，将生成的 <code style="background:rgba(0,0,0,0.1);padding:2px 4px;border-radius:4px;">.json</code> 备份文件直接保存到您的 <strong>MyResearch</strong> 文件夹中。
+                    <strong>操作指南：</strong>点击下方按钮，将生成的 <code style="background:rgba(0,0,0,0.1);padding:2px 4px;border-radius:4px;">.json</code> 备份文件直接保存到您的 <strong>OneDrive 同步文件夹</strong>中，即可实现云端备份。
                 </div>
                 
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="includePdfInBackup" checked style="width:18px;height:18px;">
+                        包含 PDF 附件文件
+                    </label>
+                    <div class="form-hint">如果不勾选，仅备份文字信息，文件体积会非常小。</div>
+                </div>
+
                 <div class="form-group" style="margin-top:10px;">
                     <button class="btn btn-onedrive" onclick="performBackup()" style="width:100%;justify-content:center;">
                         ☁️ 导出备份文件 (保存到 OneDrive)
@@ -1046,8 +1044,8 @@
     var sortOrder = 'date-desc';
     var deleteTargetIds = [];
     var deleteTargetType = 'achievement';
-    var currentPdfName = null; // 【修改点】仅记录文件名，不再存 Data
-    var currentPdfData = null; // 【修改点】废弃但保留变量名防止报错
+    var currentPdfData = null;
+    var currentPdfName = null;
     var excelData = null;
     var excelHeaders = [];
     var selectedItems = new Set();
@@ -1189,7 +1187,7 @@
         }
     }
 
-    // --- Backup & Restore Functions ---
+    // --- Backup & Restore Functions (Replacing GitHub) ---
     
     function openBackupModal() {
         document.getElementById('backupModal').classList.add('active');
@@ -1201,34 +1199,67 @@
     }
 
     function performBackup() {
+        var includePdf = document.getElementById('includePdfInBackup').checked;
+        
         var btn = document.querySelector('.btn-onedrive');
         var originalText = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spinner"></span>正在打包...';
 
+        // 使用 setTimeout 让 UI 有机会渲染 loading 状态
         setTimeout(function() {
             try {
-                // 【修改点】不再需要“是否包含PDF”的逻辑，因为只存文件名
+                // 1. 准备数据
                 var dataToBackup = {
                     version: '4.1', 
                     backupDate: new Date().toISOString(),
                     system: 'ResearchManager',
-                    achievements: achievements,
+                    achievements: [],
                     members: members
                 };
 
+                // 2. 处理 PDF (根据用户选择决定是否包含)
+                if (includePdf) {
+                    dataToBackup.achievements = achievements;
+                } else {
+                    // 深拷贝并移除 PDF 数据以减小体积
+                    dataToBackup.achievements = achievements.map(function(item) {
+                        var copy = Object.assign({}, item);
+                        if (copy.pdfData) {
+                            copy.pdfData = null; // 清空内容
+                            copy.pdfName = (item.pdfName || 'Unknown') + " (附件未备份)";
+                        }
+                        return copy;
+                    });
+                }
+
+                // 3. 转换为 Blob
                 var jsonStr = JSON.stringify(dataToBackup, null, 2);
                 var blob = new Blob([jsonStr], { type: 'application/json' });
+                
+                // 4. 计算大小并提示
+                var sizeInMB = (blob.size / (1024 * 1024)).toFixed(2);
+                if (sizeInMB > 100) {
+                    if (!confirm('备份文件较大 (' + sizeInMB + ' MB)，下载可能需要一点时间。是否继续？')) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
+                    }
+                }
+
+                // 5. 触发下载
                 var url = URL.createObjectURL(blob);
                 var a = document.createElement('a');
                 a.href = url;
-                a.download = 'database.json'; // 建议直接覆盖此文件
+                // 文件名加上时间戳，方便在 OneDrive 中管理版本
+                var timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                a.download = 'Research_Backup_' + timestamp + '.json';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
 
-                showToast('✓ 备份已生成，请保存到 MyResearch 目录', 'success');
+                showToast('✓ 备份已生成，请保存到 OneDrive', 'success');
                 closeBackupModal();
 
             } catch (err) {
@@ -1250,6 +1281,7 @@
             try {
                 var data = JSON.parse(e.target.result);
                 
+                // 简单的格式校验
                 if (!data.achievements && !data.members) {
                     throw new Error('文件格式不正确，未找到数据');
                 }
@@ -1262,6 +1294,9 @@
                 msg += '点击“确定”将合并当前数据(相同ID覆盖)，点击“取消”终止。';
 
                 if (confirm(msg)) {
+                    // 恢复逻辑：直接覆盖 (或者你可以改为合并逻辑)
+                    // 这里采用合并逻辑：ID相同的覆盖，不同的添加
+                    
                     newMembers.forEach(function(nm) {
                         var idx = members.findIndex(function(m){ return m.id === nm.id; });
                         if (idx !== -1) members[idx] = nm;
@@ -1283,12 +1318,24 @@
             } catch (err) {
                 alert('恢复失败：文件可能已损坏或格式错误。\n' + err.message);
             }
+            // 清空 input 防止无法再次选择同一文件
             document.getElementById('restoreInput').value = '';
         };
         reader.readAsText(file);
     }
 
     // --- End Backup Logic ---
+
+    // Utility Functions
+    function base64ToBlob(base64Data) {
+        var arr = base64Data.split(',');
+        var mime = arr[0].match(/:(.*?);/)[1];
+        var bstr = atob(arr[1]);
+        var n = bstr.length;
+        var u8arr = new Uint8Array(n);
+        while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+        return new Blob([u8arr], { type: mime });
+    }
 
     function escapeHtml(text) {
         if (!text) return '';
@@ -1297,45 +1344,68 @@
         return div.innerHTML;
     }
 
-    // 【修改点】新的文件选择逻辑：只记录文件名
     function handleFileSelect(event) {
         var file = event.target.files[0];
         if (!file) return;
-        
+        if (file.size > 20 * 1024 * 1024) {
+            showToast('文件过大 (>20MB)', 'error');
+            return;
+        }
         if (file.type !== 'application/pdf') {
             showToast('请选择 PDF 文件', 'error');
             return;
         }
-
-        // 只保存文件名
-        currentPdfName = file.name;
-        currentPdfData = null; // 不保存内容
-
-        document.getElementById('fileName').textContent = file.name;
-        document.getElementById('fileDisplayText').textContent = "已选择: " + file.name;
-        document.getElementById('fileInfo').classList.remove('hidden');
-        document.getElementById('fileUpload').classList.add('has-file');
-        
-        showToast('文件名已关联，请确保文件在 files 文件夹内', 'success');
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            currentPdfData = e.target.result;
+            currentPdfName = file.name;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileInfo').classList.remove('hidden');
+            document.getElementById('fileUpload').classList.add('has-file');
+        };
+        reader.readAsDataURL(file);
     }
 
-    // 【修改点】移除文件逻辑
     function removeFile() {
-        currentPdfName = null;
         currentPdfData = null;
+        currentPdfName = null;
         document.getElementById('pdfInput').value = '';
-        document.getElementById('fileDisplayText').textContent = "点击关联 files 文件夹中的文件";
         document.getElementById('fileInfo').classList.add('hidden');
         document.getElementById('fileUpload').classList.remove('hidden');
         document.getElementById('fileUpload').classList.remove('has-file');
     }
 
+    function viewPdf(id) {
+        var item = achievements.find(function(a) { return String(a.id) === String(id); });
+        if (item && item.pdfData) {
+            try {
+                var blob = base64ToBlob(item.pdfData);
+                var url = URL.createObjectURL(blob);
+                window.open(url);
+            } catch (e) {
+                showToast("打开失败", "error");
+            }
+        }
+    }
+
+    function downloadPdf(id) {
+        var item = achievements.find(function(a) { return String(a.id) === String(id); });
+        if (item && item.pdfData) {
+            var a = document.createElement('a');
+            a.href = item.pdfData;
+            a.download = item.pdfName || 'document.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    }
+
     // Sidebar Functions
     function toggleSidebar() {
         var sidebar = document.getElementById('sidebar');
-        var sidebarOverlay = document.getElementById('sidebarOverlay');
+        var overlay = document.getElementById('sidebarOverlay');
         sidebar.classList.toggle('open');
-        sidebarOverlay.classList.toggle('active');
+        overlay.classList.toggle('active');
     }
 
     function closeSidebar() {
@@ -1421,7 +1491,7 @@
         years.sort().reverse();
 
         var filterBar = document.getElementById('filterBar');
-        var yearHtml = '<div class="filter-chip active" data-year="all" onclick="setYearFilter(\'all\')">全部年份</div>';
+        var yearHtml = '<div class="filter-chip active" data-year="all" onclick="setYearFilter(\'all\')">全部</div>';
         years.forEach(function(year) {
             yearHtml += '<div class="filter-chip" data-year="' + year + '" onclick="setYearFilter(\'' + year + '\')">' + year + '</div>';
         });
@@ -1431,7 +1501,7 @@
         if(Object.keys(allKeywords).length > 0) {
             keywordBar.style.display = 'flex';
             var sortedKeys = Object.keys(allKeywords).sort(function(a,b){return allKeywords[b]-allKeywords[a]}).slice(0, 8);
-            var kwHtml = '<span style="font-size:0.75rem;color:var(--text-muted);margin-right:5px;">🏷️ 热门标签:</span>';
+            var kwHtml = '<span style="font-size:0.75rem;color:var(--text-muted);">🏷️</span>';
             sortedKeys.forEach(function(k) {
                 kwHtml += '<div class="keyword-chip" onclick="setKeywordFilter(\''+k+'\')">' + k + '</div>';
             });
@@ -1560,12 +1630,7 @@
             } else if (item.level) {
                 metaHtml += '<span>⭐ ' + escapeHtml(item.level) + '</span>';
             }
-            
-            // 【修改点】PDF 相对路径链接
-            if (item.pdfName) {
-                var link = 'files/' + item.pdfName;
-                metaHtml += '<a href="' + link + '" target="_blank" class="has-pdf" onclick="event.stopPropagation()">📎 查看PDF</a>';
-            }
+            if (item.pdfData) metaHtml += '<span class="has-pdf">📎</span>';
 
             return '<div class="result-item" onclick="editAchievement(\'' + item.id + '\')">' +
                 '<input type="checkbox" class="result-checkbox" data-id="' + item.id + '" ' + isChecked + ' onclick="toggleItemSelect(\'' + item.id + '\', event)">' +
@@ -1621,6 +1686,7 @@
         document.getElementById('dateGroup').classList.toggle('hidden', isPatent || isProject);
     }
 
+    // Modal Functions
     function openAddModal() {
         if (currentView === 'member') { openMemberModal(); return; }
         document.getElementById('modalTitle').textContent = '添加科研成果';
@@ -1668,14 +1734,11 @@
             document.getElementById('level').value = item.level || '';
             document.getElementById('keywords').value = item.keywords || '';
         }
-        
-        // 【修改点】回显逻辑：只回显文件名
         removeFile();
-        if (item.pdfName) {
+        if (item.pdfData) {
+            currentPdfData = item.pdfData;
             currentPdfName = item.pdfName;
-            currentPdfData = null; // 确保不使用Data
-            document.getElementById('fileName').textContent = item.pdfName;
-            document.getElementById('fileDisplayText').textContent = "已关联: " + item.pdfName;
+            document.getElementById('fileName').textContent = item.pdfName || 'document.pdf';
             document.getElementById('fileInfo').classList.remove('hidden');
             document.getElementById('fileUpload').classList.add('has-file');
         }
@@ -1691,7 +1754,8 @@
         var data = {
             id: editId || Date.now().toString() + Math.random().toString(36).substr(2, 9),
             type: type,
-            pdfName: currentPdfName, // 【修改点】仅存文件名
+            pdfData: currentPdfData,
+            pdfName: currentPdfName,
             updatedAt: new Date().toISOString()
         };
 
@@ -1809,7 +1873,7 @@
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url;
-        a.download = 'database.json';
+        a.download = 'research_data_backup_' + new Date().toISOString().slice(0, 10) + '.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1932,6 +1996,7 @@
         closeAllMenus();
     }
 
+    // Import Functions
     function triggerImport() {
         document.getElementById('importInput').click();
         closeAllMenus();
@@ -1947,8 +2012,10 @@
                 var data = JSON.parse(e.target.result);
                 if (data.achievements || data.members) {
                     if (confirm('导入将合并现有数据，是否继续？')) {
+                        // Merge logic: Add if ID doesn't exist
                         var newAchievements = data.achievements || [];
                         var newMembers = data.members || [];
+                        
                         var addedCount = 0;
                         newAchievements.forEach(function(item) {
                             if (!achievements.some(function(exist) { return exist.id === item.id; })) {
@@ -1956,6 +2023,7 @@
                                 addedCount++;
                             }
                         });
+                        
                         newMembers.forEach(function(item) {
                             if (!members.some(function(exist) { return exist.id === item.id; })) {
                                 members.push(item);
@@ -1976,9 +2044,10 @@
             }
         };
         reader.readAsText(file);
-        event.target.value = '';
+        event.target.value = ''; // Reset input
     }
 
+    // Excel Import Logic
     function openExcelImport() {
         document.getElementById('excelModal').classList.add('active');
         document.getElementById('excelInput').value = '';
@@ -2023,6 +2092,8 @@
         var html = '<table><thead><tr>';
         excelHeaders.forEach(function(h) { html += '<th>' + escapeHtml(h) + '</th>'; });
         html += '</tr></thead><tbody>';
+        
+        // Show first 5 rows
         for (var i = 1; i < Math.min(excelData.length, 6); i++) {
             html += '<tr>';
             var row = excelData[i];
@@ -2046,13 +2117,17 @@
             html += '<label>' + field.label + (field.required ? ' *' : '') + '</label>';
             html += '<select class="field-map-select" data-key="' + field.key + '" data-required="' + field.required + '">';
             html += '<option value="">(不导入)</option>';
+            
+            // Auto match logic
             excelHeaders.forEach(function(header, idx) {
                 var selected = '';
+                // Simple fuzzy match
                 if (header.indexOf(field.label) !== -1 || field.label.indexOf(header) !== -1) {
                     selected = 'selected';
                 }
                 html += '<option value="' + idx + '" ' + selected + '>' + escapeHtml(header) + '</option>';
             });
+            
             html += '</select></div>';
         });
         container.innerHTML = html;
@@ -2083,6 +2158,7 @@
         var duplicateCount = 0;
         var duplicates = [];
 
+        // Process data (skip header row 0)
         for (var i = 1; i < excelData.length; i++) {
             var row = excelData[i];
             if (!row || row.length === 0) continue;
@@ -2096,16 +2172,21 @@
                 item.type = type;
             }
 
+            // Map fields
             for (var key in mapConfig) {
                 var colIdx = mapConfig[key];
                 var val = row[colIdx];
+                
+                // Handle dates if Excel parsed them as numbers (basic approximation)
                 if (typeof val === 'number' && key.toLowerCase().includes('date') && val > 20000) {
                     var dateObj = new Date((val - (25567 + 2)) * 86400 * 1000);
                     val = dateObj.toISOString().slice(0, 10);
                 }
+                
                 item[key] = val !== undefined ? String(val).trim() : '';
             }
 
+            // Check uniqueness (simple check based on title/name/number)
             var isDuplicate = false;
             if (type === 'member') {
                 isDuplicate = members.some(function(m) { return m.memberNo === item.memberNo; });
@@ -2147,6 +2228,7 @@
         }
     }
 
+    // Toast Notification
     function showToast(message, type) {
         var container = document.getElementById('toastContainer');
         var toast = document.createElement('div');
@@ -2155,6 +2237,7 @@
         
         container.appendChild(toast);
         
+        // Trigger animation
         requestAnimationFrame(function() {
             toast.classList.add('show');
         });
@@ -2167,6 +2250,7 @@
         }, 3000);
     }
 
+    // Menu Functions
     function toggleMenu(id) {
         var menu = document.getElementById(id);
         var isVisible = menu.classList.contains('show');
@@ -2184,14 +2268,20 @@
         }
     });
 
+    // Initialize
     window.onload = function() {
+        // Try load from IndexedDB
         loadFromLocal().then(function(loaded) {
+            if (!loaded) {
+                // If DB empty/error, initialize empty
+                console.log("Initialize empty DB");
+            }
             updateStats();
             renderResults();
             document.getElementById('loadingSpinner')?.remove();
         });
 
-        // Initialize file drag and drop for upload (adapted for new logic)
+        // Initialize file drag and drop for upload
         var dropZone = document.getElementById('fileUpload');
         if (dropZone) {
             dropZone.addEventListener('dragover', function(e) {
