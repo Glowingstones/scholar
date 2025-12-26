@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>科研成果管理系统</title>
+    <title>科研成果管理系统 (GitHub专用版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* =================================================================
-           1. CSS 变量定义 (保持原版风格)
+           1. CSS 变量定义
            ================================================================= */
         :root {
             --bg-primary: #f8fafc;
@@ -58,8 +58,8 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
-            height: 100vh; /* 限制高度为视口高度 */
-            overflow: hidden; /* 防止body滚动 */
+            height: 100vh;
+            overflow: hidden;
         }
 
         .hidden { display: none !important; }
@@ -75,7 +75,7 @@
             flex-direction: column;
             flex-shrink: 0;
             height: 100%;
-            z-index: 100;
+            z-index: 500; /* 提高层级 */
             transition: transform 0.3s ease;
         }
 
@@ -114,7 +114,13 @@
         }
         .nav-item.active .badge { background: var(--accent); color: white; }
 
-        .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); position: relative; }
+        .sidebar-footer { 
+            padding: 16px; 
+            border-top: 1px solid var(--border); 
+            position: relative; /* 关键：为下拉菜单提供定位基准 */
+            background: var(--bg-secondary);
+            z-index: 600;
+        }
 
         .storage-status {
             font-size: 0.8rem; color: var(--success); margin-bottom: 12px;
@@ -131,15 +137,24 @@
         }
         .data-btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent); }
 
-        /* Dropdown Menu */
+        /* Dropdown Menu - 修复定位问题 */
         .dropdown-menu {
-            position: absolute; bottom: 60px; left: 10px; width: 240px;
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
-            box-shadow: var(--shadow-lg); display: none; z-index: 200; overflow: hidden;
+            position: absolute; 
+            bottom: 100%; /* 向上弹出，避免被底部遮挡 */
+            left: 10px; 
+            width: 240px;
+            background: var(--bg-card); 
+            border: 1px solid var(--border); 
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg); 
+            display: none; 
+            z-index: 9999; /* 确保在最上层 */
+            overflow: hidden;
+            margin-bottom: 10px; /* 与按钮留出间距 */
         }
         .dropdown-menu.show { display: block; animation: slideUp 0.2s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .menu-item { padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; border-bottom: 1px solid var(--border-light); }
+        .menu-item { padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; border-bottom: 1px solid var(--border-light); }
         .menu-item:hover { background: var(--bg-hover); color: var(--accent); }
 
         /* Main Content */
@@ -410,8 +425,8 @@
             </div>
             
             <div id="exportMenu" class="dropdown-menu">
-                <div class="menu-item" onclick="exportToExcelFile()">📊 导出 Excel</div>
-                <div class="menu-item" onclick="exportToWordFile()">📝 导出 Word</div>
+                <div class="menu-item" onclick="exportToExcelFile()">📊 导出 Excel (分表分列)</div>
+                <div class="menu-item" onclick="exportToWordFile()">📝 导出 Word (分表)</div>
                 <div class="menu-item" onclick="exportData()">📦 备份数据 (JSON)</div>
             </div>
 
@@ -1586,7 +1601,7 @@
                 '项目名称': item.projectName,
                 '级别': item.projectLevel,
                 '编号': item.projectNumber,
-                '负责人': item.authors, // 借用 authors 字段存储负责人
+                '负责人': item.authors,
                 '所属单位': item.projectOrg,
                 '开始时间': item.projectStartDate,
                 '结束时间': item.projectEndDate
@@ -1646,73 +1661,75 @@
         showToast('✓ Excel 分表导出成功', 'success');
     }
 
-    // --- 详细版 Word 导出 ---
+    // --- 全量 Word 分表导出 ---
     function exportToWordFile() {
-        var style = "<style>table{border-collapse:collapse;width:100%;margin-bottom:20px;font-size:10pt;font-family:'宋体'}th,td{border:1px solid #000;padding:6px;text-align:left}th{background-color:#f2f2f2;font-weight:bold}h2{text-align:center;font-family:'黑体'}h3{font-family:'黑体';margin-top:20px;border-bottom:2px solid #333;padding-bottom:5px}</style>";
+        var style = "<style>body{font-family:'SimSun';} table{border-collapse:collapse;width:100%;margin-bottom:30px;font-size:10.5pt;} th,td{border:1px solid #000;padding:6px;text-align:center;} th{background-color:#f2f2f2;font-weight:bold;} h1{text-align:center;font-size:16pt;} h2{font-size:14pt;border-bottom:1px solid #000;padding-bottom:5px;margin-top:20px;}</style>";
         var html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export</title>" + style + "</head><body>";
-        html += '<h2>科研成果详细报表</h2>';
-
-        // 1. Papers
+        html += '<h1>科研成果与团队成员详细汇总表</h1>';
+        
+        // 1. 学术论文
         var papers = achievements.filter(function(a) { return a.type === 'paper'; });
         if (papers.length > 0) {
-            html += '<h3>一、学术论文</h3>';
-            html += '<table><thead><tr><th>标题</th><th>作者</th><th>发表日期</th><th>期刊/来源</th><th>级别</th><th>关键词</th></tr></thead><tbody>';
-            papers.forEach(function(item) {
-                html += '<tr><td>' + (item.title || '') + '</td><td>' + (item.authors || '') + '</td><td>' + (item.date || '') + '</td><td>' + (item.source || '') + '</td><td>' + (item.level || '') + '</td><td>' + (item.keywords || '') + '</td></tr>';
+            html += '<h2>一、学术论文</h2>';
+            html += '<table><thead><tr><th>序号</th><th>标题</th><th>作者</th><th>发表日期</th><th>期刊/来源</th><th>级别</th><th>关键词</th></tr></thead><tbody>';
+            papers.forEach(function(item, index) {
+                html += '<tr><td>' + (index + 1) + '</td><td>' + (item.title || '') + '</td><td>' + (item.authors || '') + '</td><td>' + (item.date || '') + '</td><td>' + (item.source || '') + '</td><td>' + (item.level || '') + '</td><td>' + (item.keywords || '') + '</td></tr>';
             });
             html += '</tbody></table>';
         }
 
-        // 2. Patents
+        // 2. 发明专利
         var patents = achievements.filter(function(a) { return a.type === 'patent'; });
         if (patents.length > 0) {
-            html += '<h3>二、发明专利</h3>';
-            html += '<table><thead><tr><th>专利名称</th><th>类型</th><th>发明人</th><th>权利人</th><th>状态</th><th>专利号</th><th>申请日</th><th>授权日</th></tr></thead><tbody>';
-            patents.forEach(function(item) {
-                html += '<tr><td>' + (item.patentName||'') + '</td><td>' + (item.patentType||'') + '</td><td>' + (item.inventors||'') + '</td><td>' + (item.patentOwner||'') + '</td><td>' + (item.patentStatus||'') + '</td><td>' + (item.patentNumber||'') + '</td><td>' + (item.applicationDate||'') + '</td><td>' + (item.grantDate||'') + '</td></tr>';
+            html += '<h2>二、发明专利</h2>';
+            html += '<table><thead><tr><th>序号</th><th>专利名称</th><th>类型</th><th>状态</th><th>专利号</th><th>发明人</th><th>申请日</th><th>授权日</th></tr></thead><tbody>';
+            patents.forEach(function(item, index) {
+                html += '<tr><td>' + (index + 1) + '</td><td>' + (item.patentName || '') + '</td><td>' + (item.patentType || '') + '</td><td>' + (item.patentStatus || '') + '</td><td>' + (item.patentNumber || '') + '</td><td>' + (item.inventors || '') + '</td><td>' + (item.applicationDate || '') + '</td><td>' + (item.grantDate || '') + '</td></tr>';
             });
             html += '</tbody></table>';
         }
 
-        // 3. Projects
+        // 3. 科研项目
         var projects = achievements.filter(function(a) { return a.type === 'project'; });
         if (projects.length > 0) {
-            html += '<h3>三、科研项目</h3>';
-            html += '<table><thead><tr><th>项目名称</th><th>级别</th><th>编号</th><th>所属单位</th><th>开始时间</th><th>结束时间</th></tr></thead><tbody>';
-            projects.forEach(function(item) {
-                html += '<tr><td>' + (item.projectName||'') + '</td><td>' + (item.projectLevel||'') + '</td><td>' + (item.projectNumber||'') + '</td><td>' + (item.projectOrg||'') + '</td><td>' + (item.projectStartDate||'') + '</td><td>' + (item.projectEndDate||'') + '</td></tr>';
+            html += '<h2>三、科研项目</h2>';
+            html += '<table><thead><tr><th>序号</th><th>项目名称</th><th>编号</th><th>级别</th><th>负责人</th><th>单位</th><th>起止时间</th></tr></thead><tbody>';
+            projects.forEach(function(item, index) {
+                var time = (item.projectStartDate || '') + ' 至 ' + (item.projectEndDate || '');
+                html += '<tr><td>' + (index + 1) + '</td><td>' + (item.projectName || '') + '</td><td>' + (item.projectNumber || '') + '</td><td>' + (item.projectLevel || '') + '</td><td>' + (item.authors || '') + '</td><td>' + (item.projectOrg || '') + '</td><td>' + time + '</td></tr>';
             });
             html += '</tbody></table>';
         }
 
-        // 4. Awards
+        // 4. 获奖情况
         var awards = achievements.filter(function(a) { return a.type === 'award'; });
         if (awards.length > 0) {
-            html += '<h3>四、获奖情况</h3>';
-            html += '<table><thead><tr><th>奖项名称</th><th>获奖人</th><th>获奖日期</th><th>级别</th></tr></thead><tbody>';
-            awards.forEach(function(item) {
-                html += '<tr><td>' + (item.title||'') + '</td><td>' + (item.authors||'') + '</td><td>' + (item.date||'') + '</td><td>' + (item.level||'') + '</td></tr>';
+            html += '<h2>四、获奖情况</h2>';
+            html += '<table><thead><tr><th>序号</th><th>奖项名称</th><th>获奖人</th><th>日期</th><th>级别</th></tr></thead><tbody>';
+            awards.forEach(function(item, index) {
+                html += '<tr><td>' + (index + 1) + '</td><td>' + (item.title || '') + '</td><td>' + (item.authors || '') + '</td><td>' + (item.date || '') + '</td><td>' + (item.level || '') + '</td></tr>';
             });
             html += '</tbody></table>';
         }
 
-        // 5. Books
+        // 5. 专著出版
         var books = achievements.filter(function(a) { return a.type === 'book'; });
         if (books.length > 0) {
-            html += '<h3>五、专著出版</h3>';
-            html += '<table><thead><tr><th>著作名称</th><th>作者</th><th>出版日期</th><th>出版社</th></tr></thead><tbody>';
-            books.forEach(function(item) {
-                html += '<tr><td>' + (item.title||'') + '</td><td>' + (item.authors||'') + '</td><td>' + (item.date||'') + '</td><td>' + (item.source||'') + '</td></tr>';
+            html += '<h2>五、专著出版</h2>';
+            html += '<table><thead><tr><th>序号</th><th>著作名称</th><th>作者</th><th>出版日期</th><th>出版社</th></tr></thead><tbody>';
+            books.forEach(function(item, index) {
+                html += '<tr><td>' + (index + 1) + '</td><td>' + (item.title || '') + '</td><td>' + (item.authors || '') + '</td><td>' + (item.date || '') + '</td><td>' + (item.source || '') + '</td></tr>';
             });
             html += '</tbody></table>';
         }
 
-        // 6. Members
+        // 6. 团队成员
         if (members.length > 0) {
-            html += '<h3>六、团队成员</h3>';
-            html += '<table><thead><tr><th>工号</th><th>姓名</th><th>性别</th><th>职称</th><th>单位</th><th>手机</th><th>邮箱</th><th>在读状态</th></tr></thead><tbody>';
+            html += '<h2>六、团队成员信息</h2>';
+            html += '<table><thead><tr><th>工号</th><th>姓名</th><th>性别</th><th>职称/学位</th><th>单位</th><th>手机</th><th>邮箱</th><th>证件号码</th></tr></thead><tbody>';
             members.forEach(function(m) {
-                html += '<tr><td>' + (m.memberNo||'') + '</td><td>' + (m.memberName||'') + '</td><td>' + (m.memberGender||'') + '</td><td>' + (m.memberTitle||'') + '</td><td>' + (m.memberOrg||'') + '</td><td>' + (m.memberPhone||'') + '</td><td>' + (m.memberEmail||'') + '</td><td>' + (m.memberIsStudent||'') + '</td></tr>';
+                var titleDegree = (m.memberTitle || '') + (m.memberDegree ? '/' + m.memberDegree : '');
+                html += '<tr><td>' + (m.memberNo || '') + '</td><td>' + (m.memberName || '') + '</td><td>' + (m.memberGender || '') + '</td><td>' + titleDegree + '</td><td>' + (m.memberOrg || '') + '</td><td>' + (m.memberPhone || '') + '</td><td>' + (m.memberEmail || '') + '</td><td>' + (m.memberIdNo || '') + '</td></tr>';
             });
             html += '</tbody></table>';
         }
@@ -1722,7 +1739,7 @@
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url;
-        a.download = '科研成果详细报表.doc';
+        a.download = '科研数据分表汇总.doc';
         a.click();
         URL.revokeObjectURL(url);
         showToast('✓ Word 分表导出成功', 'success');
