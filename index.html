@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>科研成果管理系统 (Cloud Ver)</title>
+    <title>科研成果管理系统 (增强版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -111,6 +111,9 @@
         }
         .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
         .nav-item.active { background: var(--accent-light); color: var(--accent); }
+        /* 增加禁用样式 */
+        .nav-item.disabled { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
+        
         .nav-item .badge {
             margin-left: auto; background: var(--bg-hover); padding: 2px 10px;
             border-radius: 10px; font-size: 0.8rem; font-weight: 600;
@@ -133,6 +136,8 @@
             display: flex; align-items: center; justify-content: center; gap: 4px;
         }
         .data-btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent); }
+        /* 增加禁用样式 */
+        .data-btn.disabled { opacity: 0.5; pointer-events: none; background: var(--bg-hover); color: var(--text-muted); border-color: var(--border); }
         
         .data-btn.onedrive { border-color: var(--od-blue); color: var(--od-blue); }
         .data-btn.onedrive:hover { background: var(--od-light); }
@@ -189,6 +194,8 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #dc2626; }
         .btn-sm { padding: 8px 14px; font-size: 0.85rem; min-height: 36px; }
+        /* 禁用按钮样式 */
+        .btn:disabled, .btn.disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
         /* OneDrive Specific Buttons */
         .btn-od { background: var(--od-blue); color: white; border: none; }
@@ -358,6 +365,10 @@
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
             outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); 
         }
+        /* 只读输入框样式 */
+        .form-group input:read-only, .form-group select:disabled {
+            background-color: var(--bg-hover); color: var(--text-secondary); cursor: not-allowed;
+        }
         .form-group textarea { min-height: 100px; resize: vertical; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -465,6 +476,48 @@
         .confirm-dialog p { margin-bottom: 20px; font-size: 1.05rem; }
         .confirm-dialog .btn-group { display: flex; gap: 12px; justify-content: center; }
 
+        /* --- 新增：登录全屏遮罩 --- */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .login-box {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .login-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; color: var(--accent); }
+        .login-desc { color: var(--text-secondary); margin-bottom: 30px; font-size: 0.95rem; }
+
+        /* --- 新增：详情查看模式样式 --- */
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .detail-label {
+            width: 100px;
+            flex-shrink: 0;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .detail-value {
+            flex: 1;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
         /* Responsive Design */
         @media (min-width: 769px) {
             .modal-overlay { align-items: center; padding: 20px; }
@@ -509,6 +562,21 @@
     </style>
 </head>
 <body>
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+        <div class="logo-icon" style="margin: 0 auto 20px auto;">🔬</div>
+        <div class="login-title">科研成果管理</div>
+        <div class="login-desc">请输入访问密码登录系统</div>
+        <div class="form-group">
+            <input type="password" id="loginPassword" placeholder="请输入密码..." onkeyup="if(event.key==='Enter') checkLogin()">
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="checkLogin()">登录</button>
+        <div style="margin-top:15px; font-size:0.8rem; color:var(--text-muted);">
+            管理员: admin888 | 宾客: guest666
+        </div>
+    </div>
+</div>
+
 <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -551,7 +619,7 @@
                 <span class="badge" id="bookCount">0</span>
             </div>
             <div class="nav-section">团队管理</div>
-            <div class="nav-item" data-view="member" onclick="setView('member')">
+            <div class="nav-item" data-view="member" id="navMember" onclick="setView('member')">
                 👥 <span>成员信息</span>
                 <span class="badge" id="memberCount">0</span>
             </div>
@@ -562,9 +630,9 @@
                 ✓ 数据已本地保存
             </div>
             <div class="data-actions">
-                <button class="data-btn" onclick="toggleMenu('exportMenu')">📤 导出</button>
-                <button class="data-btn" onclick="toggleMenu('importMenu')">📥 导入</button>
-                <button class="data-btn onedrive" onclick="openBackupModal()" style="grid-column: span 2;">
+                <button class="data-btn" id="btnExport" onclick="toggleMenu('exportMenu')">📤 导出</button>
+                <button class="data-btn" id="btnImport" onclick="toggleMenu('importMenu')">📥 导入</button>
+                <button class="data-btn onedrive" id="btnOneDrive" onclick="openBackupModal()" style="grid-column: span 2;">
                     ☁️ OneDrive 同步/备份
                 </button>
             </div>
@@ -581,6 +649,8 @@
             </div>
 
             <input type="file" id="importInput" class="hidden" accept=".json" onchange="importData(event)">
+            
+            <button class="btn btn-sm btn-secondary" onclick="location.reload()" style="width:100%; margin-top:10px;">🔒 退出登录</button>
         </div>
     </aside>
 
@@ -637,7 +707,6 @@
         </div>
     </main>
 </div>
-
 <div class="modal-overlay" id="formModal">
     <div class="modal wide">
         <div class="modal-header">
@@ -704,6 +773,21 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="detailModal">
+    <div class="modal wide">
+        <div class="modal-header">
+            <h2 id="detailTitle">详细信息</h2>
+            <button class="modal-close" onclick="closeDetailModal()">✕</button>
+        </div>
+        <div class="modal-body" id="detailContent">
+            </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">关闭</button>
+            <button type="button" class="btn btn-primary" id="detailEditBtn" onclick="editFromDetail()">✎ 编辑</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="memberModal">
     <div class="modal wide">
         <div class="modal-header">
@@ -719,12 +803,21 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group"><label>性别</label><select id="memberGender"><option value="男">男</option><option value="女">女</option></select></div>
-                    <div class="form-group"><label>单位</label><input type="text" id="memberOrg"></div>
+                    <div class="form-group"><label>民族</label><input type="text" id="memberNation"></div>
+                </div>
+                <div class="form-group">
+                    <label>证件号码 (自动填写生日)</label>
+                    <input type="text" id="memberIdCard" oninput="handleIdCardInput(this)">
                 </div>
                 <div class="form-row">
-                     <div class="form-group"><label>职称</label><input type="text" id="memberTitle"></div>
-                     <div class="form-group"><label>邮箱</label><input type="email" id="memberEmail"></div>
+                     <div class="form-group"><label>出生年月</label><input type="text" id="memberDob" placeholder="YYYY-MM-DD"></div>
+                     <div class="form-group"><label>电话</label><input type="text" id="memberPhone"></div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group"><label>单位</label><input type="text" id="memberOrg"></div>
+                    <div class="form-group"><label>职称</label><input type="text" id="memberTitle"></div>
+                </div>
+                <div class="form-group"><label>邮箱</label><input type="email" id="memberEmail"></div>
             </form>
         </div>
         <div class="modal-footer">
@@ -812,6 +905,64 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
+    // --- Login System ---
+    let currentUserRole = null; // 'admin' or 'guest'
+
+    function checkLogin() {
+        const pwd = document.getElementById('loginPassword').value;
+        const overlay = document.getElementById('loginOverlay');
+        const errorMsg = "密码错误";
+
+        if (pwd === 'admin888') {
+            currentUserRole = 'admin';
+            overlay.style.display = 'none';
+            applyPermissions();
+            showToast('管理员登录成功', 'success');
+        } else if (pwd === 'guest666') {
+            currentUserRole = 'guest';
+            overlay.style.display = 'none';
+            applyPermissions();
+            showToast('宾客登录成功', 'success');
+        } else {
+            showToast(errorMsg, 'error');
+        }
+    }
+
+    function applyPermissions() {
+        const isAdmin = currentUserRole === 'admin';
+        
+        // Disable OneDrive/Export for guest
+        const btnOd = document.getElementById('btnOneDrive');
+        const btnExp = document.getElementById('btnExport');
+        const navMember = document.getElementById('navMember');
+        const addBtn = document.getElementById('addBtn');
+        const batchBtn = document.getElementById('batchDeleteBtn');
+
+        if (!isAdmin) {
+            btnOd.classList.add('disabled');
+            btnOd.removeAttribute('onclick');
+            btnExp.classList.add('disabled');
+            btnExp.removeAttribute('onclick');
+            
+            // Disable Member Nav
+            navMember.classList.add('disabled');
+            navMember.style.opacity = '0.3';
+            
+            // Hide Add Button if guest? The prompt says specific buttons, let's keep add but maybe simplify
+            // Requirement says "Guest password entered... cannot click upload/export/member info"
+            // It implies other things are viewable. 
+            // We will let them add but not manage members or export.
+        } else {
+             // Admin restores functionality
+            btnOd.classList.remove('disabled');
+            btnOd.setAttribute('onclick', 'openBackupModal()');
+            btnExp.classList.remove('disabled');
+            btnExp.setAttribute('onclick', "toggleMenu('exportMenu')");
+            navMember.classList.remove('disabled');
+            navMember.style.opacity = '1';
+        }
+    }
+
     // --- Microsoft Graph / OneDrive Integration ---
     const msalConfig = {
         auth: {
@@ -898,6 +1049,7 @@
         },
 
         upload: async function() {
+            if (currentUserRole !== 'admin') { showToast('无权限执行此操作', 'error'); return; }
             const btn = document.getElementById('btnOdUpload');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="loading-spinner"></span> 上传中...';
@@ -1023,6 +1175,7 @@
     var excelData = null;
     var excelHeaders = [];
     var selectedItems = new Set();
+    var currentDetailId = null;
 
     var typeConfig = {
         paper: { icon: '📄', label: '学术论文', class: 'type-paper' },
@@ -1030,7 +1183,7 @@
         project: { icon: '📊', label: '科研项目', class: 'type-project' },
         award: { icon: '🏆', label: '获奖情况', class: 'type-award' },
         book: { icon: '📚', label: '专著出版', class: 'type-book' },
-        member: { icon: '👤', label: '成员', class: 'type-member' }
+        member: { icon: '👤', label: '成员信息', class: 'type-member' }
     };
 
     var fieldMappings = {
@@ -1078,7 +1231,11 @@
             { key: 'memberGender', label: '性别' },
             { key: 'memberOrg', label: '工作单位' },
             { key: 'memberTitle', label: '职称' },
-            { key: 'memberEmail', label: '邮箱' }
+            { key: 'memberEmail', label: '邮箱' },
+            { key: 'memberIdCard', label: '证件号码' },
+            { key: 'memberDob', label: '出生年月' },
+            { key: 'memberNation', label: '民族' },
+            { key: 'memberPhone', label: '电话' }
         ]
     };
 
@@ -1193,7 +1350,6 @@
         document.getElementById('fileUpload').classList.remove('has-file');
     }
 
-    // PDF Actions - RESTORED
     function viewPdf(id) {
         var item = achievements.find(function(a) { return String(a.id) === String(id); });
         if (item && item.pdfData) {
@@ -1224,6 +1380,10 @@
     function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
 
     function setView(view) {
+        if (view === 'member' && currentUserRole !== 'admin') {
+            showToast('宾客账号无权查看成员信息', 'error');
+            return;
+        }
         currentView = view;
         selectedItems.clear();
         updateBatchDeleteBtn();
@@ -1292,6 +1452,7 @@
     }
 
     function batchDelete() {
+        if (currentUserRole !== 'admin') { showToast('无权限删除', 'error'); return; }
         if (selectedItems.size === 0) return;
         deleteTargetIds = Array.from(selectedItems);
         deleteTargetType = currentView === 'member' ? 'member' : 'achievement';
@@ -1300,6 +1461,7 @@
     }
 
     function promptDelete(id, type) {
+        if (currentUserRole !== 'admin') { showToast('无权限删除', 'error'); return; }
         deleteTargetIds = [id];
         deleteTargetType = type;
         document.getElementById('confirmMessage').textContent = '确定要删除这条记录吗？';
@@ -1366,19 +1528,23 @@
             var isChecked = selectedItems.has(item.id) ? 'checked' : '';
             var metaHtml = '<span>📅 ' + (displayDate || '-') + '</span>';
             if (displayAuthors) metaHtml += '<span>👤 ' + escapeHtml(displayAuthors.substring(0, 20)) + (displayAuthors.length > 20 ? '...' : '') + '</span>';
+            // 新增：显示专利号和状态
+            if (item.type === 'patent' && item.patentNumber) metaHtml += '<span>🔢 ' + escapeHtml(item.patentNumber) + '</span>';
+            if (item.type === 'patent' && item.patentStatus) metaHtml += '<span>🔖 ' + escapeHtml(item.patentStatus) + '</span>';
+            
             if (item.pdfData) metaHtml += '<span class="has-pdf">📎</span>';
 
-            return '<div class="result-item" onclick="editAchievement(\'' + item.id + '\')">' +
+            // 修改 onclick 为查看详情
+            return '<div class="result-item" onclick="viewDetail(\'' + item.id + '\')">' +
                 '<input type="checkbox" class="result-checkbox" data-id="' + item.id + '" ' + isChecked + ' onclick="toggleItemSelect(\'' + item.id + '\', event)">' +
                 '<div class="result-type ' + config.class + '">' + config.icon + '</div>' +
                 '<div class="result-content">' +
                 '<div class="result-title">' + escapeHtml(displayTitle) + '</div>' +
                 '<div class="result-meta">' + metaHtml + '</div></div>' +
                 '<div class="result-actions">' +
-                // RESTORED PDF BUTTONS
                 '<button class="action-btn" onclick="event.stopPropagation(); viewPdf(\'' + item.id + '\')" title="预览PDF" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>👁️</button>' +
                 '<button class="action-btn" onclick="event.stopPropagation(); downloadPdf(\'' + item.id + '\')" title="下载PDF" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>⬇️</button>' +
-                '<button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + item.id + '\', \'achievement\')" title="删除">🗑</button>' +
+                '<button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + item.id + '\', \'achievement\')" title="删除" ' + (currentUserRole !== 'admin' ? 'disabled style="opacity:0.3"' : '') + '>🗑</button>' +
                 '</div></div>';
         }).join('');
     }
@@ -1387,7 +1553,7 @@
         var filtered = members.slice();
         if (searchQuery) {
             filtered = filtered.filter(function(m) {
-                var searchFields = [m.memberNo, m.memberName, m.memberOrg, m.memberEmail, m.memberTitle].join(' ').toLowerCase();
+                var searchFields = [m.memberNo, m.memberName, m.memberOrg, m.memberEmail, m.memberTitle, m.memberIdCard].join(' ').toLowerCase();
                 return searchFields.indexOf(searchQuery) !== -1;
             });
         }
@@ -1403,11 +1569,79 @@
                 '<div class="result-type type-member">👤</div>' +
                 '<div class="result-content">' +
                 '<div class="result-title">' + escapeHtml(m.memberName) + '</div>' +
-                '<div class="result-meta"><span>🔢 ' + escapeHtml(m.memberNo) + '</span></div></div>' +
+                '<div class="result-meta"><span>🔢 ' + escapeHtml(m.memberNo) + '</span><span>📱 ' + escapeHtml(m.memberPhone || '-') + '</span></div></div>' +
                 '<div class="result-actions">' +
                 '<button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + m.id + '\', \'member\')" title="删除">🗑</button>' +
                 '</div></div>';
         }).join('');
+    }
+
+    // --- New Feature: View Detail Modal ---
+    function viewDetail(id) {
+        var item = achievements.find(function(a) { return String(a.id) === String(id); });
+        if (!item) return;
+        
+        currentDetailId = id;
+        document.getElementById('detailTitle').textContent = typeConfig[item.type]?.label + ' 详情';
+        
+        var content = '';
+        var fields = [];
+        
+        if (item.type === 'patent') {
+            fields = [
+                { l: '专利名称', v: item.patentName },
+                { l: '专利类型', v: item.patentType },
+                { l: '状态', v: item.patentStatus },
+                { l: '专利号', v: item.patentNumber },
+                { l: '发明人', v: item.inventors },
+                { l: '专利权人', v: item.patentOwner },
+                { l: '申请日', v: item.applicationDate },
+                { l: '授权日', v: item.grantDate }
+            ];
+        } else if (item.type === 'project') {
+            fields = [
+                { l: '项目名称', v: item.projectName },
+                { l: '级别', v: item.projectLevel },
+                { l: '编号', v: item.projectNumber },
+                { l: '所属单位', v: item.projectOrg },
+                { l: '开始时间', v: item.projectStartDate },
+                { l: '结束时间', v: item.projectEndDate }
+            ];
+        } else {
+            fields = [
+                { l: '标题', v: item.title },
+                { l: '日期', v: item.date },
+                { l: '作者', v: item.authors },
+                { l: '来源/期刊', v: item.source },
+                { l: '级别', v: item.level },
+                { l: '关键词', v: item.keywords }
+            ];
+        }
+        
+        content = fields.map(f => `<div class="detail-row"><div class="detail-label">${f.l}</div><div class="detail-value">${escapeHtml(f.v || '-')}</div></div>`).join('');
+        
+        if (item.pdfData) {
+            content += `<div class="detail-row" style="margin-top:10px;"><div class="detail-label">附件</div><div class="detail-value"><button class="btn btn-sm btn-secondary" onclick="viewPdf('${item.id}')">查看 PDF</button></div></div>`;
+        }
+        
+        document.getElementById('detailContent').innerHTML = content;
+        
+        // Disable Edit button for Guest
+        const editBtn = document.getElementById('detailEditBtn');
+        if (currentUserRole !== 'admin') {
+            editBtn.style.display = 'none';
+        } else {
+            editBtn.style.display = 'inline-flex';
+        }
+
+        document.getElementById('detailModal').classList.add('active');
+    }
+
+    function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
+    
+    function editFromDetail() {
+        closeDetailModal();
+        editAchievement(currentDetailId);
     }
 
     function toggleFormFields() {
@@ -1421,6 +1655,9 @@
     }
 
     function openAddModal() {
+        if (currentUserRole === 'guest') {
+            // Guest can add but maybe restricted. Prompt allows it but let's just proceed.
+        }
         if (currentView === 'member') { openMemberModal(); return; }
         document.getElementById('modalTitle').textContent = '添加科研成果';
         document.getElementById('submitBtn').textContent = '保存';
@@ -1434,6 +1671,7 @@
     }
 
     function editAchievement(id) {
+        if (currentUserRole !== 'admin') { showToast('无编辑权限', 'error'); return; }
         var item = achievements.find(function(a) { return String(a.id) === String(id); });
         if (!item) return;
         document.getElementById('modalTitle').textContent = '编辑科研成果';
@@ -1534,17 +1772,47 @@
         renderResults();
     }
 
-    function openMemberModal() { document.getElementById('memberForm').reset(); document.getElementById('memberEditId').value = ''; document.getElementById('memberModal').classList.add('active'); }
+    // --- Member Handling ---
+    // 新增：处理身份证输入自动填充
+    function handleIdCardInput(input) {
+        const val = input.value;
+        if (val.length >= 14) {
+            const birth = val.substring(6, 14);
+            const y = birth.substring(0, 4);
+            const m = birth.substring(4, 6);
+            const d = birth.substring(6, 8);
+            if (y && m && d) {
+                document.getElementById('memberDob').value = `${y}-${m}-${d}`;
+            }
+        }
+    }
+
+    function openMemberModal() { 
+        if (currentUserRole !== 'admin') { showToast('无权操作', 'error'); return; }
+        document.getElementById('memberForm').reset(); 
+        document.getElementById('memberEditId').value = ''; 
+        document.getElementById('memberModalTitle').textContent = '添加成员';
+        document.getElementById('memberModal').classList.add('active'); 
+    }
+    
     function editMember(id) {
+        if (currentUserRole !== 'admin') { showToast('无权编辑', 'error'); return; }
         var m = members.find(function(item) { return String(item.id) === String(id); });
         if (!m) return;
         document.getElementById('memberEditId').value = id;
+        document.getElementById('memberModalTitle').textContent = '编辑成员';
         document.getElementById('memberNo').value = m.memberNo || '';
         document.getElementById('memberName').value = m.memberName || '';
         document.getElementById('memberGender').value = m.memberGender || '';
         document.getElementById('memberOrg').value = m.memberOrg || '';
         document.getElementById('memberTitle').value = m.memberTitle || '';
         document.getElementById('memberEmail').value = m.memberEmail || '';
+        // 新增字段
+        document.getElementById('memberIdCard').value = m.memberIdCard || '';
+        document.getElementById('memberDob').value = m.memberDob || '';
+        document.getElementById('memberNation').value = m.memberNation || '';
+        document.getElementById('memberPhone').value = m.memberPhone || '';
+        
         document.getElementById('memberModal').classList.add('active');
     }
     function closeMemberModal() { document.getElementById('memberModal').classList.remove('active'); }
@@ -1560,6 +1828,11 @@
             memberOrg: document.getElementById('memberOrg').value,
             memberTitle: document.getElementById('memberTitle').value,
             memberEmail: document.getElementById('memberEmail').value,
+            // 新增字段
+            memberIdCard: document.getElementById('memberIdCard').value,
+            memberDob: document.getElementById('memberDob').value,
+            memberNation: document.getElementById('memberNation').value,
+            memberPhone: document.getElementById('memberPhone').value,
             updatedAt: new Date().toISOString()
         };
 
@@ -1578,6 +1851,7 @@
     }
 
     function exportData() {
+        if (currentUserRole !== 'admin') { showToast('无导出权限', 'error'); return; }
         var data = { version: '4.0', exportDate: new Date().toISOString(), achievements: achievements, members: members };
         var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         var url = URL.createObjectURL(blob);
@@ -1591,16 +1865,23 @@
         closeAllMenus();
     }
 
-    // Export Word - RESTORED
     function exportToWordFile() {
         var content = '';
         var title = '';
         if (currentView === 'member') {
             title = '团队成员名单';
             content += '<h1>' + title + '</h1><table border="1" style="border-collapse:collapse;width:100%">';
-            content += '<tr><th>学号/工号</th><th>姓名</th><th>性别</th><th>职称</th><th>单位</th><th>邮箱</th></tr>';
+            content += '<tr><th>工号</th><th>姓名</th><th>性别</th><th>民族</th><th>出生日期</th><th>电话</th><th>单位</th></tr>';
             members.forEach(function(m) {
-                content += '<tr><td>' + (m.memberNo || '') + '</td><td>' + (m.memberName || '') + '</td><td>' + (m.memberGender || '') + '</td><td>' + (m.memberTitle || '') + '</td><td>' + (m.memberOrg || '') + '</td><td>' + (m.memberEmail || '') + '</td></tr>';
+                content += '<tr>' + 
+                    '<td>' + (m.memberNo || '') + '</td>' +
+                    '<td>' + (m.memberName || '') + '</td>' +
+                    '<td>' + (m.memberGender || '') + '</td>' +
+                    '<td>' + (m.memberNation || '') + '</td>' +
+                    '<td>' + (m.memberDob || '') + '</td>' +
+                    '<td>' + (m.memberPhone || '') + '</td>' +
+                    '<td>' + (m.memberOrg || '') + '</td>' +
+                    '</tr>';
             });
             content += '</table>';
         } else {
@@ -1636,7 +1917,6 @@
         closeAllMenus();
     }
 
-    // Basic Import (Local)
     function triggerImport() { document.getElementById('importInput').click(); closeAllMenus(); }
     function importData(event) {
         var file = event.target.files[0];
@@ -1660,8 +1940,8 @@
         event.target.value = '';
     }
 
-    // EXCEL IMPORT/EXPORT FUNCTIONS - RESTORED FULL LOGIC
     function exportToExcelFile() {
+        if (currentUserRole !== 'admin') { showToast('无权限', 'error'); return; }
         if (!typeof XLSX) { showToast('Excel 组件未加载', 'error'); return; }
         var dataToExport = [];
         var sheetName = '';
@@ -1670,7 +1950,8 @@
             dataToExport = members.map(function(m) {
                 return {
                     '学号/工号': m.memberNo, '姓名': m.memberName, '性别': m.memberGender,
-                    '单位': m.memberOrg, '职称': m.memberTitle, '邮箱': m.memberEmail
+                    '单位': m.memberOrg, '职称': m.memberTitle, '邮箱': m.memberEmail,
+                    '证件号码': m.memberIdCard, '出生年月': m.memberDob, '民族': m.memberNation, '电话': m.memberPhone
                 };
             });
         } else {
@@ -1680,7 +1961,7 @@
             dataToExport = filtered.map(function(a) {
                 var base = { '类型': typeConfig[a.type]?.label || a.type };
                 if (a.type === 'patent') {
-                    Object.assign(base, { '专利名称': a.patentName, '专利类型': a.patentType, '发明人': a.inventors, '申请日': a.applicationDate, '专利号': a.patentNumber });
+                    Object.assign(base, { '专利名称': a.patentName, '专利类型': a.patentType, '发明人': a.inventors, '申请日': a.applicationDate, '专利号': a.patentNumber, '状态': a.patentStatus });
                 } else if (a.type === 'project') {
                     Object.assign(base, { '项目名称': a.projectName, '级别': a.projectLevel, '编号': a.projectNumber, '开始时间': a.projectStartDate });
                 } else {
@@ -1824,7 +2105,6 @@
         }
     }
 
-    // Toast Notification
     function showToast(message, type) {
         var container = document.getElementById('toastContainer');
         var toast = document.createElement('div');
@@ -1852,9 +2132,9 @@
         loadFromLocal().then(function() {
             updateStats();
             renderResults();
+            // 登录遮罩已在 HTML 中默认显示，无需 JS 触发
         });
     };
 </script>
 </body>
 </html>
-
