@@ -155,17 +155,12 @@
         .result-item:hover { background: var(--bg-hover); }
         .result-item:last-child { border-bottom: none; }
         .result-item:active { background: var(--accent-light); }
-        /* 调整 Checkbox 垂直居中 */
         .result-checkbox { margin-top: 12px; width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
-        /* 调整 Type Icon 垂直居中 */
         .result-type { margin-top: 0; width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
         .type-paper { background: #dbeafe; } .type-patent { background: #fef3c7; } .type-project { background: #d1fae5; } .type-award { background: #fce7f3; } .type-book { background: #e0e7ff; } .type-member { background: #f3e8ff; }
         
-        /* 修改：让内容占满宽度，允许换行 */
         .result-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-        /* 修改：标题允许换行 */
         .result-title { font-weight: 600; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 6px; white-space: normal; line-height: 1.4; }
-        /* 修改：详细信息允许换行，不截断 */
         .result-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
         .result-meta span { display: inline-flex; align-items: center; gap: 3px; white-space: normal; }
         .result-meta .has-pdf { color: var(--accent); font-weight: 500; }
@@ -295,7 +290,7 @@
         </div>
         <button class="btn btn-primary" style="width:100%" onclick="checkLogin()">登录</button>
         <div style="margin-top:15px; font-size:0.8rem; color:var(--text-muted);">
-            管理员: 1399 | 宾客: guest
+            管理员: **** | 宾客: guest
         </div>
     </div>
 </div>
@@ -542,7 +537,7 @@
                     <div class="form-group"><label>民族</label><input type="text" id="memberNation"></div>
                 </div>
                 <div class="form-group">
-                    <label>证件号码</label>
+                    <label>证件号码 (自动填写生日)</label>
                     <input type="text" id="memberIdCard" oninput="handleIdCardInput(this)">
                 </div>
                 <div class="form-row">
@@ -623,6 +618,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal-overlay" id="confirmModal">
     <div class="confirm-dialog">
         <p id="confirmMessage">确定要删除这条记录吗？</p>
@@ -929,7 +925,13 @@
         closeSidebar(); renderResults();
     }
     function setYearFilter(year) { currentYearFilter = year; document.querySelectorAll('.filter-chip').forEach(function(chip) { chip.classList.toggle('active', chip.dataset.year === year); }); renderResults(); }
-    function handleSearch() { searchQuery = document.getElementById('searchInput').value.toLowerCase(); renderResults(); }
+    
+    // 修改：全字段搜索
+    function handleSearch() { 
+        searchQuery = document.getElementById('searchInput').value.toLowerCase(); 
+        renderResults(); 
+    }
+    
     function handleSort() { sortOrder = document.getElementById('sortSelect').value; renderResults(); }
 
     function updateStats() {
@@ -962,16 +964,32 @@
     function renderResults() {
         var container = document.getElementById('resultsList');
         if (currentView === 'member') { renderMembers(container); return; }
+        
         var filtered = achievements.slice();
+        
+        // View Filtering
         if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; });
+        
+        // Year Filtering
         if (currentYearFilter !== 'all') filtered = filtered.filter(function(a) { 
             var d = a.date || a.applicationDate || a.projectStartDate || a.awardDate || a.bookDate || ''; 
             return d.indexOf(currentYearFilter) === 0; 
         });
+        
+        // Search Filtering (Expanded)
         if (searchQuery) filtered = filtered.filter(function(a) { 
-            var s = [a.title, a.authors, a.doi, a.patentName, a.inventors, a.patentNumber, a.projectName, a.projectNumber, a.awardName, a.awardRecipients, a.bookTitle, a.bookAuthors].join(' ').toLowerCase(); 
+            // 拼接所有可能包含信息的字段进行搜索
+            var s = [
+                a.title, a.authors, a.doi, a.source, a.level, // Paper
+                a.patentName, a.inventors, a.patentNumber, a.patentStatus, a.patentType, a.patentOwner, // Patent
+                a.projectName, a.projectNumber, a.projectLevel, a.projectOrg, // Project
+                a.awardName, a.awardRecipients, a.awardLevel, a.awardAgency, // Award
+                a.bookTitle, a.bookAuthors, a.bookPublisher, a.bookIsbn // Book
+            ].join(' ').toLowerCase(); 
             return s.indexOf(searchQuery) !== -1; 
         });
+        
+        // Sort
         filtered.sort(function(a, b) { 
             var dA = a.date || a.applicationDate || a.projectStartDate || a.awardDate || a.bookDate || '0'; 
             var dB = b.date || b.applicationDate || b.projectStartDate || a.awardDate || a.bookDate || '0'; 
@@ -980,38 +998,69 @@
             if (sortOrder === 'title-asc') return (a.title || a.patentName || a.projectName || a.awardName || a.bookTitle || '').localeCompare(b.title || b.patentName || b.projectName || a.awardName || a.bookTitle || '', 'zh-CN'); 
             return 0; 
         });
+        
         document.getElementById('resultsCount').textContent = '共 ' + filtered.length + ' 条';
         if (filtered.length === 0) { container.innerHTML = '<div class="empty-state"><h3>暂无记录</h3><p>' + (searchQuery ? '没有找到匹配的结果' : '点击添加按钮开始录入') + '</p></div>'; return; }
         
         container.innerHTML = filtered.map(function(item) {
             var config = typeConfig[item.type] || typeConfig.paper;
-            var displayTitle = '', displayDate = '', displayAuthors = '';
+            var displayTitle = '';
+            // 修改：显示完整信息的逻辑
+            var metaHtml = '';
             
-            if (item.type === 'patent') {
-                displayTitle = item.patentName; displayDate = item.applicationDate; displayAuthors = item.inventors;
-            } else if (item.type === 'project') {
-                displayTitle = item.projectName; displayDate = item.projectStartDate; displayAuthors = item.projectOrg;
-            } else if (item.type === 'award') {
-                displayTitle = item.awardName; displayDate = item.awardDate; displayAuthors = item.awardRecipients;
-            } else if (item.type === 'book') {
-                displayTitle = item.bookTitle; displayDate = item.bookDate; displayAuthors = item.bookAuthors;
-            } else {
-                displayTitle = item.title; displayDate = item.date; displayAuthors = item.authors;
+            // Helper function to append meta info
+            function addMeta(icon, text) {
+                if(text) metaHtml += `<span>${icon} ${escapeHtml(text)}</span>`;
             }
 
-            var isChecked = selectedItems.has(item.id) ? 'checked' : '';
-            var metaHtml = '<span>📅 ' + (displayDate || '-') + '</span>';
-            if (displayAuthors) metaHtml += '<span>👤 ' + escapeHtml(displayAuthors) + '</span>';
-            if (item.type === 'patent' && item.patentNumber) metaHtml += '<span>🔢 ' + escapeHtml(item.patentNumber) + '</span>';
-            if (item.type === 'patent' && item.patentStatus) metaHtml += '<span>🔖 ' + escapeHtml(item.patentStatus) + '</span>';
-            if (item.type === 'award' && item.awardLevel) metaHtml += '<span>🏅 ' + escapeHtml(item.awardLevel) + '</span>';
-            if (item.type === 'book' && item.bookPublisher) metaHtml += '<span>📖 ' + escapeHtml(item.bookPublisher) + '</span>';
+            if (item.type === 'patent') {
+                displayTitle = item.patentName;
+                addMeta('📅', item.applicationDate);
+                addMeta('👤', item.inventors);
+                addMeta('🔢', item.patentNumber);
+                addMeta('🔖', item.patentStatus);
+                addMeta('🏭', item.patentOwner);
+                addMeta('🏷️', item.patentType);
+                if(item.grantDate) addMeta('🏁', '授权日:' + item.grantDate);
+            } else if (item.type === 'project') {
+                displayTitle = item.projectName;
+                addMeta('📅', item.projectStartDate);
+                addMeta('🏢', item.projectOrg);
+                addMeta('🔢', item.projectNumber);
+                addMeta('📶', item.projectLevel);
+                if(item.projectEndDate) addMeta('🏁', '结题:' + item.projectEndDate);
+            } else if (item.type === 'award') {
+                displayTitle = item.awardName;
+                addMeta('📅', item.awardDate);
+                addMeta('👤', item.awardRecipients);
+                addMeta('🏅', item.awardLevel);
+                addMeta('🏛️', item.awardAgency);
+            } else if (item.type === 'book') {
+                displayTitle = item.bookTitle;
+                addMeta('📅', item.bookDate);
+                addMeta('👤', item.bookAuthors);
+                addMeta('📖', item.bookPublisher);
+                addMeta('🔢', item.bookIsbn);
+            } else {
+                // Paper
+                displayTitle = item.title;
+                addMeta('📅', item.date);
+                addMeta('👤', item.authors);
+                addMeta('📖', item.source);
+                addMeta('⭐', item.level);
+                addMeta('🔗', item.doi);
+            }
+
             if (item.pdfData) metaHtml += '<span class="has-pdf">📎</span>';
+            var isChecked = selectedItems.has(item.id) ? 'checked' : '';
             
             return '<div class="result-item" onclick="viewDetail(\'' + item.id + '\')">' +
                 '<input type="checkbox" class="result-checkbox" data-id="' + item.id + '" ' + isChecked + ' onclick="toggleItemSelect(\'' + item.id + '\', event)">' +
                 '<div class="result-type ' + config.class + '">' + config.icon + '</div>' +
-                '<div class="result-content"><div class="result-title">' + escapeHtml(displayTitle) + '</div><div class="result-meta">' + metaHtml + '</div></div>' +
+                '<div class="result-content">' +
+                    '<div class="result-title">' + escapeHtml(displayTitle) + '</div>' +
+                    '<div class="result-meta">' + metaHtml + '</div>' +
+                '</div>' +
                 '<div class="result-actions">' +
                 '<button class="action-btn" onclick="event.stopPropagation(); viewFile(\'' + item.id + '\')" title="查看/下载附件" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>👁️</button>' +
                 '<button class="action-btn" onclick="event.stopPropagation(); downloadPdf(\'' + item.id + '\')" title="下载附件" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>⬇️</button>' +
@@ -1022,15 +1071,29 @@
 
     function renderMembers(container) {
         var filtered = members.slice();
-        if (searchQuery) filtered = filtered.filter(function(m) { var s = [m.memberNo, m.memberName, m.memberOrg, m.memberEmail, m.memberTitle, m.memberIdCard].join(' ').toLowerCase(); return s.indexOf(searchQuery) !== -1; });
+        if (searchQuery) filtered = filtered.filter(function(m) { 
+            var s = [m.memberNo, m.memberName, m.memberOrg, m.memberEmail, m.memberTitle, m.memberIdCard, m.memberNation, m.memberPhone].join(' ').toLowerCase(); 
+            return s.indexOf(searchQuery) !== -1; 
+        });
         document.getElementById('resultsCount').textContent = '共 ' + filtered.length + ' 条';
         if (filtered.length === 0) { container.innerHTML = '<div class="empty-state"><h3>暂无成员</h3></div>'; return; }
         container.innerHTML = filtered.map(function(m) {
             var isChecked = selectedItems.has(m.id) ? 'checked' : '';
+            // 修改：显示更多成员信息
+            var metaHtml = '';
+            if(m.memberNo) metaHtml += `<span>🔢 ${escapeHtml(m.memberNo)}</span>`;
+            if(m.memberGender) metaHtml += `<span>⚧ ${escapeHtml(m.memberGender)}</span>`;
+            if(m.memberPhone) metaHtml += `<span>📱 ${escapeHtml(m.memberPhone)}</span>`;
+            if(m.memberOrg) metaHtml += `<span>🏢 ${escapeHtml(m.memberOrg)}</span>`;
+            if(m.memberTitle) metaHtml += `<span>🎓 ${escapeHtml(m.memberTitle)}</span>`;
+
             return '<div class="result-item" onclick="editMember(\'' + m.id + '\')">' +
                 '<input type="checkbox" class="result-checkbox" data-id="' + m.id + '" ' + isChecked + ' onclick="toggleItemSelect(\'' + m.id + '\', event)">' +
                 '<div class="result-type type-member">👤</div>' +
-                '<div class="result-content"><div class="result-title">' + escapeHtml(m.memberName) + '</div><div class="result-meta"><span>🔢 ' + escapeHtml(m.memberNo) + '</span><span>📱 ' + escapeHtml(m.memberPhone || '-') + '</span></div></div>' +
+                '<div class="result-content">' +
+                    '<div class="result-title">' + escapeHtml(m.memberName) + '</div>' +
+                    '<div class="result-meta">' + metaHtml + '</div>' +
+                '</div>' +
                 '<div class="result-actions"><button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + m.id + '\', \'member\')" title="删除">🗑</button></div></div>';
         }).join('');
     }
@@ -1065,19 +1128,12 @@
     function editFromDetail() { closeDetailModal(); editAchievement(currentDetailId); }
 
     function toggleFormFields() {
-        var type = document.getElementById('type').value; 
-        var isPatent = type === 'patent'; 
-        var isProject = type === 'project';
-        var isAward = type === 'award';
-        var isBook = type === 'book';
-        
+        var type = document.getElementById('type').value; var isPatent = type === 'patent'; var isProject = type === 'project';
         document.getElementById('patentFields').classList.toggle('hidden', !isPatent);
         document.getElementById('projectFields').classList.toggle('hidden', !isProject);
-        document.getElementById('awardFields').classList.toggle('hidden', !isAward);
-        document.getElementById('bookFields').classList.toggle('hidden', !isBook);
-        
-        // General fields are for Paper (and default)
-        var isGeneral = !isPatent && !isProject && !isAward && !isBook;
+        document.getElementById('awardFields').classList.toggle('hidden', type !== 'award');
+        document.getElementById('bookFields').classList.toggle('hidden', type !== 'book');
+        var isGeneral = !isPatent && !isProject && type !== 'award' && type !== 'book';
         document.getElementById('generalFields').classList.toggle('hidden', !isGeneral);
         document.getElementById('dateGroup').classList.toggle('hidden', !isGeneral);
     }
@@ -1086,23 +1142,11 @@
         if (currentView === 'member') { openMemberModal(); return; }
         document.getElementById('modalTitle').textContent = '添加科研成果'; document.getElementById('submitBtn').textContent = '保存'; document.getElementById('researchForm').reset(); document.getElementById('editId').value = ''; document.getElementById('date').valueAsDate = new Date(); document.getElementById('type').value = (currentView !== 'all' && currentView !== 'member') ? currentView : ''; toggleFormFields(); removeFile(); document.getElementById('formModal').classList.add('active');
     }
-    
     function editAchievement(id) {
         if (currentUserRole !== 'admin') { showToast('无编辑权限', 'error'); return; }
         var item = achievements.find(function(a) { return String(a.id) === String(id); }); if (!item) return;
         document.getElementById('modalTitle').textContent = '编辑科研成果'; document.getElementById('submitBtn').textContent = '更新'; document.getElementById('editId').value = id; document.getElementById('type').value = item.type || ''; toggleFormFields();
-        
-        if (item.type === 'patent') {
-            document.getElementById('patentName').value = item.patentName || ''; document.getElementById('patentType').value = item.patentType || ''; document.getElementById('inventors').value = item.inventors || ''; document.getElementById('patentOwner').value = item.patentOwner || ''; document.getElementById('applicationDate').value = item.applicationDate || ''; document.getElementById('grantDate').value = item.grantDate || ''; document.getElementById('patentNumber').value = item.patentNumber || ''; document.getElementById('patentStatus').value = item.patentStatus || '';
-        } else if (item.type === 'project') {
-            document.getElementById('projectName').value = item.projectName || item.title || ''; document.getElementById('projectLevel').value = item.projectLevel || item.level || ''; document.getElementById('projectNumber').value = item.projectNumber || ''; document.getElementById('projectStartDate').value = item.projectStartDate || item.date || ''; document.getElementById('projectEndDate').value = item.projectEndDate || ''; document.getElementById('projectOrg').value = item.projectOrg || '';
-        } else if (item.type === 'award') {
-            document.getElementById('awardName').value = item.awardName || ''; document.getElementById('awardRecipients').value = item.awardRecipients || ''; document.getElementById('awardDate').value = item.awardDate || ''; document.getElementById('awardLevel').value = item.awardLevel || ''; document.getElementById('awardAgency').value = item.awardAgency || '';
-        } else if (item.type === 'book') {
-            document.getElementById('bookTitle').value = item.bookTitle || ''; document.getElementById('bookAuthors').value = item.bookAuthors || ''; document.getElementById('bookDate').value = item.bookDate || ''; document.getElementById('bookPublisher').value = item.bookPublisher || ''; document.getElementById('bookIsbn').value = item.bookIsbn || '';
-        } else {
-            document.getElementById('date').value = item.date || ''; document.getElementById('title').value = item.title || ''; document.getElementById('authors').value = item.authors || ''; document.getElementById('source').value = item.source || ''; document.getElementById('level').value = item.level || ''; document.getElementById('doi').value = item.doi || '';
-        }
+        if (item.type === 'patent') { document.getElementById('patentName').value = item.patentName || ''; document.getElementById('patentType').value = item.patentType || ''; document.getElementById('inventors').value = item.inventors || ''; document.getElementById('patentOwner').value = item.patentOwner || ''; document.getElementById('applicationDate').value = item.applicationDate || ''; document.getElementById('grantDate').value = item.grantDate || ''; document.getElementById('patentNumber').value = item.patentNumber || ''; document.getElementById('patentStatus').value = item.patentStatus || ''; } else if (item.type === 'project') { document.getElementById('projectName').value = item.projectName || item.title || ''; document.getElementById('projectLevel').value = item.projectLevel || item.level || ''; document.getElementById('projectNumber').value = item.projectNumber || ''; document.getElementById('projectStartDate').value = item.projectStartDate || item.date || ''; document.getElementById('projectEndDate').value = item.projectEndDate || ''; document.getElementById('projectOrg').value = item.projectOrg || ''; } else if (item.type === 'award') { document.getElementById('awardName').value = item.awardName || ''; document.getElementById('awardRecipients').value = item.awardRecipients || ''; document.getElementById('awardDate').value = item.awardDate || ''; document.getElementById('awardLevel').value = item.awardLevel || ''; document.getElementById('awardAgency').value = item.awardAgency || ''; } else if (item.type === 'book') { document.getElementById('bookTitle').value = item.bookTitle || ''; document.getElementById('bookAuthors').value = item.bookAuthors || ''; document.getElementById('bookDate').value = item.bookDate || ''; document.getElementById('bookPublisher').value = item.bookPublisher || ''; document.getElementById('bookIsbn').value = item.bookIsbn || ''; } else { document.getElementById('date').value = item.date || ''; document.getElementById('title').value = item.title || ''; document.getElementById('authors').value = item.authors || ''; document.getElementById('source').value = item.source || ''; document.getElementById('level').value = item.level || ''; document.getElementById('doi').value = item.doi || ''; }
         removeFile();
         if (item.pdfData) { currentPdfData = item.pdfData; currentPdfName = item.pdfName; document.getElementById('fileName').textContent = item.pdfName || 'attachment'; document.getElementById('fileInfo').classList.remove('hidden'); document.getElementById('fileUpload').classList.add('has-file'); }
         document.getElementById('formModal').classList.add('active');
@@ -1112,19 +1156,7 @@
     function handleSubmit(event) {
         event.preventDefault(); var editId = document.getElementById('editId').value; var type = document.getElementById('type').value;
         var data = { id: editId || Date.now().toString() + Math.random().toString(36).substr(2, 9), type: type, pdfData: currentPdfData, pdfName: currentPdfName, updatedAt: new Date().toISOString() };
-        
-        if (type === 'patent') {
-            data.patentName = document.getElementById('patentName').value; data.patentType = document.getElementById('patentType').value; data.inventors = document.getElementById('inventors').value; data.patentOwner = document.getElementById('patentOwner').value; data.applicationDate = document.getElementById('applicationDate').value; data.grantDate = document.getElementById('grantDate').value; data.patentNumber = document.getElementById('patentNumber').value; data.patentStatus = document.getElementById('patentStatus').value; data.title = data.patentName; data.date = data.applicationDate;
-        } else if (type === 'project') {
-            data.projectName = document.getElementById('projectName').value; data.projectLevel = document.getElementById('projectLevel').value; data.projectNumber = document.getElementById('projectNumber').value; data.projectStartDate = document.getElementById('projectStartDate').value; data.projectEndDate = document.getElementById('projectEndDate').value; data.projectOrg = document.getElementById('projectOrg').value; data.title = data.projectName; data.date = data.projectStartDate;
-        } else if (type === 'award') {
-            data.awardName = document.getElementById('awardName').value; data.awardRecipients = document.getElementById('awardRecipients').value; data.awardDate = document.getElementById('awardDate').value; data.awardLevel = document.getElementById('awardLevel').value; data.awardAgency = document.getElementById('awardAgency').value; data.title = data.awardName; data.date = data.awardDate;
-        } else if (type === 'book') {
-            data.bookTitle = document.getElementById('bookTitle').value; data.bookAuthors = document.getElementById('bookAuthors').value; data.bookDate = document.getElementById('bookDate').value; data.bookPublisher = document.getElementById('bookPublisher').value; data.bookIsbn = document.getElementById('bookIsbn').value; data.title = data.bookTitle; data.date = data.bookDate;
-        } else {
-            data.date = document.getElementById('date').value; data.title = document.getElementById('title').value; data.authors = document.getElementById('authors').value; data.source = document.getElementById('source').value; data.level = document.getElementById('level').value; data.doi = document.getElementById('doi').value;
-        }
-        
+        if (type === 'patent') { data.patentName = document.getElementById('patentName').value; data.patentType = document.getElementById('patentType').value; data.inventors = document.getElementById('inventors').value; data.patentOwner = document.getElementById('patentOwner').value; data.applicationDate = document.getElementById('applicationDate').value; data.grantDate = document.getElementById('grantDate').value; data.patentNumber = document.getElementById('patentNumber').value; data.patentStatus = document.getElementById('patentStatus').value; data.title = data.patentName; data.date = data.applicationDate; } else if (type === 'project') { data.projectName = document.getElementById('projectName').value; data.projectLevel = document.getElementById('projectLevel').value; data.projectNumber = document.getElementById('projectNumber').value; data.projectStartDate = document.getElementById('projectStartDate').value; data.projectEndDate = document.getElementById('projectEndDate').value; data.projectOrg = document.getElementById('projectOrg').value; data.title = data.projectName; data.date = data.projectStartDate; } else if (type === 'award') { data.awardName = document.getElementById('awardName').value; data.awardRecipients = document.getElementById('awardRecipients').value; data.awardDate = document.getElementById('awardDate').value; data.awardLevel = document.getElementById('awardLevel').value; data.awardAgency = document.getElementById('awardAgency').value; data.title = data.awardName; data.date = data.awardDate; } else if (type === 'book') { data.bookTitle = document.getElementById('bookTitle').value; data.bookAuthors = document.getElementById('bookAuthors').value; data.bookDate = document.getElementById('bookDate').value; data.bookPublisher = document.getElementById('bookPublisher').value; data.bookIsbn = document.getElementById('bookIsbn').value; data.title = data.bookTitle; data.date = data.bookDate; } else { data.date = document.getElementById('date').value; data.title = document.getElementById('title').value; data.authors = document.getElementById('authors').value; data.source = document.getElementById('source').value; data.level = document.getElementById('level').value; data.doi = document.getElementById('doi').value; }
         if (editId) { var index = achievements.findIndex(function(a) { return String(a.id) === String(editId); }); if (index !== -1) { achievements[index] = Object.assign(achievements[index], data); showToast('✓ 已更新', 'success'); } } else { data.createdAt = new Date().toISOString(); achievements.push(data); showToast('✓ 已添加', 'success'); }
         saveToLocal(); closeModal(); updateStats(); renderResults();
     }
@@ -1156,96 +1188,27 @@
         if (currentUserRole !== 'admin') { showToast('无导出权限', 'error'); return; }
         var data = { version: '4.0', exportDate: new Date().toISOString(), achievements: achievements, members: members }; var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = 'research_data_backup_' + new Date().toISOString().slice(0, 10) + '.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); showToast('✓ 备份文件已下载', 'success'); closeAllMenus();
     }
-    
-    // --- 导出 Word (所有分类分节) ---
     function exportToWordFile() {
-        var content = ''; 
-        var categories = [
-            { id: 'paper', title: '学术论文' },
-            { id: 'patent', title: '发明专利' },
-            { id: 'project', title: '科研项目' },
-            { id: 'award', title: '获奖情况' },
-            { id: 'book', title: '专著出版' }
-        ];
-
-        // 1. 成员
-        content += '<h1>团队成员</h1><table border="1" style="border-collapse:collapse;width:100%"><tr><th>工号</th><th>姓名</th><th>性别</th><th>民族</th><th>出生日期</th><th>电话</th><th>单位</th></tr>';
-        members.forEach(function(m) { content += '<tr><td>' + (m.memberNo || '') + '</td><td>' + (m.memberName || '') + '</td><td>' + (m.memberGender || '') + '</td><td>' + (m.memberNation || '') + '</td><td>' + (m.memberDob || '') + '</td><td>' + (m.memberPhone || '') + '</td><td>' + (m.memberOrg || '') + '</td></tr>'; });
-        content += '</table><br><hr><br>';
-
-        // 2. 循环各分类
-        categories.forEach(function(cat) {
-            var items = achievements.filter(function(a) { return a.type === cat.id; });
-            if (items.length > 0) {
-                content += '<h1>' + cat.title + '</h1>';
-                items.forEach(function(item, index) {
-                    content += '<p><strong>' + (index + 1) + '. ';
-                    
-                    if (cat.id === 'paper') {
-                        content += escapeHtml(item.title) + '</strong><br>作者: ' + (item.authors||'-') + ' | 日期: ' + (item.date||'-') + '<br>来源: ' + (item.source||'-') + ' | 级别: ' + (item.level||'-') + ' | DOI: ' + (item.doi||'-');
-                    } else if (cat.id === 'patent') {
-                        content += escapeHtml(item.patentName) + '</strong><br>类型: ' + (item.patentType||'-') + ' | 状态: ' + (item.patentStatus||'-') + '<br>发明人: ' + (item.inventors||'-') + ' | 专利权人: ' + (item.patentOwner||'-') + '<br>申请日: ' + (item.applicationDate||'-') + ' | 授权日: ' + (item.grantDate||'-') + ' | 专利号: ' + (item.patentNumber||'-');
-                    } else if (cat.id === 'project') {
-                        content += escapeHtml(item.projectName) + '</strong><br>编号: ' + (item.projectNumber||'-') + ' | 级别: ' + (item.projectLevel||'-') + '<br>单位: ' + (item.projectOrg||'-') + ' | 周期: ' + (item.projectStartDate||'-') + ' 至 ' + (item.projectEndDate||'-');
-                    } else if (cat.id === 'award') {
-                        content += escapeHtml(item.awardName) + '</strong><br>获奖人: ' + (item.awardRecipients||'-') + ' | 日期: ' + (item.awardDate||'-') + '<br>级别: ' + (item.awardLevel||'-') + ' | 单位: ' + (item.awardAgency||'-');
-                    } else if (cat.id === 'book') {
-                        content += escapeHtml(item.bookTitle) + '</strong><br>作者: ' + (item.bookAuthors||'-') + ' | 日期: ' + (item.bookDate||'-') + '<br>出版社: ' + (item.bookPublisher||'-') + ' | ISBN: ' + (item.bookIsbn||'-');
-                    }
-                    content += '</p><hr>';
-                });
-                content += '<br>';
-            }
-        });
-
-        var header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export</title></head><body>"; var footer = "</body></html>"; var sourceHTML = header + content + footer; var blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' }); var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = 'Research_Report_' + new Date().toISOString().slice(0, 10) + '.doc'; document.body.appendChild(a); a.click(); document.body.removeChild(a); showToast('✓ Word 导出成功', 'success'); closeAllMenus();
+        var content = ''; var title = '';
+        if (currentView === 'member') {
+            title = '团队成员名单'; content += '<h1>' + title + '</h1><table border="1" style="border-collapse:collapse;width:100%"><tr><th>工号</th><th>姓名</th><th>性别</th><th>民族</th><th>出生日期</th><th>电话</th><th>单位</th></tr>';
+            members.forEach(function(m) { content += '<tr><td>' + (m.memberNo || '') + '</td><td>' + (m.memberName || '') + '</td><td>' + (m.memberGender || '') + '</td><td>' + (m.memberNation || '') + '</td><td>' + (m.memberDob || '') + '</td><td>' + (m.memberPhone || '') + '</td><td>' + (m.memberOrg || '') + '</td></tr>'; });
+            content += '</table>';
+        } else {
+            var typeName = { all: '全部成果', paper: '学术论文', patent: '发明专利', project: '科研项目', award: '获奖情况', book: '专著出版' }; title = typeName[currentView] || '科研成果列表'; var filtered = achievements; if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; }); content += '<h1>' + title + '</h1>';
+            filtered.forEach(function(item, index) { var itemTitle = item.title || item.patentName || item.projectName; var itemDate = item.date || item.applicationDate || item.projectStartDate; var itemAuth = item.authors || item.inventors || item.projectOrg; content += '<p><strong>' + (index + 1) + '. ' + escapeHtml(itemTitle) + '</strong><br>'; content += '日期: ' + (itemDate || '-') + ' | 人员: ' + (itemAuth || '-') + '<br>'; if (item.source) content += '来源: ' + escapeHtml(item.source) + '<br>'; if (item.level) content += '级别: ' + escapeHtml(item.level) + '<br>'; if (item.patentNumber) content += '专利号: ' + escapeHtml(item.patentNumber) + '<br>'; content += '</p><hr>'; });
+        }
+        var header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + title + "</title></head><body>"; var footer = "</body></html>"; var sourceHTML = header + content + footer; var blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' }); var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = title + '_' + new Date().toISOString().slice(0, 10) + '.doc'; document.body.appendChild(a); a.click(); document.body.removeChild(a); showToast('✓ Word 导出成功', 'success'); closeAllMenus();
     }
 
     function triggerImport() { document.getElementById('importInput').click(); closeAllMenus(); }
     function importData(event) { var file = event.target.files[0]; if (!file) return; var reader = new FileReader(); reader.onload = function(e) { try { var data = JSON.parse(e.target.result); if (data.achievements || data.members) { if (confirm('导入将合并现有数据，是否继续？')) { var newAchievements = data.achievements || []; var newMembers = data.members || []; newAchievements.forEach(function(item) { if (!achievements.some(function(exist) { return exist.id === item.id; })) { achievements.push(item); } }); newMembers.forEach(function(item) { if (!members.some(function(exist) { return exist.id === item.id; })) { members.push(item); } }); saveToLocal(); updateStats(); renderResults(); showToast('✓ 导入成功', 'success'); } } } catch (err) { showToast('文件解析失败', 'error'); } }; reader.readAsText(file); event.target.value = ''; }
-    
-    // --- 导出 Excel (所有分类分Sheet) ---
     function exportToExcelFile() {
         if (currentUserRole !== 'admin') { showToast('无权限', 'error'); return; } if (!typeof XLSX) { showToast('Excel 组件未加载', 'error'); return; }
-        var wb = XLSX.utils.book_new();
-        
-        // 1. 成员 Sheet
-        var memberData = members.map(function(m) { return { '工号': m.memberNo, '姓名': m.memberName, '性别': m.memberGender, '民族': m.memberNation, '证件号码': m.memberIdCard, '出生年月': m.memberDob, '电话': m.memberPhone, '单位': m.memberOrg, '职称': m.memberTitle, '邮箱': m.memberEmail }; });
-        if(memberData.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(memberData), '团队成员');
-
-        // 2. 各分类 Sheet
-        var categories = [
-            { id: 'paper', title: '学术论文', fields: ['title', 'authors', 'date', 'source', 'level', 'doi'] },
-            { id: 'patent', title: '发明专利', fields: ['patentName', 'patentType', 'patentStatus', 'inventors', 'patentOwner', 'applicationDate', 'grantDate', 'patentNumber'] },
-            { id: 'project', title: '科研项目', fields: ['projectName', 'projectLevel', 'projectNumber', 'projectOrg', 'projectStartDate', 'projectEndDate'] },
-            { id: 'award', title: '获奖情况', fields: ['awardName', 'awardRecipients', 'awardDate', 'awardLevel', 'awardAgency'] },
-            { id: 'book', title: '专著出版', fields: ['bookTitle', 'bookAuthors', 'bookDate', 'bookPublisher', 'bookIsbn'] }
-        ];
-
-        var hasData = false;
-        categories.forEach(function(cat) {
-            var items = achievements.filter(function(a) { return a.type === cat.id; });
-            if (items.length > 0) {
-                hasData = true;
-                var sheetData = items.map(function(item) {
-                    var row = {};
-                    // 映射字段名到中文 (简单处理，直接用key)
-                    // 实际导出最好有中文表头，这里为了代码简洁直接取值
-                    if (cat.id === 'paper') { row['标题']=item.title; row['作者']=item.authors; row['日期']=item.date; row['来源']=item.source; row['级别']=item.level; row['DOI']=item.doi; }
-                    else if (cat.id === 'patent') { row['专利名称']=item.patentName; row['类型']=item.patentType; row['状态']=item.patentStatus; row['发明人']=item.inventors; row['专利权人']=item.patentOwner; row['申请日']=item.applicationDate; row['授权日']=item.grantDate; row['专利号']=item.patentNumber; }
-                    else if (cat.id === 'project') { row['项目名称']=item.projectName; row['级别']=item.projectLevel; row['编号']=item.projectNumber; row['单位']=item.projectOrg; row['开始']=item.projectStartDate; row['结束']=item.projectEndDate; }
-                    else if (cat.id === 'award') { row['奖项名称']=item.awardName; row['获奖人']=item.awardRecipients; row['日期']=item.awardDate; row['级别']=item.awardLevel; row['单位']=item.awardAgency; }
-                    else if (cat.id === 'book') { row['著作名称']=item.bookTitle; row['作者']=item.bookAuthors; row['日期']=item.bookDate; row['出版社']=item.bookPublisher; row['ISBN']=item.bookIsbn; }
-                    return row;
-                });
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetData), cat.title);
-            }
-        });
-
-        if (!hasData && memberData.length === 0) { showToast('无数据', 'warning'); return; } 
-        XLSX.writeFile(wb, 'Research_Data_' + new Date().toISOString().slice(0, 10) + '.xlsx'); closeAllMenus();
+        var dataToExport = []; var sheetName = '';
+        if (currentView === 'member') { sheetName = '团队成员'; dataToExport = members.map(function(m) { return { '学号/工号': m.memberNo, '姓名': m.memberName, '性别': m.memberGender, '单位': m.memberOrg, '职称': m.memberTitle, '邮箱': m.memberEmail, '证件号码': m.memberIdCard, '出生年月': m.memberDob, '民族': m.memberNation, '电话': m.memberPhone }; }); } else { var filtered = achievements; if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; }); sheetName = '科研成果'; dataToExport = filtered.map(function(a) { var base = { '类型': typeConfig[a.type]?.label || a.type }; if (a.type === 'patent') { Object.assign(base, { '专利名称': a.patentName, '专利类型': a.patentType, '发明人': a.inventors, '申请日': a.applicationDate, '专利号': a.patentNumber, '状态': a.patentStatus }); } else if (a.type === 'project') { Object.assign(base, { '项目名称': a.projectName, '级别': a.projectLevel, '编号': a.projectNumber, '开始时间': a.projectStartDate }); } else { Object.assign(base, { '标题': a.title, '作者': a.authors, '日期': a.date, '来源': a.source, '级别': a.level }); } return base; }); }
+        if (dataToExport.length === 0) { showToast('无数据', 'warning'); return; } var wb = XLSX.utils.book_new(); var ws = XLSX.utils.json_to_sheet(dataToExport); XLSX.utils.book_append_sheet(wb, ws, sheetName); XLSX.writeFile(wb, sheetName + '_' + new Date().toISOString().slice(0, 10) + '.xlsx'); closeAllMenus();
     }
-
     function openExcelImport() { document.getElementById('excelModal').classList.add('active'); document.getElementById('excelInput').value = ''; document.getElementById('excelPreviewContainer').classList.add('hidden'); document.getElementById('mappingContainer').classList.add('hidden'); document.getElementById('importExcelBtn').disabled = true; document.getElementById('duplicateWarning').classList.add('hidden'); excelData = null; closeAllMenus(); }
     function closeExcelModal() { document.getElementById('excelModal').classList.remove('active'); }
     function handleExcelSelect(event) { var file = event.target.files[0]; if (!file) return; var reader = new FileReader(); reader.onload = function(e) { var data = new Uint8Array(e.target.result); var workbook = XLSX.read(data, { type: 'array' }); var firstSheet = workbook.Sheets[workbook.SheetNames[0]]; excelData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }); if (excelData.length > 0) { excelHeaders = excelData[0]; renderExcelPreview(); updateMappingFields(); document.getElementById('excelPreviewContainer').classList.remove('hidden'); document.getElementById('mappingContainer').classList.remove('hidden'); document.getElementById('importExcelBtn').disabled = false; } else { showToast('Excel 文件为空', 'error'); } }; reader.readAsArrayBuffer(file); }
@@ -1257,5 +1220,3 @@
     function closeAllMenus() { document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.classList.remove('show'); }); }
     window.onload = function() { OneDriveService.init(); loadFromLocal().then(function() { updateStats(); renderResults(); }); };
 </script>
-</body>
-</html>
