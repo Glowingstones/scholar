@@ -815,9 +815,9 @@
     // --- Microsoft Graph / OneDrive Integration ---
     const msalConfig = {
         auth: {
-            clientId: "c453313f-fd40-4534-9d66-6a0847396d3b", // Provided Client ID
-            authority: "https://login.microsoftonline.com/common", // Supports personal & work accounts
-            redirectUri: window.location.origin + window.location.pathname // Must match Azure Portal
+            clientId: "17a8f73b-bce4-44a9-abc5-3550c759585c", // 使用您提供的 Client ID
+            authority: "https://login.microsoftonline.com/common", // 支持个人和工作账号
+            redirectUri: window.location.origin + window.location.pathname // 必须与 Azure 后台一致
         },
         cache: {
             cacheLocation: "localStorage",
@@ -876,7 +876,6 @@
                 });
                 return response.accessToken;
             } catch (e) {
-                // If silent fails, try popup
                 const response = await msalInstance.acquireTokenPopup(loginRequest);
                 return response.accessToken;
             }
@@ -906,8 +905,6 @@
 
             try {
                 const token = await this.getToken();
-                
-                // Prepare Data
                 const data = {
                     version: '4.5',
                     backupDate: new Date().toISOString(),
@@ -916,15 +913,9 @@
                     members: members
                 };
                 
-                // OneDrive Upload Path: /Apps/ResearchManager/backup.json (or root if Apps folder issue)
-                // Using special folder "approot" if configured, else root/ResearchManager
                 const fileName = "backup.json";
                 const folderName = "ResearchManager";
                 const content = JSON.stringify(data);
-
-                // 1. Upload Content
-                // Simple PUT to create/replace file. 
-                // Path: /me/drive/root:/{folder}/{file}:/content
                 const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${folderName}/${fileName}:/content`;
                 
                 const response = await fetch(url, {
@@ -962,7 +953,6 @@
                 const token = await this.getToken();
                 const fileName = "backup.json";
                 const folderName = "ResearchManager";
-                
                 const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${folderName}/${fileName}:/content`;
 
                 const response = await fetch(url, {
@@ -970,14 +960,11 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (response.status === 404) {
-                    throw new Error("云端未找到备份文件");
-                }
+                if (response.status === 404) throw new Error("云端未找到备份文件");
                 if (!response.ok) throw new Error("下载失败");
 
                 const data = await response.json();
                 
-                // Logic reused from importData
                 if (confirm(`下载成功！\n云端时间: ${data.backupDate || '未知'}\n包含 ${data.achievements?.length || 0} 条成果。\n\n是否合并到当前数据？`)) {
                     const newAchievements = data.achievements || [];
                     const newMembers = data.members || [];
@@ -1206,6 +1193,32 @@
         document.getElementById('fileUpload').classList.remove('has-file');
     }
 
+    // PDF Actions - RESTORED
+    function viewPdf(id) {
+        var item = achievements.find(function(a) { return String(a.id) === String(id); });
+        if (item && item.pdfData) {
+            try {
+                var blob = base64ToBlob(item.pdfData);
+                var url = URL.createObjectURL(blob);
+                window.open(url);
+            } catch (e) {
+                showToast("打开失败", "error");
+            }
+        }
+    }
+
+    function downloadPdf(id) {
+        var item = achievements.find(function(a) { return String(a.id) === String(id); });
+        if (item && item.pdfData) {
+            var a = document.createElement('a');
+            a.href = item.pdfData;
+            a.download = item.pdfName || 'document.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    }
+
     // Sidebar Functions
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
     function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
@@ -1362,6 +1375,9 @@
                 '<div class="result-title">' + escapeHtml(displayTitle) + '</div>' +
                 '<div class="result-meta">' + metaHtml + '</div></div>' +
                 '<div class="result-actions">' +
+                // RESTORED PDF BUTTONS
+                '<button class="action-btn" onclick="event.stopPropagation(); viewPdf(\'' + item.id + '\')" title="预览PDF" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>👁️</button>' +
+                '<button class="action-btn" onclick="event.stopPropagation(); downloadPdf(\'' + item.id + '\')" title="下载PDF" ' + (!item.pdfData ? 'disabled style="opacity:0.3"' : '') + '>⬇️</button>' +
                 '<button class="action-btn delete" onclick="event.stopPropagation(); promptDelete(\'' + item.id + '\', \'achievement\')" title="删除">🗑</button>' +
                 '</div></div>';
         }).join('');
@@ -1575,6 +1591,51 @@
         closeAllMenus();
     }
 
+    // Export Word - RESTORED
+    function exportToWordFile() {
+        var content = '';
+        var title = '';
+        if (currentView === 'member') {
+            title = '团队成员名单';
+            content += '<h1>' + title + '</h1><table border="1" style="border-collapse:collapse;width:100%">';
+            content += '<tr><th>学号/工号</th><th>姓名</th><th>性别</th><th>职称</th><th>单位</th><th>邮箱</th></tr>';
+            members.forEach(function(m) {
+                content += '<tr><td>' + (m.memberNo || '') + '</td><td>' + (m.memberName || '') + '</td><td>' + (m.memberGender || '') + '</td><td>' + (m.memberTitle || '') + '</td><td>' + (m.memberOrg || '') + '</td><td>' + (m.memberEmail || '') + '</td></tr>';
+            });
+            content += '</table>';
+        } else {
+            var typeName = { all: '全部成果', paper: '学术论文', patent: '发明专利', project: '科研项目', award: '获奖情况', book: '专著出版' };
+            title = typeName[currentView] || '科研成果列表';
+            var filtered = achievements;
+            if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; });
+            content += '<h1>' + title + '</h1>';
+            filtered.forEach(function(item, index) {
+                var itemTitle = item.title || item.patentName || item.projectName;
+                var itemDate = item.date || item.applicationDate || item.projectStartDate;
+                var itemAuth = item.authors || item.inventors || item.projectOrg;
+                content += '<p><strong>' + (index + 1) + '. ' + escapeHtml(itemTitle) + '</strong><br>';
+                content += '日期: ' + (itemDate || '-') + ' | 人员: ' + (itemAuth || '-') + '<br>';
+                if (item.source) content += '来源: ' + escapeHtml(item.source) + '<br>';
+                if (item.level) content += '级别: ' + escapeHtml(item.level) + '<br>';
+                if (item.patentNumber) content += '专利号: ' + escapeHtml(item.patentNumber) + '<br>';
+                content += '</p><hr>';
+            });
+        }
+        var header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + title + "</title></head><body>";
+        var footer = "</body></html>";
+        var sourceHTML = header + content + footer;
+        var blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = title + '_' + new Date().toISOString().slice(0, 10) + '.doc';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('✓ Word 导出成功', 'success');
+        closeAllMenus();
+    }
+
     // Basic Import (Local)
     function triggerImport() { document.getElementById('importInput').click(); closeAllMenus(); }
     function importData(event) {
@@ -1599,30 +1660,169 @@
         event.target.value = '';
     }
 
-    // Excel functions omitted for brevity (same as previous, just ensure variables are accessible)
+    // EXCEL IMPORT/EXPORT FUNCTIONS - RESTORED FULL LOGIC
     function exportToExcelFile() {
         if (!typeof XLSX) { showToast('Excel 组件未加载', 'error'); return; }
         var dataToExport = [];
         var sheetName = '';
         if (currentView === 'member') {
             sheetName = '团队成员';
-            dataToExport = members.map(m => ({ '学号': m.memberNo, '姓名': m.memberName, '性别': m.memberGender, '单位': m.memberOrg, '职称': m.memberTitle }));
+            dataToExport = members.map(function(m) {
+                return {
+                    '学号/工号': m.memberNo, '姓名': m.memberName, '性别': m.memberGender,
+                    '单位': m.memberOrg, '职称': m.memberTitle, '邮箱': m.memberEmail
+                };
+            });
         } else {
             var filtered = achievements;
-            if (currentView !== 'all') filtered = filtered.filter(a => a.type === currentView);
+            if (currentView !== 'all') filtered = filtered.filter(function(a) { return a.type === currentView; });
             sheetName = '科研成果';
-            dataToExport = filtered.map(a => ({ '类型': typeConfig[a.type]?.label || a.type, '标题': a.title || a.patentName || a.projectName, '日期': a.date || a.applicationDate || a.projectStartDate }));
+            dataToExport = filtered.map(function(a) {
+                var base = { '类型': typeConfig[a.type]?.label || a.type };
+                if (a.type === 'patent') {
+                    Object.assign(base, { '专利名称': a.patentName, '专利类型': a.patentType, '发明人': a.inventors, '申请日': a.applicationDate, '专利号': a.patentNumber });
+                } else if (a.type === 'project') {
+                    Object.assign(base, { '项目名称': a.projectName, '级别': a.projectLevel, '编号': a.projectNumber, '开始时间': a.projectStartDate });
+                } else {
+                    Object.assign(base, { '标题': a.title, '作者': a.authors, '日期': a.date, '来源': a.source, '级别': a.level });
+                }
+                return base;
+            });
         }
         if (dataToExport.length === 0) { showToast('无数据', 'warning'); return; }
         var wb = XLSX.utils.book_new();
         var ws = XLSX.utils.json_to_sheet(dataToExport);
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
-        XLSX.writeFile(wb, sheetName + '.xlsx');
+        XLSX.writeFile(wb, sheetName + '_' + new Date().toISOString().slice(0, 10) + '.xlsx');
         closeAllMenus();
     }
 
-    function openExcelImport() { document.getElementById('excelModal').classList.add('active'); closeAllMenus(); }
+    function openExcelImport() {
+        document.getElementById('excelModal').classList.add('active');
+        document.getElementById('excelInput').value = '';
+        document.getElementById('excelPreviewContainer').classList.add('hidden');
+        document.getElementById('mappingContainer').classList.add('hidden');
+        document.getElementById('importExcelBtn').disabled = true;
+        document.getElementById('duplicateWarning').classList.add('hidden');
+        excelData = null;
+        closeAllMenus();
+    }
+
     function closeExcelModal() { document.getElementById('excelModal').classList.remove('active'); }
+
+    function handleExcelSelect(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var data = new Uint8Array(e.target.result);
+            var workbook = XLSX.read(data, { type: 'array' });
+            var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            excelData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            if (excelData.length > 0) {
+                excelHeaders = excelData[0];
+                renderExcelPreview();
+                updateMappingFields();
+                document.getElementById('excelPreviewContainer').classList.remove('hidden');
+                document.getElementById('mappingContainer').classList.remove('hidden');
+                document.getElementById('importExcelBtn').disabled = false;
+            } else {
+                showToast('Excel 文件为空', 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function renderExcelPreview() {
+        var html = '<table><thead><tr>';
+        excelHeaders.forEach(function(h) { html += '<th>' + escapeHtml(h) + '</th>'; });
+        html += '</tr></thead><tbody>';
+        for (var i = 1; i < Math.min(excelData.length, 6); i++) {
+            html += '<tr>';
+            var row = excelData[i];
+            excelHeaders.forEach(function(_, idx) { html += '<td>' + escapeHtml(row[idx] || '') + '</td>'; });
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+        document.getElementById('excelPreview').innerHTML = html;
+    }
+
+    function updateMappingFields() {
+        var type = document.getElementById('excelImportType').value;
+        var fields = fieldMappings[type] || [];
+        var container = document.getElementById('mappingFields');
+        var html = '';
+        fields.forEach(function(field) {
+            html += '<div class="mapping-row"><label>' + field.label + (field.required ? ' *' : '') + '</label><select class="field-map-select" data-key="' + field.key + '" data-required="' + field.required + '"><option value="">(不导入)</option>';
+            excelHeaders.forEach(function(header, idx) {
+                var selected = (header.indexOf(field.label) !== -1 || field.label.indexOf(header) !== -1) ? 'selected' : '';
+                html += '<option value="' + idx + '" ' + selected + '>' + escapeHtml(header) + '</option>';
+            });
+            html += '</select></div>';
+        });
+        container.innerHTML = html;
+    }
+
+    function confirmExcelImport() {
+        var type = document.getElementById('excelImportType').value;
+        var selects = document.querySelectorAll('.field-map-select');
+        var mapConfig = {};
+        var hasError = false;
+        selects.forEach(function(sel) {
+            var key = sel.dataset.key;
+            var idx = sel.value;
+            if (sel.dataset.required === 'true' && idx === '') {
+                showToast('请映射必填字段', 'error');
+                sel.style.borderColor = 'var(--danger)';
+                hasError = true;
+            } else {
+                sel.style.borderColor = 'var(--border)';
+                if (idx !== '') mapConfig[key] = parseInt(idx);
+            }
+        });
+        if (hasError) return;
+
+        var importCount = 0;
+        var duplicateCount = 0;
+        var duplicates = [];
+
+        for (var i = 1; i < excelData.length; i++) {
+            var row = excelData[i];
+            if (!row || row.length === 0) continue;
+            var item = { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), createdAt: new Date().toISOString() };
+            if (type !== 'member') item.type = type;
+
+            for (var key in mapConfig) {
+                var colIdx = mapConfig[key];
+                var val = row[colIdx];
+                if (typeof val === 'number' && key.toLowerCase().includes('date') && val > 20000) {
+                    var dateObj = new Date((val - (25567 + 2)) * 86400 * 1000);
+                    val = dateObj.toISOString().slice(0, 10);
+                }
+                item[key] = val !== undefined ? String(val).trim() : '';
+            }
+
+            var isDuplicate = false;
+            if (type === 'member') {
+                isDuplicate = members.some(function(m) { return m.memberNo === item.memberNo; });
+                if (!isDuplicate) { members.push(item); importCount++; } else { duplicates.push(item.memberName + ' (' + item.memberNo + ')'); duplicateCount++; }
+            } else {
+                var uniqueKey = type === 'patent' ? 'patentName' : (type === 'project' ? 'projectName' : 'title');
+                isDuplicate = achievements.some(function(a) { return a[uniqueKey] === item[uniqueKey] && a.type === type; });
+                if (!isDuplicate) { achievements.push(item); importCount++; } else { duplicates.push(item[uniqueKey]); duplicateCount++; }
+            }
+        }
+        saveToLocal(); updateStats(); renderResults();
+        if (duplicateCount > 0) {
+            var warnList = document.getElementById('duplicateList');
+            warnList.innerHTML = duplicates.map(function(d) { return '<li>' + escapeHtml(d) + '</li>'; }).join('');
+            document.getElementById('duplicateWarning').classList.remove('hidden');
+            showToast('导入成功 ' + importCount + ' 条，跳过 ' + duplicateCount + ' 条重复', 'warning');
+        } else {
+            closeExcelModal();
+            showToast('✓ 成功导入 ' + importCount + ' 条数据', 'success');
+        }
+    }
 
     // Toast Notification
     function showToast(message, type) {
@@ -1657,4 +1857,3 @@
 </script>
 </body>
 </html>
-
