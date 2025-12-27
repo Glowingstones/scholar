@@ -3,22 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>科研成果管理系统 (Pro V2.1)</title>
+    <title>科研成果管理系统 (完整版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- CSS 样式表 (保持您原有的所有样式) --- */
-        :root { --bg-primary: #f8fafc; --bg-secondary: #ffffff; --bg-card: #ffffff; --bg-hover: #f1f5f9; --text-primary: #1e293b; --text-secondary: #64748b; --text-muted: #94a3b8; --border: #e2e8f0; --border-light: #f1f5f9; --accent: #6366f1; --accent-light: #eef2ff; --accent-dark: #4f46e5; --success: #10b981; --success-light: #d1fae5; --warning: #f59e0b; --warning-light: #fef3c7; --danger: #ef4444; --danger-light: #fee2e2; --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow: 0 4px 6px -1px rgba(0,0,0,0.1); --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1); --radius: 12px; --radius-sm: 8px; --od-blue: #0078D4; --od-hover: #005a9e; --od-light: #f3f9fd; }
-        html.dark { --bg-primary: #0f172a; --bg-secondary: #1e293b; --bg-card: #1e293b; --bg-hover: #334155; --text-primary: #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b; --border: #334155; --border-light: #1e293b; --accent-light: #312e81; --success-light: #064e3b; --warning-light: #78350f; --danger-light: #7f1d1d; --od-light: #002c4e; }
+        /* --- 基础变量定义 --- */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --accent: #6366f1;
+            --accent-light: #eef2ff;
+            --accent-dark: #4f46e5;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --od-blue: #0078D4;
+            --od-hover: #005a9e;
+            --od-light: #f3f9fd;
+        }
+
+        /* --- 暗黑模式变量 --- */
+        html.dark {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #334155;
+            --border-light: #1e293b;
+            --accent-light: #312e81;
+            --success-light: #064e3b;
+            --warning-light: #78350f;
+            --danger-light: #7f1d1d;
+            --od-light: #002c4e;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; height: 100vh; height: 100dvh; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         .hidden { display: none !important; }
         .app-container { display: flex; height: 100vh; height: 100dvh; overflow: hidden; }
-        .sidebar { width: 280px; background: var(--bg-secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; height: 100%; z-index: 100; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+
+        /* --- 侧边栏样式 (Sidebar) --- */
+        .sidebar { 
+            width: 280px; 
+            background: var(--bg-secondary); 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            height: 100%; 
+            z-index: 100; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .sidebar-header { 
+            padding: 20px; 
+            border-bottom: 1px solid var(--border); 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         .logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.1rem; color: var(--text-primary); }
         .logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
         .nav-menu { flex: 1; padding: 16px 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -30,20 +105,28 @@
         .nav-item.disabled { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
         .nav-item .badge { margin-left: auto; background: var(--bg-hover); padding: 2px 10px; border-radius: 10px; font-size: 0.8rem; font-weight: 600; }
         .nav-item.active .badge { background: var(--accent); color: white; }
+        
         .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); position: relative; }
         .storage-status { font-size: 0.85rem; color: var(--success); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .storage-status.warning { color: var(--warning); }
+        .storage-status .sync-info { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; }
+        
         .data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .data-btn { padding: 10px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-secondary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; text-align: center; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .data-btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent); }
+        .data-btn.disabled { opacity: 0.5; pointer-events: none; background: var(--bg-hover); color: var(--text-muted); border-color: var(--border); }
         .data-btn.onedrive { border-color: var(--od-blue); color: var(--od-blue); }
         .data-btn.onedrive:hover { background: var(--od-light); }
+        
         .dropdown-menu { position: absolute; bottom: 100%; left: 10px; right: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); display: none; z-index: 200; overflow: hidden; margin-bottom: 8px; }
         .dropdown-menu.show { display: block; animation: slideUp 0.2s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .menu-item { padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; border-bottom: 1px solid var(--border-light); min-height: 48px; }
         .menu-item:last-child { border-bottom: none; }
         .menu-item:hover { background: var(--bg-hover); color: var(--accent); }
+        .menu-item.disabled { opacity: 0.5; pointer-events: none; color: var(--text-muted); }
+
+        /* --- 主内容区域 (Main Content) --- */
         .main-content { flex: 1; padding: 20px; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0; gap: 12px; flex-wrap: wrap; }
         .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
@@ -51,6 +134,7 @@
         .search-box { flex: 1; min-width: 200px; max-width: 400px; display: flex; gap: 8px; }
         .search-box input { padding: 12px 16px; border: 2px solid var(--border); border-radius: var(--radius); background: var(--bg-card); color: var(--text-primary); font-size: 16px; width: 100%; transition: all 0.2s; }
         .search-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+        
         .btn { padding: 12px 20px; border-radius: var(--radius); font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; min-height: 48px; }
         .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: white; box-shadow: var(--shadow); }
         .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
@@ -64,6 +148,8 @@
         .btn-od:hover { background: var(--od-hover); }
         .btn-od-outline { background: transparent; border: 2px solid var(--od-blue); color: var(--od-blue); }
         .btn-od-outline:hover { background: var(--od-light); }
+
+        /* --- 统计卡片 (Stats Grid) --- */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; flex-shrink: 0; }
         .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; cursor: pointer; }
         .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--accent); }
@@ -71,12 +157,15 @@
         .stat-icon.papers { background: #dbeafe; } .stat-icon.patents { background: #fef3c7; } .stat-icon.projects { background: #d1fae5; } .stat-icon.awards { background: #fce7f3; } .stat-icon.books { background: #e0e7ff; } .stat-icon.members { background: #f3e8ff; }
         .stat-info h3 { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
         .stat-info p { font-size: 0.75rem; color: var(--text-secondary); }
+
+        /* --- 列表与结果 (List View) --- */
         #listViewContainer { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
         .filter-container { margin-bottom: 12px; flex-shrink: 0; }
         .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
         .filter-chip { padding: 6px 14px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
         .filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+        
         .results-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
         .results-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-secondary); flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
         .results-count { color: var(--text-secondary); font-size: 0.85rem; }
@@ -85,6 +174,7 @@
         .select-all-wrapper:hover { background: var(--bg-hover); }
         .select-all-wrapper input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
         .results-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        
         .result-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background 0.2s; gap: 12px; min-height: 72px; }
         .result-item:hover { background: var(--bg-hover); }
         .result-item:last-child { border-bottom: none; }
@@ -92,17 +182,23 @@
         .result-checkbox { margin-top: 12px; width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
         .result-type { margin-top: 0; width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
         .type-paper { background: #dbeafe; } .type-patent { background: #fef3c7; } .type-project { background: #d1fae5; } .type-award { background: #fce7f3; } .type-book { background: #e0e7ff; } .type-member { background: #f3e8ff; }
+        
         .result-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
         .result-title { font-weight: 600; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 6px; white-space: normal; line-height: 1.4; }
         .result-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
         .result-meta span { display: inline-flex; align-items: center; gap: 3px; white-space: normal; }
         .result-meta .has-pdf { color: var(--accent); font-weight: 500; }
+        
         .result-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; margin-top: 2px; }
         .action-btn { width: 36px; height: 36px; border: none; background: var(--bg-hover); border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 1rem; }
         .action-btn:hover { background: var(--accent-light); color: var(--accent); }
         .action-btn.delete:hover { background: var(--danger-light); color: var(--danger); }
+
         .empty-state { padding: 60px 20px; text-align: center; color: var(--text-secondary); }
         .empty-state h3 { font-size: 1.25rem; margin-bottom: 8px; color: var(--text-primary); }
+        .empty-state p { margin-bottom: 20px; }
+
+        /* --- 模态框 (Modals) --- */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal { background: var(--bg-card); border-radius: var(--radius) var(--radius) 0 0; width: 100%; max-width: 600px; max-height: 90vh; max-height: 90dvh; overflow: hidden; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
@@ -114,59 +210,96 @@
         .modal-close:hover { background: var(--danger-light); color: var(--danger); }
         .modal-body { padding: 20px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
         .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; flex-shrink: 0; }
+
+        /* --- 表单样式 (Forms) --- */
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); font-size: 0.9rem; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); font-size: 16px; transition: all 0.2s; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+        .form-group input:read-only, .form-group select:disabled { background-color: var(--bg-hover); color: var(--text-secondary); cursor: not-allowed; }
         .form-group textarea { min-height: 100px; resize: vertical; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+
         .file-upload { border: 2px dashed var(--border); border-radius: var(--radius); padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; }
         .file-upload:hover { border-color: var(--accent); background: var(--accent-light); }
         .file-upload input { display: none; }
         .file-upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+        .file-upload-text { color: var(--text-secondary); font-size: 0.9rem; }
         .file-upload.has-file { display: none; }
         .file-info { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--accent-light); border-radius: var(--radius-sm); border: 1px solid var(--accent); }
         .file-info-name { display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 500; }
         .file-remove { width: 32px; height: 32px; border: none; background: var(--danger-light); color: var(--danger); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
         .excel-preview { max-height: 200px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); -webkit-overflow-scrolling: touch; }
         .excel-preview table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .excel-preview th, .excel-preview td { padding: 10px 12px; border: 1px solid var(--border); text-align: left; white-space: nowrap; }
         .excel-preview th { background: var(--bg-secondary); font-weight: 600; position: sticky; top: 0; }
         .mapping-row { display: grid; grid-template-columns: 140px 1fr; gap: 12px; align-items: center; margin-bottom: 12px; }
+        .mapping-row label { font-weight: 500; color: var(--text-secondary); font-size: 0.9rem; }
+        .mapping-row select { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); font-size: 16px; }
+
         .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
         .toast { padding: 14px 20px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-lg); font-weight: 500; transform: translateY(-120%); transition: transform 0.3s; text-align: center; }
         .toast.show { transform: translateY(0); }
         .toast.success { background: var(--success-light); border-color: var(--success); color: var(--success); }
         .toast.error { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
         .toast.warning { background: var(--warning-light); border-color: var(--warning); color: var(--warning); }
+
         .duplicate-warning { background: var(--warning-light); border: 1px solid var(--warning); border-radius: var(--radius-sm); padding: 16px; margin-top: 16px; }
+        .duplicate-warning h4 { color: var(--warning); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .duplicate-list { max-height: 150px; overflow-y: auto; font-size: 0.85rem; color: var(--text-secondary); }
         .duplicate-list li { padding: 4px 0; border-bottom: 1px solid var(--warning); }
+        .duplicate-list li:last-child { border-bottom: none; }
+        
         .user-profile { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-sm); background: var(--bg-hover); margin-bottom: 16px; }
         .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--od-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
         .mobile-menu-btn { display: none; position: fixed; top: 12px; left: 12px; z-index: 101; width: 48px; height: 48px; border: none; background: var(--bg-card); border-radius: var(--radius-sm); box-shadow: var(--shadow); font-size: 1.4rem; cursor: pointer; align-items: center; justify-content: center; }
         .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
         .sidebar-overlay.active { display: block; }
+        
         .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
         .loading-spinner.dark { border-color: var(--text-muted); border-top-color: var(--accent); }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
         .confirm-dialog { background: var(--bg-card); border-radius: var(--radius); padding: 24px; max-width: 360px; width: 90%; text-align: center; }
+        .confirm-dialog p { margin-bottom: 20px; font-size: 1.05rem; }
+        .confirm-dialog .btn-group { display: flex; gap: 12px; justify-content: center; }
+        
         .login-overlay { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
+        .login-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; color: var(--accent); }
+        .login-desc { color: var(--text-secondary); margin-bottom: 30px; font-size: 0.95rem; }
+        
         .detail-row { display: flex; padding: 12px 0; border-bottom: 1px solid var(--border-light); }
         .detail-label { width: 100px; flex-shrink: 0; font-weight: 600; color: var(--text-secondary); }
         .detail-value { flex: 1; color: var(--text-primary); word-break: break-all; }
+
+        /* --- 【新增功能样式】 --- */
+        
+        /* 1. 高级搜索面板 */
         .advanced-search-panel { background: var(--bg-hover); padding: 12px; border-radius: var(--radius); margin-bottom: 10px; border: 1px solid var(--border); display: none; }
         .advanced-search-panel.active { display: block; animation: slideDown 0.3s; }
         @keyframes slideDown { from {opacity:0; transform:translateY(-10px);} to {opacity:1; transform:translateY(0);} }
         .adv-row { display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
         .adv-row input, .adv-row select { padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 0.9rem; flex: 1; }
+
+        /* 2. 标签系统 */
         .tag-list { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
         .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; background: var(--accent-light); color: var(--accent); font-weight: 600; }
+
+        /* 3. 分页栏 */
         .pagination-bar { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary); flex-shrink: 0; }
+        .pagination-info { font-size: 0.85rem; color: var(--text-secondary); }
+        .pagination-controls { display: flex; gap: 8px; }
+
+        /* 4. 回收站/日志 */
         .deleted-item { opacity: 0.7; background: var(--bg-hover); }
         .log-entry { font-size: 0.8rem; border-bottom: 1px solid var(--border-light); padding: 8px 0; display: flex; justify-content: space-between; }
         .log-time { color: var(--text-muted); width: 140px; flex-shrink: 0; }
+        
+        /* 5. 智能化功能按钮 */
         .smart-btn { white-space: nowrap; padding: 0 16px; background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent); border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; }
         .ocr-upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; transition: all 0.2s; }
         .ocr-upload-area:hover { border-color: var(--accent); background: var(--accent-light); }
@@ -186,8 +319,21 @@
             .btn { padding: 10px 16px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
             .stat-card { padding: 12px; }
-            .form-row { grid-template-columns: 1fr; }
+            .stat-info h3 { font-size: 1.1rem; }
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
             .mapping-row { grid-template-columns: 1fr; gap: 8px; }
+            .result-actions { opacity: 1; }
+            .result-item { padding: 12px; }
+            .results-header { padding: 10px 12px; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .stat-card { padding: 10px 8px; flex-direction: column; gap: 6px; text-align: center; }
+            .stat-icon { width: 32px; height: 32px; font-size: 1rem; }
+            .stat-info h3 { font-size: 1rem; }
+            .stat-info p { font-size: 0.7rem; }
+            .filter-chip { padding: 5px 10px; font-size: 0.8rem; }
+            .result-meta { font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -195,11 +341,15 @@
 <div id="loginOverlay" class="login-overlay">
     <div class="login-box">
         <div class="logo-icon" style="margin: 0 auto 20px auto;">🔬</div>
-        <div class="login-title" style="font-size:1.8rem;font-weight:700;margin-bottom:20px;color:var(--accent);">科研成果管理</div>
-        <div class="login-desc" style="color:var(--text-secondary);margin-bottom:30px;">请输入访问密码登录系统</div>
-        <div class="form-group"><input type="password" id="loginPassword" placeholder="请输入密码..." onkeyup="if(event.key==='Enter') checkLogin()"></div>
+        <div class="login-title">科研成果管理</div>
+        <div class="login-desc">请输入访问密码登录系统</div>
+        <div class="form-group">
+            <input type="password" id="loginPassword" placeholder="请输入密码..." onkeyup="if(event.key==='Enter') checkLogin()">
+        </div>
         <button class="btn btn-primary" style="width:100%" onclick="checkLogin()">登录</button>
-        <div style="margin-top:15px; font-size:0.8rem; color:var(--text-muted);">管理员: 1399 | 宾客: guest</div>
+        <div style="margin-top:15px; font-size:0.8rem; color:var(--text-muted);">
+            管理员: 1399 | 宾客: guest
+        </div>
     </div>
 </div>
 
@@ -209,40 +359,77 @@
 <div class="app-container">
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="logo"><div class="logo-icon">🔬</div><div><div>科研成果管理</div><div style="font-size:0.7rem;color:var(--text-muted);">Pro V2.1</div></div></div>
+            <div class="logo">
+                <div class="logo-icon">🔬</div>
+                <div>
+                    <div>科研成果管理</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">Pro V2.1</div>
+                </div>
+            </div>
             <div class="theme-toggle" onclick="toggleTheme()" title="切换日/夜模式">🌓</div>
         </div>
+
         <nav class="nav-menu">
             <div class="nav-section">成果管理</div>
-            <div class="nav-item active" data-view="all" onclick="setView('all')">📋 <span>全部成果</span><span class="badge" id="totalCount">0</span></div>
-            <div class="nav-item" data-view="paper" onclick="setView('paper')">📄 <span>学术论文</span><span class="badge" id="paperCount">0</span></div>
-            <div class="nav-item" data-view="patent" onclick="setView('patent')">💡 <span>发明专利</span><span class="badge" id="patentCount">0</span></div>
-            <div class="nav-item" data-view="project" onclick="setView('project')">📊 <span>科研项目</span><span class="badge" id="projectCount">0</span></div>
-            <div class="nav-item" data-view="award" onclick="setView('award')">🏆 <span>获奖情况</span><span class="badge" id="awardCount">0</span></div>
-            <div class="nav-item" data-view="book" onclick="setView('book')">📚 <span>专著出版</span><span class="badge" id="bookCount">0</span></div>
+            <div class="nav-item active" data-view="all" onclick="setView('all')">
+                📋 <span>全部成果</span>
+                <span class="badge" id="totalCount">0</span>
+            </div>
+            <div class="nav-item" data-view="paper" onclick="setView('paper')">
+                📄 <span>学术论文</span>
+                <span class="badge" id="paperCount">0</span>
+            </div>
+            <div class="nav-item" data-view="patent" onclick="setView('patent')">
+                💡 <span>发明专利</span>
+                <span class="badge" id="patentCount">0</span>
+            </div>
+            <div class="nav-item" data-view="project" onclick="setView('project')">
+                📊 <span>科研项目</span>
+                <span class="badge" id="projectCount">0</span>
+            </div>
+            <div class="nav-item" data-view="award" onclick="setView('award')">
+                🏆 <span>获奖情况</span>
+                <span class="badge" id="awardCount">0</span>
+            </div>
+            <div class="nav-item" data-view="book" onclick="setView('book')">
+                📚 <span>专著出版</span>
+                <span class="badge" id="bookCount">0</span>
+            </div>
             <div class="nav-section">团队管理</div>
-            <div class="nav-item" data-view="member" id="navMember" onclick="setView('member')">👥 <span>成员信息</span><span class="badge" id="memberCount">0</span></div>
+            <div class="nav-item" data-view="member" id="navMember" onclick="setView('member')">
+                👥 <span>成员信息</span>
+                <span class="badge" id="memberCount">0</span>
+            </div>
             <div class="nav-section">系统维护</div>
             <div class="nav-item" onclick="openRecycleBin()">♻️ <span>回收站</span></div>
             <div class="nav-item" onclick="openLogsModal()">📜 <span>操作日志</span></div>
         </nav>
+
         <div class="sidebar-footer">
-            <div class="storage-status" id="storageStatus">✓ 数据已本地保存</div>
+            <div class="storage-status" id="storageStatus">
+                ✓ 数据已本地保存
+            </div>
             <div class="data-actions">
                 <button class="data-btn" id="btnExport" onclick="toggleMenu('exportMenu')">📤 导出</button>
                 <button class="data-btn" id="btnImport" onclick="toggleMenu('importMenu')">📥 导入</button>
-                <button class="data-btn onedrive" id="btnOneDrive" onclick="openBackupModal()" style="grid-column: span 2;">☁️ OneDrive 同步</button>
+                <button class="data-btn onedrive" id="btnOneDrive" onclick="openBackupModal()" style="grid-column: span 2;">
+                    ☁️ OneDrive 同步
+                </button>
             </div>
+            
             <div id="exportMenu" class="dropdown-menu">
                 <div class="menu-item" onclick="exportToExcelFile()">📊 导出 Excel (分表)</div>
                 <div class="menu-item" onclick="exportResume()">📝 导出简历 (Word)</div>
                 <div class="menu-item" id="menuExportJson" onclick="exportData()">📦 导出纯 JSON (加密)</div>
             </div>
+
             <div id="importMenu" class="dropdown-menu">
                 <div class="menu-item" onclick="openExcelImport()">📊 导入 Excel</div>
                 <div class="menu-item" onclick="triggerImport()">📂 恢复 JSON</div>
             </div>
+
             <input type="file" id="importInput" class="hidden" accept=".json" onchange="importData(event)">
+            
             <button class="btn btn-sm btn-secondary" onclick="location.reload()" style="width:100%; margin-top:10px;">🔒 退出登录</button>
         </div>
     </aside>
@@ -258,6 +445,7 @@
                 <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">➕ <span id="addBtnText">添加</span></button>
             </div>
         </div>
+
         <div class="advanced-search-panel" id="advancedSearchPanel">
             <div class="adv-row">
                 <input type="date" id="advStartDate" placeholder="开始日期" onchange="handleSearch()">
@@ -268,6 +456,7 @@
             </div>
             <div style="font-size:0.8rem; color:var(--text-secondary)">提示：多条件是“与”的关系</div>
         </div>
+
         <div class="stats-grid" id="statsGrid">
              <div class="stat-card" onclick="setView('paper')"><div class="stat-icon papers">📄</div><div class="stat-info"><h3 id="statPaper">0</h3><p>论文</p></div></div>
              <div class="stat-card" onclick="setView('patent')"><div class="stat-icon patents">💡</div><div class="stat-info"><h3 id="statPatent">0</h3><p>专利</p></div></div>
@@ -276,21 +465,28 @@
              <div class="stat-card" onclick="setView('book')"><div class="stat-icon books">📚</div><div class="stat-info"><h3 id="statBook">0</h3><p>著作</p></div></div>
              <div class="stat-card" onclick="setView('member')"><div class="stat-icon members">👥</div><div class="stat-info"><h3 id="statMember">0</h3><p>成员</p></div></div>
         </div>
+
         <div id="listViewContainer">
             <div class="filter-container">
                 <div class="filter-bar" id="filterBar">
                     <div class="filter-chip active" data-year="all" onclick="setYearFilter('all')">全部年份</div>
                 </div>
             </div>
+
             <div class="results-container" id="resultsContainer">
                 <div class="results-header">
                     <div class="batch-actions">
-                        <label class="select-all-wrapper"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"> <span>全选</span></label>
-                        <button class="btn btn-danger btn-sm" id="batchDeleteBtn" onclick="batchDelete()" style="display:none;">🗑 删除 (<span id="selectedCount">0</span>)</button>
+                        <label class="select-all-wrapper">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            <span>全选</span>
+                        </label>
+                        <button class="btn btn-danger btn-sm" id="batchDeleteBtn" onclick="batchDelete()" style="display:none;">
+                            🗑 删除 (<span id="selectedCount">0</span>)
+                        </button>
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                         <span class="results-count" id="resultsCount">共 0 条</span>
-                        <select id="sortSelect" onchange="handleSort()" style="padding:10px;border-radius:8px;border:2px solid var(--border);">
+                        <select id="sortSelect" onchange="handleSort()" style="padding:10px 12px;border-radius:8px;border:2px solid var(--border);background:var(--bg-card);color:var(--text-primary);font-weight:500;font-size:16px;">
                             <option value="date-desc">最新优先</option>
                             <option value="date-asc">最早优先</option>
                             <option value="title-asc">标题排序</option>
@@ -312,7 +508,10 @@
 
 <div class="modal-overlay" id="formModal">
     <div class="modal wide">
-        <div class="modal-header"><h2 id="modalTitle">添加科研成果</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+        <div class="modal-header">
+            <h2 id="modalTitle">添加科研成果</h2>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
         <div class="modal-body">
             <div id="ocrSection" class="ocr-upload-area hidden" onclick="document.getElementById('ocrInput').click()">
                 <input type="file" id="ocrInput" accept="image/*" class="hidden" onchange="handleOCR(event)">
@@ -320,17 +519,37 @@
                 <div>点击上传证书/专利图片自动识别文字 (OCR)</div>
                 <div id="ocrStatus" style="font-size:0.8rem;color:var(--accent);"></div>
             </div>
+
             <form id="researchForm" onsubmit="handleSubmit(event)">
                 <input type="hidden" id="editId">
                 <div class="form-row">
-                    <div class="form-group"><label>成果类型 *</label><select id="type" required onchange="toggleFormFields()"><option value="">请选择</option><option value="paper">学术论文</option><option value="patent">发明专利</option><option value="project">科研项目</option><option value="award">获奖情况</option><option value="book">专著出版</option></select></div>
-                    <div class="form-group" id="dateGroup"><label>日期 *</label><input type="date" id="date"></div>
+                    <div class="form-group">
+                        <label>成果类型 *</label>
+                        <select id="type" required onchange="toggleFormFields()">
+                            <option value="">请选择</option>
+                            <option value="paper">学术论文</option>
+                            <option value="patent">发明专利</option>
+                            <option value="project">科研项目</option>
+                            <option value="award">获奖情况</option>
+                            <option value="book">专著出版</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="dateGroup">
+                        <label>日期 *</label>
+                        <input type="date" id="date">
+                    </div>
                 </div>
                 <div id="generalFields">
                     <div class="form-group"><label>标题 *</label><input type="text" id="title" placeholder="请输入成果标题"></div>
                     <div class="form-group"><label>作者/成员</label><input type="text" id="authors" placeholder="多个作者用逗号分隔"></div>
                     <div class="form-row"><div class="form-group"><label>来源/期刊</label><input type="text" id="source"></div><div class="form-group"><label>级别</label><input type="text" id="level"></div></div>
-                    <div class="form-group"><label>DOI</label><div class="input-group"><input type="text" id="doi" placeholder="如 10.1038/xxx"><button type="button" class="smart-btn" onclick="fetchDoiMetadata()">🌐 抓取</button></div></div>
+                    <div class="form-group">
+                        <label>DOI (自动填表)</label>
+                        <div class="input-group">
+                            <input type="text" id="doi" placeholder="如 10.1038/xxx">
+                            <button type="button" class="smart-btn" onclick="fetchDoiMetadata()">🌐 抓取</button>
+                        </div>
+                    </div>
                 </div>
                 <div id="patentFields" class="hidden">
                     <div class="form-group"><label>专利名称 *</label><input type="text" id="patentName"></div>
@@ -354,40 +573,88 @@
                 <div id="bookFields" class="hidden">
                     <div class="form-group"><label>著作名称 *</label><input type="text" id="bookTitle"></div>
                     <div class="form-group"><label>作者</label><input type="text" id="bookAuthors"></div>
-                    <div class="form-row"><div class="form-group"><label>出版社</label><input type="text" id="bookPublisher"></div><div class="form-group"><label>ISBN</label><div class="input-group"><input type="text" id="bookIsbn"><button type="button" class="smart-btn" onclick="fetchIsbnMetadata()">📚 抓取</button></div></div></div>
+                    <div class="form-row"><div class="form-group"><label>出版社</label><input type="text" id="bookPublisher"></div>
+                    <div class="form-group"><label>ISBN</label><div class="input-group"><input type="text" id="bookIsbn"><button type="button" class="smart-btn" onclick="fetchIsbnMetadata()">📚 抓取</button></div></div>
+                    </div>
                     <div class="form-group"><label>出版日期</label><input type="date" id="bookDate"></div>
                 </div>
-                <div class="form-group"><label>🏷️ 标签</label><input type="text" id="tags" placeholder="例如: #重点项目 #风电"></div>
-                <div class="form-group"><label>📎 附件</label><div class="file-upload" id="fileUpload" onclick="document.getElementById('pdfInput').click()"><input type="file" id="pdfInput" accept=".pdf,.doc,.docx,.xlsx,.zip" onchange="handleFileSelect(event)"><div class="file-upload-icon">📄</div><div class="file-upload-text">点击上传文件</div></div><div class="file-info hidden" id="fileInfo"><span class="file-info-name"><span>📄</span><span id="fileName"></span></span><button type="button" class="file-remove" onclick="removeFile()">✕</button></div></div>
+                
+                <div class="form-group">
+                    <label>🏷️ 标签 (Tag)</label>
+                    <input type="text" id="tags" placeholder="例如: #重点项目 #风电 (空格分隔)">
+                </div>
+
+                <div class="form-group">
+                    <label>📎 附件 (PDF, Word, Excel, PPT, Zip 等)</label>
+                    <div class="file-upload" id="fileUpload" onclick="document.getElementById('pdfInput').click()">
+                        <input type="file" id="pdfInput" accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.txt" onchange="handleFileSelect(event)">
+                        <div class="file-upload-icon">📄</div>
+                        <div class="file-upload-text">点击上传文件</div>
+                    </div>
+                    <div class="file-info hidden" id="fileInfo">
+                        <span class="file-info-name"><span>📄</span><span id="fileName"></span></span>
+                        <button type="button" class="file-remove" onclick="removeFile()">✕</button>
+                    </div>
+                </div>
             </form>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button><button type="submit" form="researchForm" class="btn btn-primary" id="submitBtn">保存</button></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+            <button type="submit" form="researchForm" class="btn btn-primary" id="submitBtn">保存</button>
+        </div>
     </div>
 </div>
 
 <div class="modal-overlay" id="detailModal">
     <div class="modal wide">
-        <div class="modal-header"><h2 id="detailTitle">详细信息</h2><button class="modal-close" onclick="closeDetailModal()">✕</button></div>
+        <div class="modal-header">
+            <h2 id="detailTitle">详细信息</h2>
+            <button class="modal-close" onclick="closeDetailModal()">✕</button>
+        </div>
         <div class="modal-body" id="detailContent"></div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeDetailModal()">关闭</button><button type="button" class="btn btn-primary" id="detailEditBtn" onclick="editFromDetail()">✎ 编辑</button></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">关闭</button>
+            <button type="button" class="btn btn-primary" id="detailEditBtn" onclick="editFromDetail()">✎ 编辑</button>
+        </div>
     </div>
 </div>
 
 <div class="modal-overlay" id="memberModal">
     <div class="modal wide">
-        <div class="modal-header"><h2 id="memberModalTitle">添加成员</h2><button class="modal-close" onclick="closeMemberModal()">✕</button></div>
+        <div class="modal-header">
+            <h2 id="memberModalTitle">添加成员</h2>
+            <button class="modal-close" onclick="closeMemberModal()">✕</button>
+        </div>
         <div class="modal-body">
             <form id="memberForm" onsubmit="handleMemberSubmit(event)">
                 <input type="hidden" id="memberEditId">
-                <div class="form-row"><div class="form-group"><label>学号/工号 *</label><input type="text" id="memberNo" required></div><div class="form-group"><label>姓名 *</label><input type="text" id="memberName" required></div></div>
-                <div class="form-row"><div class="form-group"><label>性别</label><select id="memberGender"><option value="男">男</option><option value="女">女</option></select></div><div class="form-group"><label>民族</label><input type="text" id="memberNation"></div></div>
-                <div class="form-group"><label>证件号码</label><input type="text" id="memberIdCard" oninput="handleIdCardInput(this)"></div>
-                <div class="form-row"><div class="form-group"><label>出生年月</label><input type="text" id="memberDob"></div><div class="form-group"><label>电话</label><input type="text" id="memberPhone"></div></div>
-                <div class="form-row"><div class="form-group"><label>单位</label><input type="text" id="memberOrg"></div><div class="form-group"><label>职称</label><input type="text" id="memberTitle"></div></div>
+                <div class="form-row">
+                    <div class="form-group"><label>学号/工号 *</label><input type="text" id="memberNo" required></div>
+                    <div class="form-group"><label>姓名 *</label><input type="text" id="memberName" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>性别</label><select id="memberGender"><option value="男">男</option><option value="女">女</option></select></div>
+                    <div class="form-group"><label>民族</label><input type="text" id="memberNation"></div>
+                </div>
+                <div class="form-group">
+                    <label>证件号码 (自动填写生日)</label>
+                    <input type="text" id="memberIdCard" oninput="handleIdCardInput(this)">
+                </div>
+                <div class="form-row">
+                     <div class="form-group"><label>出生年月</label><input type="text" id="memberDob" placeholder="YYYY-MM-DD"></div>
+                     <div class="form-group"><label>电话</label><input type="text" id="memberPhone"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>单位</label><input type="text" id="memberOrg"></div>
+                    <div class="form-group"><label>职称</label><input type="text" id="memberTitle"></div>
+                </div>
                 <div class="form-group"><label>邮箱</label><input type="email" id="memberEmail"></div>
             </form>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeMemberModal()">取消</button><button type="submit" form="memberForm" class="btn btn-primary">保存</button></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeMemberModal()">取消</button>
+            <button type="submit" form="memberForm" class="btn btn-primary">保存</button>
+        </div>
     </div>
 </div>
 
@@ -407,242 +674,407 @@
 
 <div class="modal-overlay" id="backupModal">
     <div class="modal">
-        <div class="modal-header"><h2>☁️ 数据同步与备份</h2><button class="modal-close" onclick="closeBackupModal()">✕</button></div>
+        <div class="modal-header">
+            <h2>☁️ 数据同步与备份</h2>
+            <button class="modal-close" onclick="closeBackupModal()">✕</button>
+        </div>
         <div class="modal-body">
             <div class="backup-section" style="background:var(--od-light); border-color:var(--od-blue);">
-                <h4 style="color:var(--od-blue)">☁️ OneDrive 同步</h4>
-                <div id="onedrive-login-panel"><button class="btn btn-od" onclick="OneDriveService.signIn()" style="width:100%">🔑 登录</button></div>
-                <div id="onedrive-actions-panel" class="hidden"><div class="user-profile"><div class="user-avatar" id="odUserInitials">?</div><div style="flex:1;"><div style="font-weight:600;" id="odUserName"></div><div style="font-size:0.75rem;" id="odUserEmail"></div></div><button class="btn btn-sm btn-secondary" onclick="OneDriveService.signOut()">注销</button></div><div style="display:grid; gap:10px;"><button class="btn btn-od" id="btnOdUpload" onclick="OneDriveService.upload()">⬆️ 上传</button><button class="btn btn-od-outline" id="btnOdDownload" onclick="OneDriveService.download()">⬇️ 恢复</button></div></div>
+                <h4 style="color:var(--od-blue)">☁️ Microsoft OneDrive 同步 (Beta)</h4>
+                <div class="backup-info">
+                    登录微软账号，将数据直接同步到您的 OneDrive 个人空间。<br>
+                    路径: <code>/Apps/ResearchManager/backup.json</code>
+                </div>
+                <div id="onedrive-login-panel">
+                     <button class="btn btn-od" onclick="OneDriveService.signIn()" style="width:100%">🔑 登录微软账号</button>
+                </div>
+                <div id="onedrive-actions-panel" class="hidden">
+                    <div class="user-profile">
+                        <div class="user-avatar" id="odUserInitials">?</div>
+                        <div style="flex:1;overflow:hidden;">
+                            <div style="font-weight:600;" id="odUserName">User</div>
+                            <div style="font-size:0.75rem;color:var(--text-secondary);" id="odUserEmail">email</div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="OneDriveService.signOut()">注销</button>
+                    </div>
+                    <div style="display:grid; gap:10px;">
+                        <button class="btn btn-od" id="btnOdUpload" onclick="OneDriveService.upload()">
+                            ⬆️ 上传当前数据到云端
+                        </button>
+                        <button class="btn btn-od-outline" id="btnOdDownload" onclick="OneDriveService.download()">
+                            ⬇️ 从云端恢复/合并数据
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div style="border-top:1px solid var(--border); padding-top:20px; margin-top:20px;"><h4 style="margin-bottom:12px;">💾 本地备份</h4><div style="display:flex; gap:10px;"><button class="btn btn-secondary" id="btnLocalExport" onclick="exportData()" style="flex:1;">导出 JSON</button><button class="btn btn-secondary" onclick="triggerImport()" style="flex:1;">导入 JSON</button></div></div>
+            <div style="border-top:1px solid var(--border); padding-top:20px; margin-top:20px;">
+                <h4 style="margin-bottom:12px;font-size:1rem;">💾 本地文件备份</h4>
+                <div class="backup-info">将数据导出为 JSON 文件保存到本地磁盘。</div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn btn-secondary" id="btnLocalExport" style="flex:1;" onclick="exportData()">导出 JSON</button>
+                    <button class="btn btn-secondary" style="flex:1;" onclick="triggerImport()">导入 JSON</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="modal-overlay" id="recycleModal"><div class="modal wide"><div class="modal-header"><h2>♻️ 回收站</h2><button class="modal-close" onclick="closeRecycleModal()">✕</button></div><div class="modal-body" id="recycleList" style="min-height:200px"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeRecycleModal()">关闭</button></div></div></div>
-<div class="modal-overlay" id="logsModal"><div class="modal wide"><div class="modal-header"><h2>📜 操作日志</h2><button class="modal-close" onclick="document.getElementById('logsModal').classList.remove('active')">✕</button></div><div class="modal-body" id="logsList" style="min-height:200px"></div></div></div>
-<div class="modal-overlay" id="confirmModal"><div class="confirm-dialog"><p id="confirmMessage">确定要删除吗？</p><div class="btn-group"><button class="btn btn-secondary" onclick="closeConfirmModal()">取消</button><button class="btn btn-danger" onclick="confirmDelete()">删除</button></div></div></div>
-<div class="toast-container" id="toastContainer"></div>
+<div class="modal-overlay" id="recycleModal">
+    <div class="modal wide">
+        <div class="modal-header"><h2>♻️ 回收站</h2><button class="modal-close" onclick="closeRecycleModal()">✕</button></div>
+        <div class="modal-body" id="recycleList" style="min-height:200px"></div>
+        <div class="modal-footer"><button class="btn btn-secondary" onclick="closeRecycleModal()">关闭</button></div>
+    </div>
+</div>
 
+<div class="modal-overlay" id="logsModal">
+    <div class="modal wide">
+        <div class="modal-header"><h2>📜 操作日志</h2><button class="modal-close" onclick="document.getElementById('logsModal').classList.remove('active')">✕</button></div>
+        <div class="modal-body" id="logsList" style="min-height:200px"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+    <div class="confirm-dialog">
+        <p id="confirmMessage">确定要删除这条记录吗？</p>
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="closeConfirmModal()">取消</button>
+            <button class="btn btn-danger" onclick="confirmDelete()">删除</button>
+        </div>
+    </div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
 <script>
     // --- 全局状态 ---
-    let currentUserRole = null;
+    let currentUserRole = null; // 'admin' or 'guest'
     let achievements = [];
     let members = [];
+    
+    // 【新增】回收站与日志
     let trashBin = [];
     let actionLogs = [];
+    
     let currentView = 'all';
+    let currentYearFilter = 'all';
     let searchQuery = '';
     let sortOrder = 'date-desc';
     let selectedItems = new Set();
     let deleteTargetIds = [];
     let deleteTargetType = 'achievement';
+    
+    // 【新增】分页与高级搜索
     let currentPage = 1;
     const pageSize = 50;
     let advFilter = { start: '', end: '', author: '', tag: '' };
-    let currentPdfData = null; let currentPdfName = null;
-    let excelData = null; let excelHeaders = [];
+
+    // 文件处理状态
+    let currentPdfData = null; 
+    let currentPdfName = null;
+    let excelData = null;
+    let excelHeaders = [];
     let currentDetailId = null;
 
-    // 数据库初始化
-    const DB_NAME = 'ResearchDB_V6_Pro';
-    let db;
-    function initDB() { return new Promise((resolve, reject) => { var r = indexedDB.open(DB_NAME, 1); r.onerror = e => reject(e); r.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains('appState')) e.target.result.createObjectStore('appState', { keyPath: 'id' }); }; r.onsuccess = e => { db = e.target.result; resolve(db); }; }); }
-    async function saveToLocal() { if (!db) await initDB(); var t = db.transaction(['appState'], 'readwrite'); const safeMembers = members.map(m => ({ ...m, memberIdCard: m.memberIdCard ? btoa(m.memberIdCard) : '', memberPhone: m.memberPhone ? btoa(m.memberPhone) : '' })); t.objectStore('appState').put({ id: 'main_data', achievements: achievements, members: safeMembers, trashBin: trashBin, actionLogs: actionLogs, updatedAt: new Date().toISOString() }); updateStorageStatus(true); }
-    async function loadFromLocal() { if (!db) await initDB(); return new Promise(resolve => { var r = db.transaction(['appState'], 'readonly').objectStore('appState').get('main_data'); r.onsuccess = e => { if (e.target.result) { achievements = e.target.result.achievements || []; members = (e.target.result.members || []).map(m => ({ ...m, memberIdCard: m.memberIdCard ? atob(m.memberIdCard) : '', memberPhone: m.memberPhone ? atob(m.memberPhone) : '' })); trashBin = e.target.result.trashBin || []; actionLogs = e.target.result.actionLogs || []; resolve(true); } else resolve(false); }; r.onerror = () => resolve(false); }); }
-    function logAction(action, detail) { actionLogs.unshift({ time: new Date().toLocaleString(), user: currentUserRole || 'unknown', action: action, detail: detail }); if(actionLogs.length > 500) actionLogs.pop(); saveToLocal(); }
+    var typeConfig = {
+        paper: { icon: '📄', label: '学术论文', class: 'type-paper' },
+        patent: { icon: '💡', label: '发明专利', class: 'type-patent' },
+        project: { icon: '📊', label: '科研项目', class: 'type-project' },
+        award: { icon: '🏆', label: '获奖情况', class: 'type-award' },
+        book: { icon: '📚', label: '专著出版', class: 'type-book' },
+        member: { icon: '👤', label: '成员信息', class: 'type-member' }
+    };
 
-    // --- 登录与权限 ---
+    var fieldMappings = {
+        paper: [{ key: 'title', label: '标题', required: true }, { key: 'authors', label: '作者' }, { key: 'date', label: '发表日期' }, { key: 'source', label: '期刊/来源' }, { key: 'level', label: '级别' }, { key: 'doi', label: 'DOI' }],
+        patent: [{ key: 'patentName', label: '专利名称', required: true }, { key: 'patentType', label: '专利类型' }, { key: 'inventors', label: '发明人' }, { key: 'patentOwner', label: '专利权人' }, { key: 'applicationDate', label: '申请日' }, { key: 'grantDate', label: '授权时间' }, { key: 'patentNumber', label: '专利号' }, { key: 'patentStatus', label: '专利状态' }],
+        project: [{ key: 'projectName', label: '项目名称', required: true }, { key: 'projectLevel', label: '项目级别' }, { key: 'projectNumber', label: '项目编号' }, { key: 'projectStartDate', label: '开始时间' }, { key: 'projectEndDate', label: '结束时间' }, { key: 'projectOrg', label: '所属单位' }],
+        award: [{ key: 'awardName', label: '奖项名称', required: true }, { key: 'awardRecipients', label: '获奖人' }, { key: 'awardDate', label: '获奖日期' }, { key: 'awardLevel', label: '级别' }, { key: 'awardAgency', label: '授奖单位' }],
+        book: [{ key: 'bookTitle', label: '著作名称', required: true }, { key: 'bookAuthors', label: '作者' }, { key: 'bookDate', label: '出版日期' }, { key: 'bookPublisher', label: '出版社' }, { key: 'bookIsbn', label: 'ISBN' }],
+        member: [{ key: 'memberNo', label: '学号/工号', required: true }, { key: 'memberName', label: '姓名', required: true }, { key: 'memberGender', label: '性别' }, { key: 'memberOrg', label: '工作单位' }, { key: 'memberTitle', label: '职称' }, { key: 'memberEmail', label: '邮箱' }, { key: 'memberIdCard', label: '证件号码' }, { key: 'memberDob', label: '出生年月' }, { key: 'memberNation', label: '民族' }, { key: 'memberPhone', label: '电话' }]
+    };
+
+    // 数据库初始化
+    const DB_NAME = 'ResearchDB_V6_Pro'; 
+    const DB_VERSION = 1;
+    let db;
+    function initDB() { return new Promise((resolve, reject) => { var r = indexedDB.open(DB_NAME, DB_VERSION); r.onerror = e => reject(e); r.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains('appState')) e.target.result.createObjectStore('appState', { keyPath: 'id' }); }; r.onsuccess = e => { db = e.target.result; resolve(db); }; }); }
+    
+    // 数据存取（增加敏感加密）
+    async function saveToLocal() { 
+        if (!db) await initDB(); 
+        var t = db.transaction(['appState'], 'readwrite'); 
+        const safeMembers = members.map(m => ({
+            ...m,
+            memberIdCard: m.memberIdCard ? btoa(m.memberIdCard) : '',
+            memberPhone: m.memberPhone ? btoa(m.memberPhone) : ''
+        }));
+        t.objectStore('appState').put({ 
+            id: 'main_data', 
+            achievements: achievements, 
+            members: safeMembers, 
+            trashBin: trashBin, 
+            actionLogs: actionLogs, 
+            updatedAt: new Date().toISOString() 
+        }); 
+        updateStorageStatus(true); 
+    }
+    
+    async function loadFromLocal() { 
+        if (!db) await initDB(); 
+        return new Promise(resolve => { 
+            var r = db.transaction(['appState'], 'readonly').objectStore('appState').get('main_data'); 
+            r.onsuccess = e => { 
+                if (e.target.result) { 
+                    achievements = e.target.result.achievements || []; 
+                    members = (e.target.result.members || []).map(m => ({
+                        ...m,
+                        memberIdCard: m.memberIdCard ? atob(m.memberIdCard) : '',
+                        memberPhone: m.memberPhone ? atob(m.memberPhone) : ''
+                    }));
+                    trashBin = e.target.result.trashBin || [];
+                    actionLogs = e.target.result.actionLogs || [];
+                    resolve(true); 
+                } else resolve(false); 
+            }; 
+            r.onerror = () => resolve(false); 
+        }); 
+    }
+    
+    function logAction(action, detail) {
+        actionLogs.unshift({ time: new Date().toLocaleString(), user: currentUserRole || 'unknown', action: action, detail: detail });
+        if(actionLogs.length > 500) actionLogs.pop();
+        saveToLocal();
+    }
+
+    // --- 登录系统 ---
     function checkLogin() {
         const pwd = document.getElementById('loginPassword').value;
-        if (pwd === '1399') { currentUserRole = 'admin'; document.getElementById('loginOverlay').style.display = 'none'; logAction('Login', '管理员登录'); applyPermissions(); showToast('管理员登录成功', 'success'); } 
-        else if (pwd === 'guest') { currentUserRole = 'guest'; document.getElementById('loginOverlay').style.display = 'none'; logAction('Login', '宾客登录'); applyPermissions(); showToast('宾客登录成功', 'success'); } 
-        else { showToast('密码错误', 'error'); }
+        const overlay = document.getElementById('loginOverlay');
+        if (pwd === '1399') {
+            currentUserRole = 'admin'; overlay.style.display = 'none';
+            logAction('Login', '管理员登录'); applyPermissions(); showToast('管理员登录成功', 'success');
+        } else if (pwd === 'guest') {
+            currentUserRole = 'guest'; overlay.style.display = 'none';
+            logAction('Login', '宾客登录'); applyPermissions(); showToast('宾客登录成功', 'success');
+        } else { showToast('密码错误', 'error'); }
     }
+
     function applyPermissions() {
         const isAdmin = currentUserRole === 'admin';
         document.getElementById('navMember').classList.toggle('disabled', !isAdmin);
-        const btnOdUpload = document.getElementById('btnOdUpload'); if(btnOdUpload) btnOdUpload.disabled = !isAdmin;
-        const btnLocalExport = document.getElementById('btnLocalExport'); if(btnLocalExport) btnLocalExport.disabled = !isAdmin;
+        const btnOdUpload = document.getElementById('btnOdUpload');
+        const btnLocalExport = document.getElementById('btnLocalExport');
+        if(btnOdUpload) btnOdUpload.disabled = !isAdmin;
+        if(btnLocalExport) btnLocalExport.disabled = !isAdmin;
         updateBatchDeleteBtn();
     }
 
-    // --- 界面交互 ---
+    // --- 界面交互逻辑 ---
     function toggleTheme() { document.documentElement.classList.toggle('dark'); logAction('UX', '切换主题'); }
-    new Sortable(document.getElementById('resultsList'), { animation: 150, handle: '.result-item' });
-    function renderPagination(totalItems) { const totalPages = Math.ceil(totalItems / pageSize) || 1; document.getElementById('paginationInfo').textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`; }
-    function prevPage() { if(currentPage > 1) { currentPage--; renderResults(); } }
-    function nextPage() { const filtered = getFilteredData(); const maxPage = Math.ceil(filtered.length / pageSize) || 1; if(currentPage < maxPage) { currentPage++; renderResults(); } }
     
-    // --- 智能化功能 ---
-    async function fetchDoiMetadata() {
-        const doi = document.getElementById('doi').value.trim(); if(!doi) return showToast('请输入 DOI', 'warning');
-        try { const res = await fetch(`https://api.crossref.org/works/${doi}`); if(!res.ok) throw new Error('未找到'); const data = await res.json(); const item = data.message; document.getElementById('title').value = item.title ? item.title[0] : ''; if(item.author) document.getElementById('authors').value = item.author.map(a => `${a.given} ${a.family}`).join(', '); document.getElementById('source').value = item['container-title'] ? item['container-title'][0] : ''; if(item.published && item.published['date-parts']) { const p = item.published['date-parts'][0]; document.getElementById('date').value = `${p[0]}-${String(p[1]||1).padStart(2,'0')}-${String(p[2]||1).padStart(2,'0')}`; } showToast('✓ 抓取成功', 'success'); } catch(e) { showToast('抓取失败: ' + e.message, 'error'); }
+    // 分页
+    function renderPagination(totalItems) {
+        const totalPages = Math.ceil(totalItems / pageSize) || 1;
+        document.getElementById('paginationInfo').textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
     }
-    async function fetchIsbnMetadata() {
-        const isbn = document.getElementById('bookIsbn').value.replace(/-/g, '').trim(); if(!isbn) return showToast('请输入 ISBN', 'warning');
-        try { const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`); if(!res.ok) throw new Error('未找到图书'); const data = await res.json(); document.getElementById('bookTitle').value = data.title; if(data.publish_date) document.getElementById('bookDate').value = new Date(data.publish_date).toISOString().slice(0,10); if(data.publishers) document.getElementById('bookPublisher').value = data.publishers[0]; showToast('✓ 抓取成功', 'success'); } catch(e) { showToast('抓取失败: ' + e.message, 'error'); }
-    }
-    async function handleOCR(event) {
-        const file = event.target.files[0]; if(!file) return; const statusDiv = document.getElementById('ocrStatus'); statusDiv.textContent = '识别中...';
-        try { const result = await Tesseract.recognize(file, 'chi_sim', { logger: m => statusDiv.textContent = `进度: ${(m.progress * 100).toFixed(0)}%` }); const text = result.data.text; if(text.match(/ZL/)) document.getElementById('patentNumber').value = (text.match(/ZL\s?\d+/) || [''])[0]; const dateMatch = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/); if(dateMatch) document.getElementById('date').value = `${dateMatch[1]}-${dateMatch[2].padStart(2,'0')}-${dateMatch[3].padStart(2,'0')}`; if(!document.getElementById('title').value) document.getElementById('title').value = text.split('\n')[0].substring(0,20); showToast('OCR 识别完成', 'success'); } catch(e) { showToast('OCR 失败', 'error'); }
+    function prevPage() { if(currentPage > 1) { currentPage--; renderResults(); } }
+    function nextPage() { 
+        const filtered = getFilteredData();
+        const maxPage = Math.ceil(filtered.length / pageSize) || 1;
+        if(currentPage < maxPage) { currentPage++; renderResults(); } 
     }
 
-    // --- 核心渲染与过滤 ---
+    // 高级搜索
+    function toggleAdvancedSearch() { document.getElementById('advancedSearchPanel').classList.toggle('active'); }
+    function handleSearch() {
+        searchQuery = document.getElementById('searchInput').value.toLowerCase();
+        advFilter.start = document.getElementById('advStartDate').value;
+        advFilter.end = document.getElementById('advEndDate').value;
+        advFilter.author = document.getElementById('advAuthor').value;
+        advFilter.tag = document.getElementById('advTag').value;
+        currentPage = 1; renderResults();
+    }
+
+    // --- 智能化功能 ---
+    async function fetchDoiMetadata() {
+        const doi = document.getElementById('doi').value.trim();
+        if(!doi) return showToast('请输入 DOI', 'warning');
+        try {
+            const res = await fetch(`https://api.crossref.org/works/${doi}`);
+            if(!res.ok) throw new Error('未找到');
+            const data = await res.json();
+            const item = data.message;
+            document.getElementById('title').value = item.title ? item.title[0] : '';
+            if(item.author) document.getElementById('authors').value = item.author.map(a => `${a.given} ${a.family}`).join(', ');
+            document.getElementById('source').value = item['container-title'] ? item['container-title'][0] : '';
+            if(item.published && item.published['date-parts']) {
+                const p = item.published['date-parts'][0];
+                document.getElementById('date').value = `${p[0]}-${String(p[1]||1).padStart(2,'0')}-${String(p[2]||1).padStart(2,'0')}`;
+            }
+            showToast('✓ 抓取成功', 'success');
+        } catch(e) { showToast('抓取失败: ' + e.message, 'error'); }
+    }
+
+    async function fetchIsbnMetadata() {
+        const isbn = document.getElementById('bookIsbn').value.replace(/-/g, '').trim();
+        if(!isbn) return showToast('请输入 ISBN', 'warning');
+        try {
+            const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
+            if(!res.ok) throw new Error('未找到图书');
+            const data = await res.json();
+            document.getElementById('bookTitle').value = data.title;
+            if(data.publish_date) document.getElementById('bookDate').value = new Date(data.publish_date).toISOString().slice(0,10);
+            if(data.publishers) document.getElementById('bookPublisher').value = data.publishers[0];
+            showToast('✓ 抓取成功', 'success');
+        } catch(e) { showToast('抓取失败: ' + e.message, 'error'); }
+    }
+
+    async function handleOCR(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+        const statusDiv = document.getElementById('ocrStatus');
+        statusDiv.textContent = '识别中...';
+        try {
+            const result = await Tesseract.recognize(file, 'chi_sim', { logger: m => statusDiv.textContent = `进度: ${(m.progress * 100).toFixed(0)}%` });
+            const text = result.data.text;
+            if(text.match(/ZL/)) document.getElementById('patentNumber').value = (text.match(/ZL\s?\d+/) || [''])[0];
+            const dateMatch = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+            if(dateMatch) document.getElementById('date').value = `${dateMatch[1]}-${dateMatch[2].padStart(2,'0')}-${dateMatch[3].padStart(2,'0')}`;
+            if(!document.getElementById('title').value) document.getElementById('title').value = text.split('\n')[0].substring(0,20);
+            showToast('OCR 识别完成', 'success');
+        } catch(e) { showToast('OCR 失败', 'error'); }
+    }
+
+    // --- 核心列表渲染 (含分页过滤) ---
     function getFilteredData() {
         let filtered = achievements.slice();
         if (currentView === 'member') return members.slice(); 
+        
         if (currentView !== 'all') filtered = filtered.filter(a => a.type === currentView);
-        if (searchQuery) filtered = filtered.filter(a => Object.values(a).join(' ').toLowerCase().includes(searchQuery.toLowerCase()));
+        if (searchQuery) filtered = filtered.filter(a => Object.values(a).join(' ').toLowerCase().includes(searchQuery));
+        
         if (advFilter.start) filtered = filtered.filter(a => (a.date||'').substring(0,10) >= advFilter.start);
         if (advFilter.end) filtered = filtered.filter(a => (a.date||'').substring(0,10) <= advFilter.end);
         if (advFilter.author) filtered = filtered.filter(a => (a.authors||a.inventors||'').includes(advFilter.author));
         if (advFilter.tag) filtered = filtered.filter(a => (a.tags||'').includes(advFilter.tag.replace('#','')));
-        filtered.sort((a, b) => { const dA = a.date||'0', dB = b.date||'0'; return sortOrder==='date-desc' ? dB.localeCompare(dA) : sortOrder==='date-asc' ? dA.localeCompare(dB) : (a.title||'').localeCompare(b.title||''); });
+
+        filtered.sort((a, b) => {
+            const dA = a.date || a.applicationDate || '0';
+            const dB = b.date || b.applicationDate || '0';
+            if (sortOrder === 'date-desc') return dB.localeCompare(dA);
+            if (sortOrder === 'date-asc') return dA.localeCompare(dB);
+            if (sortOrder === 'title-asc') return (a.title||'').localeCompare(b.title||'');
+            return 0;
+        });
         return filtered;
     }
 
     function renderResults() {
         const container = document.getElementById('resultsList');
         if (currentView === 'member') { renderMembers(container); return; }
+        
         const filtered = getFilteredData();
         const totalItems = filtered.length;
         document.getElementById('resultsCount').textContent = `共 ${totalItems} 条`;
         renderPagination(totalItems);
+
         const start = (currentPage - 1) * pageSize;
         const pageItems = filtered.slice(start, start + pageSize);
+
         if (pageItems.length === 0) { container.innerHTML = '<div class="empty-state"><h3>暂无记录</h3></div>'; return; }
+
         container.innerHTML = pageItems.map(item => {
             const config = { paper: {icon:'📄',class:'type-paper'}, patent: {icon:'💡',class:'type-patent'}, project: {icon:'📊',class:'type-project'}, award: {icon:'🏆',class:'type-award'}, book: {icon:'📚',class:'type-book'} }[item.type] || {icon:'📄',class:'type-paper'};
             let title = item.title || item.patentName || item.projectName;
             let date = item.date || item.applicationDate;
             let tagsHtml = item.tags ? item.tags.split(' ').map(t => `<span class="tag">${t.replace('#','')}</span>`).join('') : '';
             const isChecked = selectedItems.has(item.id) ? 'checked' : '';
-            return `<div class="result-item" onclick="viewDetail('${item.id}')"><input type="checkbox" class="result-checkbox" data-id="${item.id}" ${isChecked} onclick="toggleItemSelect('${item.id}', event)"><div class="result-type ${config.class}">${config.icon}</div><div class="result-content"><div class="result-title">${escapeHtml(title)}</div><div class="result-meta"><span>📅 ${date||'-'}</span>${tagsHtml?`<div class="tag-list">${tagsHtml}</div>`:''}</div></div><div class="result-actions"><button class="action-btn" onclick="event.stopPropagation(); viewFile('${item.id}')" ${!item.pdfData?'disabled style="opacity:0.3"':''}>👁️</button><button class="action-btn delete" onclick="event.stopPropagation(); promptDelete('${item.id}', 'achievement')">🗑</button></div></div>`;
+            
+            return `<div class="result-item" onclick="viewDetail('${item.id}')">
+                <input type="checkbox" class="result-checkbox" data-id="${item.id}" ${isChecked} onclick="toggleItemSelect('${item.id}', event)">
+                <div class="result-type ${config.class}">${config.icon}</div>
+                <div class="result-content">
+                    <div class="result-title">${escapeHtml(title)}</div>
+                    <div class="result-meta"><span>📅 ${date||'-'}</span>${tagsHtml?`<div class="tag-list">${tagsHtml}</div>`:''}</div>
+                </div>
+                <div class="result-actions">
+                    <button class="action-btn" onclick="event.stopPropagation(); viewFile('${item.id}')" ${!item.pdfData?'disabled style="opacity:0.3"':''}>👁️</button>
+                    <button class="action-btn delete" onclick="event.stopPropagation(); promptDelete('${item.id}', 'achievement')">🗑</button>
+                </div>
+            </div>`;
         }).join('');
     }
 
-    // --- Excel 导出修复 (强制分表功能) ---
+    // --- 【修复】Excel 分表导出 ---
     function exportToExcelFile() {
         if (currentUserRole !== 'admin') { showToast('无权限', 'error'); return; }
         const wb = XLSX.utils.book_new();
         let hasData = false;
         
-        // 如果是 member 视图，只导出 member
-        if (currentView === 'member') {
-            if (members.length > 0) {
-                const data = members.map(m => ({ '工号': m.memberNo, '姓名': m.memberName, '职称': m.memberTitle, '单位': m.memberOrg, '电话': m.memberPhone }));
-                const ws = XLSX.utils.json_to_sheet(data);
-                XLSX.utils.book_append_sheet(wb, ws, '团队成员');
-                hasData = true;
-            }
-        } else {
-            // 如果是成果视图，强制分 Sheet 导出
-            // 无论当前视图是 paper 还是 all，如果是 all 则循环所有类型，如果是 paper 则只导 paper
-            const types = currentView === 'all' ? ['paper', 'patent', 'project', 'award', 'book'] : [currentView];
-            
-            types.forEach(t => {
+        // 强制分表逻辑：如果是 member，只导 member；否则循环所有类型
+        const types = currentView === 'member' ? ['member'] : (currentView === 'all' ? ['paper', 'patent', 'project', 'award', 'book'] : [currentView]);
+
+        types.forEach(t => {
+            let data = [];
+            if(t === 'member') {
+                if(members.length === 0) return;
+                data = members.map(m => ({'工号': m.memberNo, '姓名': m.memberName, '职称': m.memberTitle, '单位': m.memberOrg}));
+            } else {
                 const list = achievements.filter(a => a.type === t);
-                if (list.length === 0) return;
-                
-                const sheetData = list.map(a => {
-                    let r = { 'ID': a.id, '标题': a.title || a.patentName || a.projectName || a.bookTitle, '日期': a.date || a.applicationDate || a.projectStartDate };
-                    // 补充具体字段
-                    if(t==='patent') { r['专利号'] = a.patentNumber; r['状态'] = a.patentStatus; r['类型'] = a.patentType; r['发明人'] = a.inventors; }
-                    else if(t==='paper') { r['期刊'] = a.source; r['作者'] = a.authors; r['级别'] = a.level; r['DOI'] = a.doi; }
-                    else if(t==='project') { r['编号'] = a.projectNumber; r['单位'] = a.projectOrg; r['级别'] = a.projectLevel; }
-                    else if(t==='award') { r['获奖人'] = a.awardRecipients; r['级别'] = a.awardLevel; r['单位'] = a.awardAgency; }
-                    else if(t==='book') { r['作者'] = a.bookAuthors; r['出版社'] = a.bookPublisher; r['ISBN'] = a.bookIsbn; }
+                if(list.length === 0) return;
+                data = list.map(a => {
+                    let r = { '标题': a.title||a.patentName||a.projectName, '日期': a.date||a.applicationDate };
+                    if(t==='patent') { r['专利号'] = a.patentNumber; r['状态'] = a.patentStatus; r['发明人'] = a.inventors; }
+                    else if(t==='paper') { r['期刊'] = a.source; r['作者'] = a.authors; r['级别'] = a.level; }
+                    else if(t==='project') { r['编号'] = a.projectNumber; r['单位'] = a.projectOrg; }
                     return r;
                 });
-                
-                const ws = XLSX.utils.json_to_sheet(sheetData);
-                XLSX.utils.book_append_sheet(wb, ws, typeConfig[t].label);
-                hasData = true;
-            });
-        }
+            }
+            const ws = XLSX.utils.json_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, typeConfig[t]?.label || '成员');
+            hasData = true;
+        });
 
         if (!hasData) { showToast('无数据可导出', 'warning'); return; }
         XLSX.writeFile(wb, `科研数据_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
-    // --- 简历导出优化 (排版美化) ---
+    // --- 【优化】简历导出 ---
     function exportResume() {
         const id = document.getElementById('memberEditId').value;
-        // 如果不在编辑模式，尝试获取选中项，或者提示错误
         let member = members.find(m => m.id === id);
-        if(!member && selectedItems.size === 1) {
-             const selectedId = Array.from(selectedItems)[0];
-             member = members.find(m => m.id === selectedId);
-        }
-        
-        if(!member) { showToast('请先点击某位成员进入详情/编辑页，或勾选一位成员', 'warning'); return; }
+        // 尝试从选中项获取
+        if(!member && selectedItems.size === 1) member = members.find(m => m.id === Array.from(selectedItems)[0]);
+        if(!member) { showToast('请先选中一位成员或进入详情页', 'warning'); return; }
 
         const related = achievements.filter(a => (a.authors||a.inventors||a.bookAuthors||a.awardRecipients||'').includes(member.memberName));
         related.sort((a,b) => (b.date||'').localeCompare(a.date||''));
 
-        // 生成 Word HTML
         let html = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
             <head><meta charset='utf-8'><title>简历</title>
-            <style>
-                body { font-family: 'SimSun', serif; font-size: 14px; line-height: 1.5; }
-                h1 { text-align: center; font-size: 24px; font-family: 'SimHei'; margin-bottom: 20px; }
-                .section { margin-bottom: 20px; }
-                .section-title { font-size: 16px; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 10px; font-weight: bold; font-family: 'SimHei'; }
-                table { width: 100%; border-collapse: collapse; }
-                td { padding: 5px; vertical-align: top; }
-                .date-col { width: 120px; color: #666; }
-                .type-tag { font-size: 12px; border: 1px solid #999; padding: 1px 4px; border-radius: 3px; margin-right: 5px; }
-            </style>
+            <style>body{font-family:'SimSun';}table{width:100%;border-collapse:collapse;}td{padding:5px;vertical-align:top;border-bottom:1px dashed #ccc;}</style>
             </head>
             <body>
-                <h1>${member.memberName} - 个人简历</h1>
-                <div class="section">
-                    <div class="section-title">基本信息</div>
-                    <p>单位：${member.memberOrg} &nbsp;|&nbsp; 职称：${member.memberTitle} &nbsp;|&nbsp; 学号/工号：${member.memberNo}</p>
-                    <p>电话：${member.memberPhone || '-'} &nbsp;|&nbsp; 邮箱：${member.memberEmail || '-'}</p>
-                </div>
-                <div class="section">
-                    <div class="section-title">科研成果 (${related.length}项)</div>
-                    <table>
+                <h1 style="text-align:center">${member.memberName} - 个人简历</h1>
+                <p style="text-align:center">${member.memberOrg} | ${member.memberTitle}</p>
+                <h3>主要科研成果</h3>
+                <table>
         `;
-        
         related.forEach(a => {
-            let detail = '';
-            if(a.type === 'paper') detail = `期刊: ${a.source} (级别: ${a.level||'-'})`;
-            if(a.type === 'patent') detail = `专利号: ${a.patentNumber}`;
-            if(a.type === 'project') detail = `项目编号: ${a.projectNumber} (级别: ${a.projectLevel||'-'})`;
-            if(a.type === 'award') detail = `授奖单位: ${a.awardAgency}`;
-            
-            let typeLabel = typeConfig[a.type]?.label || '成果';
-            html += `
-                <tr>
-                    <td class="date-col">${a.date || a.applicationDate || a.projectStartDate || '-'}</td>
-                    <td>
-                        <span class="type-tag">${typeLabel}</span>
-                        <b>${a.title || a.patentName || a.projectName}</b><br/>
-                        <span style="color:#444;font-size:13px;">${detail}</span><br/>
-                        <span style="color:#666;font-size:12px;">参与人员: ${a.authors || a.inventors || a.awardRecipients || '-'}</span>
-                    </td>
-                </tr>
-            `;
+            let info = '';
+            if(a.type==='paper') info = `${a.source} (${a.level||''})`;
+            if(a.type==='patent') info = `${a.patentNumber}`;
+            html += `<tr><td width="100">${a.date||'-'}</td><td><b>${a.title||a.patentName}</b><br/><span style="color:#666;font-size:12px">${info} - ${a.authors||a.inventors}</span></td></tr>`;
         });
-        
-        html += `</table></div></body></html>`;
+        html += `</table></body></html>`;
         
         const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${member.memberName}_简历.doc`; a.click();
     }
 
-    // --- 重复检测修复 (核心逻辑) ---
-    // 检查重复，返回 {isDup, item}
+    // --- 【核心修复】重复检测 ---
     function checkDuplicate(newItem, list) {
-        // 1. ID 匹配 (通常不发生，除非完全相同的数据)
-        const idMatch = list.find(e => e.id === newItem.id);
-        if(idMatch) return { isDup: true, item: idMatch };
-
-        // 2. 专利号/项目编号 匹配 (强特征)
+        // 1. 专利号/项目号 强匹配
         if (newItem.type === 'patent' && newItem.patentNumber) {
             const pMatch = list.find(e => e.type === 'patent' && e.patentNumber === newItem.patentNumber);
             if(pMatch) return { isDup: true, item: pMatch };
@@ -651,19 +1083,16 @@
             const pMatch = list.find(e => e.type === 'project' && e.projectNumber === newItem.projectNumber);
             if(pMatch) return { isDup: true, item: pMatch };
         }
-
-        // 3. 标题/名称 匹配 (去除空格，忽略大小写)
+        // 2. 标题 弱匹配
         const normalize = s => (s||'').toLowerCase().replace(/\s/g, '');
         const targetTitle = normalize(newItem.title || newItem.patentName || newItem.projectName);
-        if(targetTitle.length > 5) { // 只有标题够长才检测
+        if(targetTitle.length > 3) {
             const titleMatch = list.find(e => {
                 if(e.type !== newItem.type) return false;
-                const eTitle = normalize(e.title || e.patentName || e.projectName);
-                return eTitle === targetTitle;
+                return normalize(e.title || e.patentName) === targetTitle;
             });
             if(titleMatch) return { isDup: true, item: titleMatch };
         }
-
         return { isDup: false };
     }
 
@@ -679,51 +1108,38 @@
             const row = excelData[i];
             if (!row || row.length === 0) continue;
             
-            // 构建临时对象
             let item = { id: Date.now() + Math.random().toString(), type: type, updatedAt: new Date().toISOString() };
             for (let key in mapConfig) item[key] = row[mapConfig[key]];
             
-            // 数据预处理补全 (重要：保证 title 存在以供检测)
-            if(type === 'patent') item.title = item.patentName;
-            if(type === 'project') item.title = item.projectName;
-            if(type === 'award') item.title = item.awardName;
-            if(type === 'book') item.title = item.bookTitle;
-            // 如果没映射具体名但映射了 title
-            if(!item.patentName && item.title) item.patentName = item.title;
+            // 关键：补全 title 字段供检测
+            if(!item.title) item.title = item.patentName || item.projectName || item.awardName || item.bookTitle;
+            if(type==='patent' && !item.patentName) item.patentName = item.title;
 
-            // 检测
             const targetList = type==='member' ? members : achievements;
             const check = checkDuplicate(item, targetList);
             
             if(!check.isDup) {
-                // 无重复，直接添加
                 targetList.push(item);
                 added++;
             } else {
-                // 有重复，比较数据完整度 (这里简化为：如果新数据有值且旧数据为空，则更新)
+                // 只有当本地为空且新数据有值时，才更新
                 let hasChange = false;
                 const oldItem = check.item;
-                for (let key in item) {
-                    if (key === 'id' || key === 'updatedAt') continue;
-                    // 如果旧数据为空，新数据有值 -> 更新
-                    if ((!oldItem[key] || oldItem[key] === '') && (item[key] && item[key] !== '')) {
+                for(let key in item) {
+                    if(key==='id'||key==='updatedAt') continue;
+                    if((!oldItem[key] || oldItem[key]==='') && (item[key])) {
                         oldItem[key] = item[key];
                         hasChange = true;
                     }
                 }
-                if(hasChange) {
-                    oldItem.updatedAt = new Date().toISOString();
-                    updated++;
-                } else {
-                    skipped++;
-                }
+                if(hasChange) updated++; else skipped++;
             }
         }
         saveToLocal(); closeExcelModal(); updateStats(); renderResults();
-        showToast(`导入结束: 新增 ${added}, 更新补全 ${updated}, 跳过重复 ${skipped}`, 'success');
+        showToast(`导入: 新增${added}, 补全${updated}, 跳过${skipped}`, 'success');
     }
 
-    // --- 其他辅助函数 (保持不变) ---
+    // --- 标准辅助函数 (不修改) ---
     function updateStorageStatus(ok) { var s = document.getElementById('storageStatus'); if (ok) { s.className = 'storage-status'; s.innerHTML = '✓ 数据已本地保存'; } else { s.className = 'storage-status warning'; s.textContent = '⚠ 保存失败'; } }
     function base64ToBlob(base64Data) { var arr = base64Data.split(','); var mime = arr[0].match(/:(.*?);/)[1]; var bstr = atob(arr[1]); var n = bstr.length; var u8arr = new Uint8Array(n); while (n--) { u8arr[n] = bstr.charCodeAt(n); } return new Blob([u8arr], { type: mime }); }
     function escapeHtml(text) { if (!text) return ''; var d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
@@ -738,24 +1154,55 @@
     function batchDelete() { if (currentUserRole !== 'admin') return; if (selectedItems.size === 0) return; deleteTargetIds = Array.from(selectedItems); deleteTargetType = currentView === 'member' ? 'member' : 'achievement'; document.getElementById('confirmMessage').textContent = '确定删除？'; document.getElementById('confirmModal').classList.add('active'); }
     function promptDelete(id, type) { if (currentUserRole !== 'admin') return; deleteTargetIds = [id]; deleteTargetType = type; document.getElementById('confirmMessage').textContent = '确定删除？'; document.getElementById('confirmModal').classList.add('active'); }
     function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('active'); }
-    function confirmDelete() { if (deleteTargetType === 'member') { deleteTargetIds.forEach(id => { const item = members.find(m => m.id === id); if(item) trashBin.push({ originalId: item.id, type: 'member', data: item, deletedAt: new Date().toLocaleString() }); }); members = members.filter(m => !deleteTargetIds.includes(m.id)); } else { deleteTargetIds.forEach(id => { const item = achievements.find(a => a.id === id); if(item) trashBin.push({ originalId: item.id, type: 'achievement', data: item, deletedAt: new Date().toLocaleString() }); }); achievements = achievements.filter(a => !deleteTargetIds.includes(a.id)); } logAction('Delete', `删除 ${deleteTargetIds.length} 项`); deleteTargetIds.forEach(id => selectedItems.delete(id)); saveToLocal(); updateStats(); renderResults(); updateBatchDeleteBtn(); closeConfirmModal(); showToast('已移入回收站', 'success'); }
+    
+    // 【修改】confirmDelete -> 软删除
+    function confirmDelete() { 
+        if (deleteTargetType === 'member') { 
+            deleteTargetIds.forEach(id => { const item = members.find(m => m.id === id); if(item) trashBin.push({ originalId: item.id, type: 'member', data: item, deletedAt: new Date().toLocaleString() }); }); 
+            members = members.filter(m => !deleteTargetIds.includes(m.id)); 
+        } else { 
+            deleteTargetIds.forEach(id => { const item = achievements.find(a => a.id === id); if(item) trashBin.push({ originalId: item.id, type: 'achievement', data: item, deletedAt: new Date().toLocaleString() }); }); 
+            achievements = achievements.filter(a => !deleteTargetIds.includes(a.id)); 
+        } 
+        logAction('Delete', `删除 ${deleteTargetIds.length} 项`); deleteTargetIds.forEach(id => selectedItems.delete(id)); saveToLocal(); updateStats(); renderResults(); updateBatchDeleteBtn(); closeConfirmModal(); showToast('已移入回收站', 'success'); 
+    }
+    
+    function openRecycleBin() {
+        const container = document.getElementById('recycleList');
+        if(trashBin.length===0) container.innerHTML='<div style="text-align:center;padding:20px;">空</div>';
+        else container.innerHTML = trashBin.map(t => `<div class="result-item deleted-item"><div class="result-content"><div class="result-title">${t.data.title||t.data.memberName}</div><div class="result-meta">删除于: ${t.deletedAt}</div></div><button class="btn btn-sm btn-primary" onclick="restoreItem('${t.originalId}')">恢复</button></div>`).join('');
+        document.getElementById('recycleModal').classList.add('active');
+    }
+    function closeRecycleModal() { document.getElementById('recycleModal').classList.remove('active'); }
+    function restoreItem(id) {
+        const idx = trashBin.findIndex(t => t.originalId === id);
+        if(idx === -1) return;
+        const item = trashBin[idx];
+        if(item.type === 'member') members.push(item.data); else achievements.push(item.data);
+        trashBin.splice(idx, 1);
+        saveToLocal(); updateStats(); renderResults(); openRecycleBin(); showToast('已恢复', 'success');
+    }
+    function openLogsModal() {
+        document.getElementById('logsList').innerHTML = actionLogs.map(l => `<div class="log-entry"><span class="log-time">${l.time}</span><span>${l.user} ${l.action} ${l.detail}</span></div>`).join('');
+        document.getElementById('logsModal').classList.add('active');
+    }
+
     function updateStats() { var counts = { paper: 0, patent: 0, project: 0, award: 0, book: 0 }; achievements.forEach(item => { if (counts[item.type] !== undefined) counts[item.type]++; }); document.getElementById('totalCount').textContent = achievements.length; document.getElementById('memberCount').textContent = members.length; document.getElementById('statMember').textContent = members.length; ['paper', 'patent', 'project', 'award', 'book'].forEach(t => { document.getElementById(t + 'Count').textContent = counts[t]; document.getElementById('stat' + t.charAt(0).toUpperCase() + t.slice(1)).textContent = counts[t]; }); }
     function openAddModal() { if (currentView === 'member') { openMemberModal(); return; } document.getElementById('modalTitle').textContent = '添加科研成果'; document.getElementById('researchForm').reset(); document.getElementById('editId').value = ''; document.getElementById('type').value = (currentView!=='all')?currentView:''; toggleFormFields(); removeFile(); document.getElementById('formModal').classList.add('active'); }
     function closeModal() { document.getElementById('formModal').classList.remove('active'); }
     function toggleFormFields() { var type = document.getElementById('type').value; document.getElementById('patentFields').classList.toggle('hidden', type !== 'patent'); document.getElementById('projectFields').classList.toggle('hidden', type !== 'project'); document.getElementById('awardFields').classList.toggle('hidden', type !== 'award'); document.getElementById('bookFields').classList.toggle('hidden', type !== 'book'); var isGeneral = !['patent','project','award','book'].includes(type); document.getElementById('generalFields').classList.toggle('hidden', !isGeneral); document.getElementById('ocrSection').classList.toggle('hidden', type !== 'patent' && type !== 'award'); }
     function openMemberModal() { document.getElementById('memberForm').reset(); document.getElementById('memberEditId').value = ''; document.getElementById('btnResume').style.display='none'; document.getElementById('memberModal').classList.add('active'); }
     function closeMemberModal() { document.getElementById('memberModal').classList.remove('active'); }
-    function editMember(id) { if(currentUserRole!=='admin') return; const m = members.find(x=>x.id===id); if(!m) return; document.getElementById('memberEditId').value = id; document.getElementById('memberName').value = m.memberName; document.getElementById('memberNo').value = m.memberNo; document.getElementById('memberOrg').value = m.memberOrg||''; document.getElementById('memberTitle').value = m.memberTitle||''; document.getElementById('memberIdCard').value = m.memberIdCard; document.getElementById('memberPhone').value = m.memberPhone; document.getElementById('btnResume').style.display='inline-flex'; document.getElementById('memberModal').classList.add('active'); }
-    function handleSubmit(event) { event.preventDefault(); const formData = { id: document.getElementById('editId').value || Date.now().toString(), type: document.getElementById('type').value, title: document.getElementById('title').value, date: document.getElementById('date').value, authors: document.getElementById('authors').value, tags: document.getElementById('tags').value, patentName: document.getElementById('patentName').value, patentNumber: document.getElementById('patentNumber').value, projectName: document.getElementById('projectName').value, awardName: document.getElementById('awardName').value, bookTitle: document.getElementById('bookTitle').value, updatedAt: new Date().toISOString() }; if(formData.type==='patent') formData.title = formData.patentName; const idx = achievements.findIndex(a => a.id === formData.id); if(idx !== -1) achievements[idx] = { ...achievements[idx], ...formData }; else achievements.push({ ...formData, createdAt: new Date().toISOString() }); saveToLocal(); closeModal(); updateStats(); renderResults(); logAction(idx!==-1?'Update':'Create', `保存: ${formData.title}`); }
     function handleMemberSubmit(event) { event.preventDefault(); const data = { id: document.getElementById('memberEditId').value || Date.now().toString(), memberName: document.getElementById('memberName').value, memberNo: document.getElementById('memberNo').value, memberOrg: document.getElementById('memberOrg').value, memberTitle: document.getElementById('memberTitle').value, memberIdCard: document.getElementById('memberIdCard').value, memberPhone: document.getElementById('memberPhone').value }; const idx = members.findIndex(m => m.id === data.id); if(idx !== -1) members[idx] = { ...members[idx], ...data }; else members.push(data); saveToLocal(); closeMemberModal(); updateStats(); renderResults(); logAction(idx!==-1?'Update':'Create', `成员: ${data.memberName}`); }
+    function handleSubmit(event) { event.preventDefault(); const formData = { id: document.getElementById('editId').value || Date.now().toString(), type: document.getElementById('type').value, title: document.getElementById('title').value, date: document.getElementById('date').value, authors: document.getElementById('authors').value, tags: document.getElementById('tags').value, patentName: document.getElementById('patentName').value, patentNumber: document.getElementById('patentNumber').value, projectName: document.getElementById('projectName').value, awardName: document.getElementById('awardName').value, bookTitle: document.getElementById('bookTitle').value, updatedAt: new Date().toISOString() }; if(formData.type==='patent') formData.title = formData.patentName; const idx = achievements.findIndex(a => a.id === formData.id); if(idx !== -1) achievements[idx] = { ...achievements[idx], ...formData }; else achievements.push({ ...formData, createdAt: new Date().toISOString() }); saveToLocal(); closeModal(); updateStats(); renderResults(); logAction(idx!==-1?'Update':'Create', `保存: ${formData.title}`); }
     function exportData() { if(currentUserRole !== 'admin') return; const exportObj = { achievements, members, trashBin, actionLogs }; const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
     function triggerImport() { document.getElementById('importInput').click(); }
+    function importData(event) { const file = event.target.files[0]; const reader = new FileReader(); reader.onload = e => { const data = JSON.parse(e.target.result); if(data.achievements) data.achievements.forEach(i => achievements.push(i)); saveToLocal(); updateStats(); renderResults(); showToast('导入成功','success'); }; reader.readAsText(file); }
     function showToast(msg, type) { const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg; document.getElementById('toastContainer').appendChild(t); setTimeout(() => t.classList.add('show'), 10); setTimeout(() => t.remove(), 3000); }
+    function renderMembers(container) { const filtered = members.filter(m => !searchQuery || m.memberName.includes(searchQuery)); container.innerHTML = filtered.map(m => `<div class="result-item" onclick="editMember('${m.id}')"><div class="result-type type-member">👤</div><div class="result-content"><div class="result-title">${m.memberName}</div><div class="result-meta">${m.memberOrg}</div></div><div class="result-actions"><button class="action-btn delete" onclick="event.stopPropagation();promptDelete('${m.id}','member')">🗑</button></div></div>`).join(''); }
     function viewDetail(id) { currentDetailId = id; const item = achievements.find(a=>a.id===id); if(!item) return; document.getElementById('detailContent').innerHTML = Object.entries(item).filter(([k])=>!['id','pdfData'].includes(k)).map(([k,v]) => `<div class="detail-row"><div class="detail-label">${k}</div><div class="detail-value">${v}</div></div>`).join(''); document.getElementById('detailModal').classList.add('active'); }
     function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
     function editFromDetail() { closeDetailModal(); document.getElementById('editId').value=currentDetailId; openAddModal(); }
-    function toggleAdvancedSearch() { document.getElementById('advancedSearchPanel').classList.toggle('active'); }
-    function handleSearch() { searchQuery = document.getElementById('searchInput').value.toLowerCase(); advFilter.start = document.getElementById('advStartDate').value; advFilter.end = document.getElementById('advEndDate').value; advFilter.author = document.getElementById('advAuthor').value; advFilter.tag = document.getElementById('advTag').value; currentPage = 1; renderResults(); }
     function toggleMenu(id) { var menu = document.getElementById(id); var isVisible = menu.classList.contains('show'); closeAllMenus(); if (!isVisible) menu.classList.add('show'); }
     function closeAllMenus() { document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.classList.remove('show'); }); }
     function handleFileSelect(event) { var file = event.target.files[0]; if (!file) return; var reader = new FileReader(); reader.onload = function(e) { currentPdfData = e.target.result; currentPdfName = file.name; document.getElementById('fileName').textContent = file.name; document.getElementById('fileInfo').classList.remove('hidden'); document.getElementById('fileUpload').classList.add('has-file'); }; reader.readAsDataURL(file); }
@@ -767,7 +1214,7 @@
     function renderExcelPreview() { var html = '<table><thead><tr>'; excelHeaders.forEach(function(h) { html += '<th>' + escapeHtml(h) + '</th>'; }); html += '</tr></thead><tbody>'; for (var i = 1; i < Math.min(excelData.length, 6); i++) { html += '<tr>'; var row = excelData[i]; excelHeaders.forEach(function(_, idx) { html += '<td>' + escapeHtml(row[idx] || '') + '</td>'; }); html += '</tr>'; } html += '</tbody></table>'; document.getElementById('excelPreview').innerHTML = html; }
     function updateMappingFields() { var type = document.getElementById('excelImportType').value; var fields = fieldMappings[type] || []; var container = document.getElementById('mappingFields'); var html = ''; fields.forEach(function(field) { html += '<div class="mapping-row"><label>' + field.label + (field.required ? ' *' : '') + '</label><select class="field-map-select" data-key="' + field.key + '" data-required="' + field.required + '"><option value="">(不导入)</option>'; excelHeaders.forEach(function(header, idx) { var selected = (header.indexOf(field.label) !== -1 || field.label.indexOf(header) !== -1) ? 'selected' : ''; html += '<option value="' + idx + '" ' + selected + '>' + escapeHtml(header) + '</option>'; }); html += '</select></div>'; }); container.innerHTML = html; }
 
-    // OneDrive
+    // --- OneDrive 原始代码 (完全保留) ---
     const msalConfig = { auth: { clientId: "c453313f-fd40-4534-9d66-6a0847396d3b", authority: "https://login.microsoftonline.com/common", redirectUri: window.location.origin + window.location.pathname }, cache: { cacheLocation: "localStorage", storeAuthStateInCookie: false } };
     const loginRequest = { scopes: ["User.Read", "Files.ReadWrite"] };
     let msalInstance = null;
